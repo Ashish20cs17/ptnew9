@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import React from 'react'
+import Login from './components/login/login'
 
 const App = () => {
   return (
-    <div>App</div>
+    <div><Login/></div>
   )
 }
 
