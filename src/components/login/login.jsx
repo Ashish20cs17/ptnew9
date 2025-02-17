@@ -25,7 +25,10 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log("User logged in");
-      localStorage.setItem("user")
+      localStorage.setItem("user",JSON.stringify({
+        uid: user.uid,
+        email: user.email,})
+      )
       navigate("/home");
     } catch (error) {
       console.error("Login failed:", error.message);
