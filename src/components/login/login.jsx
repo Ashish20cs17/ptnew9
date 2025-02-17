@@ -23,7 +23,8 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user; // ✅ Get the user object
       console.log("User logged in");
       localStorage.setItem("user",JSON.stringify({
         uid: user.uid,
