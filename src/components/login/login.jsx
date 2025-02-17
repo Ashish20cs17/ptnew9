@@ -3,7 +3,7 @@ import React, { useState,useEffect } from 'react';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/FirebaseSetup"; // Import auth from firebase.js
 import PracticeTime from "../../assets/practiceTime.jpg";
-import "./login.css";
+import "./Login.css";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
