@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { db } from "../firebase/FirebaseSetup"; // Import Firestore instance
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Firestore functions
-import PracticeTime from "../../assets/PracticeTime.jpg";
+import PracticeTime from "../../assets/practiceTime.jpg";
 
 const Home = () => {
   const [question, setQuestion] = useState('');
