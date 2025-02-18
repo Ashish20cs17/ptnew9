@@ -34,12 +34,12 @@ const Navbar = () => {
           {/* ✅ Navigate to /all-questions when clicked */}
           <li onClick={() => {
             navigate('/home');
-            handleHamburger();
+           
           }}>
             Add Questions
           </li>
 
-          <li onClick={() => {navigate('/all-questions'); handleHamburger();
+          <li onClick={() => {navigate('/all-questions');
           }} style={{ cursor: 'pointer' }}>All Questions</li>
           <li>Attached Questions</li>
           <li onClick={handleLogout}>Log out</li>
