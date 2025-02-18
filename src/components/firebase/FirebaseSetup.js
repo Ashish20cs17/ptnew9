@@ -6,6 +6,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore"; // Import Firestore
 
 
+
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBpRHSVSqeFGW-nU8TXsR7u0Rcvwlut-0I",
