@@ -19,6 +19,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      localStorage.removeItem("user");  // ✅ Clear user data from localStorage
       navigate("/"); // Redirect to login page after logout
     } catch (error) {
       console.error("Logout error:", error);
