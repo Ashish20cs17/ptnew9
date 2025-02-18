@@ -4,12 +4,14 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Fir
 import PracticeTime from "../../assets/practiceTime.jpg";
 
 const Home = () => {
+  const [questionType, setQuestionType] = useState("MCQ"); // Default: MCQ
   const [question, setQuestion] = useState('');
-  const [options, setOptions] = useState(['', '', '', '']);
+  const [options, setOptions] = useState(['', '', '', '']); // Options for MCQ
+  const [answer, setAnswer] = useState(''); // Answer for Fill in the Blanks
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Function to handle text field changes
+  // Function to handle option text field changes
   const handleOptionChange = (index, value) => {
     const updatedOptions = [...options];
     updatedOptions[index] = value;
@@ -18,7 +20,7 @@ const Home = () => {
 
   // Function to save the question to Firestore
   const uploadQuestion = async () => {
-    if (!question || options.some(opt => opt === '')) {
+    if (!question || (questionType === "MCQ" && options.some(opt => opt === '')) || (questionType === "Fill in the Blanks" && !answer)) {
       setError("Please fill all fields");
       return;
     }
@@ -30,18 +32,27 @@ const Home = () => {
       const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
       const questionsRef = collection(db, `questions/${today}/allQuestions`);
       
-      await addDoc(questionsRef, {
+      const questionData = {
         question,
-        option1: options[0],
-        option2: options[1],
-        option3: options[2],
-        option4: options[3],
+        type: questionType,
         timestamp: serverTimestamp(),
-      });
+      };
+
+      if (questionType === "MCQ") {
+        questionData.option1 = options[0];
+        questionData.option2 = options[1];
+        questionData.option3 = options[2];
+        questionData.option4 = options[3];
+      } else {
+        questionData.answer = answer;
+      }
+
+      await addDoc(questionsRef, questionData);
 
       // Clear inputs after successful upload
       setQuestion('');
       setOptions(['', '', '', '']);
+      setAnswer('');
       setLoading(false);
       alert("Question uploaded successfully!");
     } catch (error) {
@@ -58,6 +69,30 @@ const Home = () => {
 
       {error && <p className="errorMessage">{error}</p>}
 
+      {/* Radio buttons to select question type */}
+      <div>
+        <label>
+          <input 
+            type="radio" 
+            value="MCQ" 
+            checked={questionType === "MCQ"} 
+            onChange={() => setQuestionType("MCQ")} 
+          />
+          MCQ
+        </label>
+        <label>
+          <input 
+            type="radio" 
+            value="Fill in the Blanks" 
+            checked={questionType === "Fill in the Blanks"} 
+            onChange={() => setQuestionType("Fill in the Blanks")} 
+          />
+          Fill in the Blanks
+        </label>
+      </div>
+      <hr />
+
+      {/* Question Input */}
       <input 
         placeholder="Enter the question" 
         type="text" 
@@ -67,7 +102,8 @@ const Home = () => {
       />
       <hr />
 
-      {options.map((option, index) => (
+      {/* MCQ Options (Shown Only If MCQ is Selected) */}
+      {questionType === "MCQ" && options.map((option, index) => (
         <React.Fragment key={index}>
           <input
             placeholder={`Option ${index + 1}`}
@@ -78,6 +114,20 @@ const Home = () => {
           <hr />
         </React.Fragment>
       ))}
+
+      {/* Answer Field for Fill in the Blanks */}
+      {questionType === "Fill in the Blanks" && (
+        <>
+          <input 
+            placeholder="Enter the correct answer" 
+            type="text" 
+            required 
+            value={answer} 
+            onChange={(e) => setAnswer(e.target.value)} 
+          />
+          <hr />
+        </>
+      )}
 
       <button id="Upload" onClick={uploadQuestion} disabled={loading}>
         {loading ? "Uploading..." : "Upload"}
