@@ -2,11 +2,19 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import "./Navbar.css";
 import { signOut } from "firebase/auth";
-import {auth} from "../firebase/FirebaseSetup";
+import { auth } from "../firebase/FirebaseSetup";
+import practiceTime from "../../assets/practiceTime-removebg-preview.png";
+import { RxHamburgerMenu } from "react-icons/rx"
+import { set } from 'firebase/database';
 
 
 const Navbar = () => {
-    
+
+  const [showmenu, setShowmenu] = React.useState(false);
+  const handleHamburger = () => {
+    setShowmenu(!showmenu);
+  }
+
   const navigate = useNavigate(); // ✅ React Router navigation
   const handleLogout = async () => {
     try {
@@ -19,15 +27,33 @@ const Navbar = () => {
 
   return (
     <div className='wrapper'>
-      <div className="navContainer">
+      <h2>PracticeTime.ai</h2>
+
+      <nav className={showmenu ? "menu-mobile" : "menu-web"}>
         <ul>
           {/* ✅ Navigate to /all-questions when clicked */}
-          <li onClick={() => navigate('/all-questions')} style={{ cursor: 'pointer' }}>All Questions</li>
+          <li onClick={() => {
+            navigate('/home');
+            handleHamburger();
+          }}>
+            Add Questions
+          </li>
+
+          <li onClick={() => {navigate('/all-questions'); handleHamburger();
+          }} style={{ cursor: 'pointer' }}>All Questions</li>
           <li>Attached Questions</li>
+          <li onClick={handleLogout}>Log out</li>
         </ul>
-        <button onClick={handleLogout}>Log out</button>
+
+
+      </nav>
+
+      <div className="hamburger">
+        <button onClick={handleHamburger}><RxHamburgerMenu /></button>
       </div>
     </div>
+
+
   );
 };
 
