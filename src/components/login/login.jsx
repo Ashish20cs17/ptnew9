@@ -6,6 +6,8 @@ import PracticeTime from "../../assets/practiceTime.jpg";
 import "./Login.css";
 import { useNavigate } from "react-router-dom";
 
+
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +40,9 @@ const Login = () => {
   };
 
   return (
+
+    <div className="wrapper">
+    
     <div className="loginContainer">
       <img src={PracticeTime} alt="Practice Time" className="loginImage" />
       <hr />
@@ -65,6 +70,7 @@ const Login = () => {
       <button id="Login" onClick={handleLogin}>
         Log in
       </button>
+    </div>
     </div>
   );
 };
