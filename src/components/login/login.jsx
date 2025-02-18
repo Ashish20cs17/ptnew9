@@ -41,7 +41,7 @@ const Login = () => {
 
   return (
 
-    <div className="wrapper">
+    <div className="loginWrapper">
     
     <div className="loginContainer">
       <img src={PracticeTime} alt="Practice Time" className="loginImage" />
