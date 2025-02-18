@@ -51,8 +51,8 @@
     outline: none;
     
 }
-.wrapper{
-    
+.loginWrapper{
+    display: flex;
     height: 70vh;
 
 }
