@@ -1,51 +1,81 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase/FirebaseSetup";
-import { collection, getDocs } from "firebase/firestore";
+import { database } from "../firebase/FirebaseSetup";
+import { ref, get } from "firebase/database";
 
 const AllQuestions = () => {
   const [questions, setQuestions] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchAllQuestions = async () => {
       try {
-        const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-        const questionsRef = collection(db, `questions/${today}/allQuestions`);
-        const snapshot = await getDocs(questionsRef);
+        const questionsRef = ref(database, "questions");
+        const snapshot = await get(questionsRef);
 
-        if (snapshot.empty) {
-          setQuestions([]);
-          setError("No questions available!");
+        if (!snapshot.exists()) {
+          setError("No questions found!");
           return;
         }
 
-        const fetchedQuestions = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const data = snapshot.val();
+        let allFetchedQuestions = [];
 
-        setQuestions(fetchedQuestions);
+        Object.keys(data).forEach((date) => {
+          Object.keys(data[date]).forEach((questionId) => {
+            allFetchedQuestions.push({
+              id: questionId,
+              date,
+              ...data[date][questionId],
+            });
+          });
+        });
+
+        setQuestions(allFetchedQuestions);
+        setFilteredQuestions(allFetchedQuestions); // Show all questions initially
       } catch (err) {
         console.error("Error fetching questions:", err);
         setError("Failed to fetch questions");
       }
     };
 
-    fetchQuestions();
+    fetchAllQuestions();
   }, []);
+
+  // Function to filter questions based on the selected date
+  const handleDateChange = (e) => {
+    const selectedDateValue = e.target.value;
+    setSelectedDate(selectedDateValue);
+
+    if (selectedDateValue === "") {
+      setFilteredQuestions(questions); // Show all if date is cleared
+    } else {
+      const filtered = questions.filter((q) => q.date === selectedDateValue);
+      setFilteredQuestions(filtered);
+    }
+  };
 
   return (
     <div className="loginContainer">
-          
-          
       <h2>All Questions</h2>
       <hr />
+
+      {/* Date Picker to filter questions */}
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={handleDateChange}
+      />
+      <hr />
+
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {questions.length === 0 && !error ? <p>Loading...</p> : null}
+      {filteredQuestions.length === 0 && !error ? <p>No questions found!</p> : null}
+
       <ol>
-        {questions.map((q) => (
+        {filteredQuestions.map((q) => (
           <li key={q.id}>
-            <strong>{q.question}</strong> ({q.type})
+            <strong>{q.question}</strong> ({q.type}) - <small>{q.date}</small>
             {q.type === "MCQ" && (
               <ul>
                 <li>{q.option1}</li>

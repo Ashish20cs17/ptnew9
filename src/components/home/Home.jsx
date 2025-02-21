@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { db } from "../firebase/FirebaseSetup"; // Import Firestore instance
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Firestore functions
+import { database } from "../firebase/FirebaseSetup"; // Import Realtime DB
+import { ref, push, set, serverTimestamp } from "firebase/database"; // Realtime DB functions
 import PracticeTime from "../../assets/practiceTime.jpg";
 
 const Home = () => {
@@ -19,7 +19,7 @@ const Home = () => {
     setOptions(updatedOptions);
   };
 
-  // Function to save the question to Firestore
+  // Function to save the question to Firebase Realtime Database
   const uploadQuestion = async () => {
     if (!question || 
         (questionType === "MCQ" && (options.some(opt => opt === '') || !mcqAnswer)) || 
@@ -33,8 +33,9 @@ const Home = () => {
 
     try {
       const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-      const questionsRef = collection(db, `questions/${today}/allQuestions`);
-      
+      const questionsRef = ref(database, `questions/${today}`); // Store questions by date
+      const newQuestionRef = push(questionsRef); // Generate unique key
+
       const questionData = {
         question,
         type: questionType,
@@ -51,7 +52,8 @@ const Home = () => {
         questionData.answer = answer;
       }
 
-      await addDoc(questionsRef, questionData);
+      // Store question in the Realtime Database
+      await set(newQuestionRef, questionData);
 
       // Clear inputs after successful upload
       setQuestion('');
