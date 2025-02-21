@@ -7,6 +7,7 @@ const Home = () => {
   const [questionType, setQuestionType] = useState("MCQ"); // Default: MCQ
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '', '', '']); // Options for MCQ
+  const [mcqAnswer, setMcqAnswer] = useState(''); // Correct answer for MCQ
   const [answer, setAnswer] = useState(''); // Answer for Fill in the Blanks
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,9 @@ const Home = () => {
 
   // Function to save the question to Firestore
   const uploadQuestion = async () => {
-    if (!question || (questionType === "MCQ" && options.some(opt => opt === '')) || (questionType === "Fill in the Blanks" && !answer)) {
+    if (!question || 
+        (questionType === "MCQ" && (options.some(opt => opt === '') || !mcqAnswer)) || 
+        (questionType === "Fill in the Blanks" && !answer)) {
       setError("Please fill all fields");
       return;
     }
@@ -43,6 +46,7 @@ const Home = () => {
         questionData.option2 = options[1];
         questionData.option3 = options[2];
         questionData.option4 = options[3];
+        questionData.correctAnswer = mcqAnswer; // ✅ Correct answer for MCQ
       } else {
         questionData.answer = answer;
       }
@@ -52,6 +56,7 @@ const Home = () => {
       // Clear inputs after successful upload
       setQuestion('');
       setOptions(['', '', '', '']);
+      setMcqAnswer('');
       setAnswer('');
       setLoading(false);
       alert("Question uploaded successfully!");
@@ -114,6 +119,20 @@ const Home = () => {
           <hr />
         </React.Fragment>
       ))}
+
+      {/* ✅ Correct Answer Field for MCQ */}
+      {questionType === "MCQ" && (
+        <>
+          <input 
+            placeholder="Enter the correct answer" 
+            type="text" 
+            required 
+            value={mcqAnswer} 
+            onChange={(e) => setMcqAnswer(e.target.value)} 
+          />
+          <hr />
+        </>
+      )}
 
       {/* Answer Field for Fill in the Blanks */}
       {questionType === "Fill in the Blanks" && (
