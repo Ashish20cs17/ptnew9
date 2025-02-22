@@ -1,30 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { database } from "../firebase/FirebaseSetup"; // Import Realtime DB
 import { ref, push, set, serverTimestamp } from "firebase/database"; // Realtime DB functions
+import supabase from "../supabase/SupabaseConfig"; // Supabase client
 import PracticeTime from "../../assets/practiceTime.jpg";
 
 const Home = () => {
   const [questionType, setQuestionType] = useState("MCQ"); // Default: MCQ
-  const [question, setQuestion] = useState('');
-  const [options, setOptions] = useState(['', '', '', '']); // Options for MCQ
-  const [mcqAnswer, setMcqAnswer] = useState(''); // Correct answer for MCQ
-  const [answer, setAnswer] = useState(''); // Answer for Fill in the Blanks
-  const [error, setError] = useState(null);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]); // Options for MCQ
+  const [mcqAnswer, setMcqAnswer] = useState(""); // Correct answer for MCQ
+  const [answer, setAnswer] = useState(""); // Answer for Fill in the Blanks
+  const [image, setImage] = useState(null); // Image file
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Function to handle option text field changes
   const handleOptionChange = (index, value) => {
     const updatedOptions = [...options];
     updatedOptions[index] = value;
     setOptions(updatedOptions);
   };
 
-  // Function to save the question to Firebase Realtime Database
+  const uploadImageToSupabase = async (file) => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const { data, error } = await supabase.storage
+      .from("questions") // Bucket name
+      .upload(fileName, file);
+
+    if (error) {
+      console.error("Image upload failed: ", error.message);
+      return null;
+    }
+
+    return supabase.storage.from("questions").getPublicUrl(fileName).data.publicUrl;
+  };
+
   const uploadQuestion = async () => {
-    if (!question || 
-        (questionType === "MCQ" && (options.some(opt => opt === '') || !mcqAnswer)) || 
-        (questionType === "Fill in the Blanks" && !answer)) {
-      setError("Please fill all fields");
+    if (
+      !question ||
+      (questionType === "MCQ" && (options.some((opt) => opt === "") || !mcqAnswer)) ||
+      (questionType === "Fill in the Blanks" && !answer)
+    ) {
+      setError("Please fill all required fields");
       return;
     }
 
@@ -32,34 +49,37 @@ const Home = () => {
     setLoading(true);
 
     try {
+      let imageUrl = null;
+      if (image) {
+        imageUrl = await uploadImageToSupabase(image);
+      }
+
       const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-      const questionsRef = ref(database, `questions/${today}`); // Store questions by date
-      const newQuestionRef = push(questionsRef); // Generate unique key
+      const questionsRef = ref(database, `questions/${today}`);
+      const newQuestionRef = push(questionsRef);
 
       const questionData = {
         question,
         type: questionType,
         timestamp: serverTimestamp(),
+        ...(imageUrl && { imageUrl }), // Include image URL only if an image is uploaded
       };
 
       if (questionType === "MCQ") {
-        questionData.option1 = options[0];
-        questionData.option2 = options[1];
-        questionData.option3 = options[2];
-        questionData.option4 = options[3];
-        questionData.correctAnswer = mcqAnswer; // ✅ Correct answer for MCQ
+        questionData.options = options;
+        questionData.correctAnswer = mcqAnswer;
       } else {
         questionData.answer = answer;
       }
 
-      // Store question in the Realtime Database
       await set(newQuestionRef, questionData);
 
-      // Clear inputs after successful upload
-      setQuestion('');
-      setOptions(['', '', '', '']);
-      setMcqAnswer('');
-      setAnswer('');
+      // Reset form
+      setQuestion("");
+      setOptions(["", "", "", ""]);
+      setMcqAnswer("");
+      setAnswer("");
+      setImage(null);
       setLoading(false);
       alert("Question uploaded successfully!");
     } catch (error) {
@@ -73,86 +93,44 @@ const Home = () => {
     <div className="loginContainer">
       <img src={PracticeTime} alt="Practice Time" className="loginImage" />
       <hr />
-
       {error && <p className="errorMessage">{error}</p>}
 
-      {/* Radio buttons to select question type */}
+      {/* Question Type Selection */}
       <div>
         <label>
-          <input 
-            type="radio" 
-            value="MCQ" 
-            checked={questionType === "MCQ"} 
-            onChange={() => setQuestionType("MCQ")} 
-          />
+          <input type="radio" value="MCQ" checked={questionType === "MCQ"} onChange={() => setQuestionType("MCQ")} />
           MCQ
         </label>
         <label>
-          <input 
-            type="radio" 
-            value="Fill in the Blanks" 
-            checked={questionType === "Fill in the Blanks"} 
-            onChange={() => setQuestionType("Fill in the Blanks")} 
-          />
+          <input type="radio" value="Fill in the Blanks" checked={questionType === "Fill in the Blanks"} onChange={() => setQuestionType("Fill in the Blanks")} />
           Fill in the Blanks
         </label>
       </div>
       <hr />
 
       {/* Question Input */}
-      <input 
-        placeholder="Enter the question" 
-        type="text" 
-        required 
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-      />
+      <input placeholder="Enter the question" type="text" value={question} onChange={(e) => setQuestion(e.target.value)} />
       <hr />
 
-      {/* MCQ Options (Shown Only If MCQ is Selected) */}
+      {/* MCQ Options */}
       {questionType === "MCQ" && options.map((option, index) => (
         <React.Fragment key={index}>
-          <input
-            placeholder={`Option ${index + 1}`}
-            type="text"
-            value={option}
-            onChange={(e) => handleOptionChange(index, e.target.value)}
-          />
+          <input placeholder={`Option ${index + 1}`} type="text" value={option} onChange={(e) => handleOptionChange(index, e.target.value)} />
           <hr />
         </React.Fragment>
       ))}
 
-      {/* ✅ Correct Answer Field for MCQ */}
-      {questionType === "MCQ" && (
-        <>
-          <input 
-            placeholder="Enter the correct answer" 
-            type="text" 
-            required 
-            value={mcqAnswer} 
-            onChange={(e) => setMcqAnswer(e.target.value)} 
-          />
-          <hr />
-        </>
-      )}
+      {/* Correct Answer for MCQ */}
+      {questionType === "MCQ" && <input placeholder="Enter the correct answer" type="text" value={mcqAnswer} onChange={(e) => setMcqAnswer(e.target.value)} />}<hr />
+      
+      {/* Answer for Fill in the Blanks */}
+      {questionType === "Fill in the Blanks" && <input placeholder="Enter the correct answer" type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} />}<hr />
 
-      {/* Answer Field for Fill in the Blanks */}
-      {questionType === "Fill in the Blanks" && (
-        <>
-          <input 
-            placeholder="Enter the correct answer" 
-            type="text" 
-            required 
-            value={answer} 
-            onChange={(e) => setAnswer(e.target.value)} 
-          />
-          <hr />
-        </>
-      )}
+      {/* Image Upload (Optional) */}
+      <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} />
+      <hr />
 
-      <button id="Upload" onClick={uploadQuestion} disabled={loading}>
-        {loading ? "Uploading..." : "Upload"}
-      </button>
+      <button id="Upload" onClick={uploadQuestion} disabled={loading}>{loading ? "Uploading..." : "Upload"}</button>
     </div>
   );
 };
