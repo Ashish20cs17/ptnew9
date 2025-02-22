@@ -7,6 +7,7 @@ import ProtectedRoute from './components/route/ProtectedRoute';
 import Navbar from './components/navbar/Navbar';
 import "./App.css"
 import AllQuestions from './components/questions/AllQuestions';
+import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 
 const App = () => {
   const router = createBrowserRouter([
@@ -25,6 +26,9 @@ const App = () => {
         </>
       ),
     },
+    {
+      path: "/attached-questions", // ✅ Add new route
+      element:<><Navbar /><ProtectedRoute> <AttachedQuestion/></ProtectedRoute></>}
    
   ])
   return (
