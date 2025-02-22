@@ -73,6 +73,7 @@ const AllQuestions = () => {
       {filteredQuestions.length === 0 && !error ? <p>No questions found!</p> : null}
 
       <ol>
+        
         {filteredQuestions.map((q) => (
           <li key={q.id}>
             <strong>{q.question}</strong> ({q.type}) - <small>{q.date}</small>
