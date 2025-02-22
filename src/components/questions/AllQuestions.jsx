@@ -62,21 +62,28 @@ const AllQuestions = () => {
       <hr />
 
       {/* Date Picker to filter questions */}
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={handleDateChange}
-      />
+      <input type="date" value={selectedDate} onChange={handleDateChange} />
       <hr />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {filteredQuestions.length === 0 && !error ? <p>No questions found!</p> : null}
 
       <ol>
-        
         {filteredQuestions.map((q) => (
           <li key={q.id}>
             <strong>{q.question}</strong> ({q.type}) - <small>{q.date}</small>
+
+            {/* Show image if available */}
+            {q.imageUrl && (
+              <div>
+                <img
+                  src={q.imageUrl}
+                  alt="Question Attachment"
+                  style={{ maxWidth: "300px", marginTop: "10px" }}
+                />
+              </div>
+            )}
+
             {q.type === "MCQ" && (
               <ul>
                 <li>{q.option1}</li>
