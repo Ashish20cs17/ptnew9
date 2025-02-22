@@ -84,14 +84,18 @@ const AllQuestions = () => {
               </div>
             )}
 
-            {q.type === "MCQ" && (
+            {/* Show MCQ options properly */}
+            {q.type === "MCQ" && Array.isArray(q.options) && (
               <ul>
-                <li>{q.option1}</li>
-                <li>{q.option2}</li>
-                <li>{q.option3}</li>
-                <li>{q.option4}</li>
+                {q.options.map((option, index) => (
+                  <li key={index}>{option}</li>
+                ))}
               </ul>
             )}
+
+            {/* Show the correct answer if available */}
+            {q.correctAnswer && <p><strong>Correct Answer:</strong> {q.correctAnswer}</p>}
+
             {q.type === "Fill in the Blanks" && <p>Answer: {q.answer}</p>}
           </li>
         ))}
