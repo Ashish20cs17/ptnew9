@@ -91,6 +91,7 @@
         margin: 0;
         padding: 10px 0;
         text-align: center;
+        
     }
     .menu-web button {
         margin: 10px 0;
@@ -140,6 +141,11 @@
         list-style: none;
         
  
+    }
+    .menu-mobile ul li{
+        padding: 10px 0;
+        text-align: center;
+        cursor: pointer;
     }
     
     
