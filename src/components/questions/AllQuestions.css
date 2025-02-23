@@ -1,0 +1,45 @@
+.allQuestionsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: white;
+    margin: auto;
+    border-radius: 20px;
+  }
+  
+  /* Scrollable Question List */
+  .questionList {
+    max-height: 600px;
+    
+    width: 100%;
+    overflow-y: auto;
+    border: 1px solid #ffffff;
+    padding-left: 20px;
+    
+    border-radius: 8px;
+    background: #ffffff;
+   
+  }
+  
+  .questionItem {
+    
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+  }
+  
+  .deleteButton {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+  
+  .deleteButton:hover {
+    background-color: darkred;
+  }
+  
