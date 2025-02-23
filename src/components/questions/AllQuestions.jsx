@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, remove } from "firebase/database";
+import  supabase  from "../supabase/SupabaseConfig";
+
 import "./AllQuestions.css";
 
 const AllQuestions = () => {
@@ -60,40 +62,43 @@ const AllQuestions = () => {
     }
   };
 
-
-  // Function to delete a question and remove the image from Supabase
+  // ✅ **Fixed handleDelete function**
   const handleDelete = async (question) => {
     const { id, date, imageUrl } = question;
 
-    // 1️⃣ Delete image from Supabase if it exists
+    // 1️⃣ **Delete image from Supabase if it exists**
     if (imageUrl) {
       try {
-        // Extract the file name from Supabase URL
+        // Extract file name from URL
         const urlParts = imageUrl.split("/");
         const fileName = urlParts[urlParts.length - 1]; // Get last part as file name
 
-        // Delete image from Supabase
+        // Delete the specific image from Supabase Storage
         const { error } = await supabase.storage
-          .from("question-images") // Change this to your Supabase bucket name
+          .from("questions") // Change this to your Supabase bucket name
           .remove([fileName]);
 
         if (error) {
           console.error("Error deleting image from Supabase:", error);
+        } else {
+          console.log("Image deleted from Supabase:", fileName);
         }
       } catch (err) {
-        console.error("Failed to process image deletion:", err);
+        console.error("Failed to delete image from Supabase:", err);
       }
     }
 
-    // 2️⃣ Delete question from Firebase
+    // 2️⃣ **Delete the question from Firebase**
     try {
       await remove(ref(database, `questions/${date}/${id}`));
 
-      // Update UI by removing the deleted question
+      // Update UI after deletion
       setQuestions((prevQuestions) => prevQuestions.filter((q) => q.id !== id));
       setFilteredQuestions((prevFiltered) => prevFiltered.filter((q) => q.id !== id));
+
+      console.log("Question deleted successfully from Firebase.");
     } catch (err) {
-      console.error("Error deleting question:", err);
+      console.error("Error deleting question from Firebase:", err);
       setError("Failed to delete question");
     }
   };
@@ -142,8 +147,8 @@ const AllQuestions = () => {
 
               {q.type === "Fill in the Blanks" && <p>Answer: {q.answer}</p>}
 
-              {/* Delete button */}
-              <button className="deleteButton" onClick={() => handleDelete(q.id, q.date)}>
+              {/* ✅ Delete button - Now correctly passes the question object */}
+              <button className="deleteButton" onClick={() => handleDelete(q)}>
                 Delete
               </button>
             </li>
