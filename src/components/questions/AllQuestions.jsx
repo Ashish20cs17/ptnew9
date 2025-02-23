@@ -66,28 +66,28 @@ const AllQuestions = () => {
   const handleDelete = async (question) => {
     const { id, date, imageUrl } = question;
 
-    // 1️⃣ **Delete image from Supabase if it exists**
-    if (imageUrl) {
-      try {
-        // Extract file name from URL
-        const urlParts = imageUrl.split("/");
-        const fileName = urlParts[urlParts.length - 1]; // Get last part as file name
+    // / Extract only the file path from the URL
+  const filePath = imageUrl.replace(
+    "https://couvdshedcmsvofxouuz.supabase.co/storage/v1/object/public/questions/",
+    ""
+  );
 
-        // Delete the specific image from Supabase Storage
-        const { error } = await supabase.storage
-          .from("questions") // Change this to your Supabase bucket name
-          .remove([fileName]);
+  // ✅ Step 1: Delete image from Supabase (if exists)
+  if (filePath) {
+    try {
+      const { error } = await supabase.storage
+        .from("questions") // Bucket name
+        .remove([filePath]); // Correct file path
 
-        if (error) {
-          console.error("Error deleting image from Supabase:", error);
-        } else {
-          console.log("Image deleted from Supabase:", fileName);
-        }
-      } catch (err) {
-        console.error("Failed to delete image from Supabase:", err);
+      if (error) {
+        console.error("❌ Error deleting image from Supabase:", error);
+      } else {
+        console.log("✅ Image deleted from Supabase:", filePath);
       }
+    } catch (err) {
+      console.error("❌ Failed to delete image from Supabase:", err);
     }
-
+  }
     // 2️⃣ **Delete the question from Firebase**
     try {
       await remove(ref(database, `questions/${date}/${id}`));
