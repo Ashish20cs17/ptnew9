@@ -11,6 +11,7 @@ const Home = () => {
   const [mcqAnswer, setMcqAnswer] = useState(""); // Correct answer for MCQ
   const [answer, setAnswer] = useState(""); // Answer for Fill in the Blanks
   const [image, setImage] = useState(null); // Image file
+  const [uploadProgress, setUploadProgress] = useState(0); // Image upload progress
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,17 +22,28 @@ const Home = () => {
   };
 
   const uploadImageToSupabase = async (file) => {
+    setUploadProgress(10); // Start progress
+
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
+
     const { data, error } = await supabase.storage
       .from("questions") // Bucket name
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        upsert: false, // Prevent overwriting
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          setUploadProgress(progress);
+        }
+      });
 
     if (error) {
-      console.error("Image upload failed: ", error.message);
+      console.error("❌ Image upload failed:", error.message);
+      setUploadProgress(0);
       return null;
     }
 
+    setUploadProgress(100); // Upload complete
     return supabase.storage.from("questions").getPublicUrl(fileName).data.publicUrl;
   };
 
@@ -47,6 +59,7 @@ const Home = () => {
 
     setError(null);
     setLoading(true);
+    setUploadProgress(0);
 
     try {
       let imageUrl = null;
@@ -80,10 +93,11 @@ const Home = () => {
       setMcqAnswer("");
       setAnswer("");
       setImage(null);
+      setUploadProgress(0);
       setLoading(false);
-      alert("Question uploaded successfully!");
+      alert("✅ Question uploaded successfully!");
     } catch (error) {
-      console.error("Error uploading question: ", error);
+      console.error("❌ Error uploading question:", error);
       setError("Failed to upload question");
       setLoading(false);
     }
@@ -130,7 +144,19 @@ const Home = () => {
       <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} />
       <hr />
 
-      <button id="Upload" onClick={uploadQuestion} disabled={loading}>{loading ? "Uploading..." : "Upload"}</button>
+      {/* Image Upload Progress Bar */}
+      {uploadProgress > 0 && (
+        <div className="progressBar">
+          <div className="progressFill" style={{ width: `${uploadProgress}%` }}></div>
+          <span>{uploadProgress}%</span>
+        </div>
+      )}
+
+      <button id="Upload" onClick={uploadQuestion} disabled={loading}>
+        {loading ? "Uploading..." : "Upload"}
+      </button>
+
+      
     </div>
   );
 };
