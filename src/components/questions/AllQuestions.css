@@ -11,9 +11,11 @@
   /* Scrollable Question List */
   .questionList {
     max-height: 600px;
+  
     
     width: 100%;
     overflow-y: auto;
+    
     border: 1px solid #ffffff;
     padding-left: 20px;
     
@@ -40,6 +42,6 @@
   }
   
   .deleteButton:hover {
-    background-color: darkred;
+    background-color: rgb(97, 2, 2);
   }
   
