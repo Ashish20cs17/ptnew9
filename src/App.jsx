@@ -9,6 +9,8 @@ import "./App.css"
 import AllQuestions from './components/questions/AllQuestions';
 import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 
+import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
+
 const App = () => {
   const router = createBrowserRouter([
     {
@@ -28,7 +30,10 @@ const App = () => {
     },
     {
       path: "/attached-questions", // ✅ Add new route
-      element:<><Navbar /><ProtectedRoute> <AttachedQuestion/></ProtectedRoute></>}
+      element:<><Navbar /><ProtectedRoute> <AttachedQuestion/></ProtectedRoute></>},
+      {
+        path: "/all-questions-set", // ✅ Add new route
+        element:<><Navbar /><ProtectedRoute> <AllQuestionsSet/></ProtectedRoute></>}
    
   ])
   return (

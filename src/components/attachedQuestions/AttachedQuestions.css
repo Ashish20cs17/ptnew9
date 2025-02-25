@@ -1,0 +1,59 @@
+.attachedQuestionsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: rgb(255, 255, 255);
+    margin: auto;
+    border-radius: 20px;
+  }
+
+  .attachedQuestionsContainer input{
+
+    
+    padding: 10px;
+    
+    border-radius: 10px;
+    border: 1px solid #ddd;
+
+
+  }
+  
+  /* Scrollable Question List */
+  .attachedQuestionList {
+    
+    max-height: 580px;
+    width: 100%;
+  
+    
+    
+    overflow-y: auto;
+    
+    border: 1px solid #ffffff;
+    padding-left: 20px;
+    
+    border-radius: 8px;
+    background: #ffffff;
+   
+  }
+  
+  .attachedQuestionItem {
+    
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+  }
+  
+  .addQuestionButton {
+    background-color: rgb(6, 110, 207);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+  
+  .addQuestionButton:hover {
+    background-color: rgb(97, 2, 2);
+  }
