@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, remove } from "firebase/database";
-import  supabase  from "../supabase/SupabaseConfig";
+import supabase from "../supabase/SupabaseConfig";
 
 import "./AllQuestions.css";
 
@@ -25,17 +25,15 @@ const AllQuestions = () => {
         const data = snapshot.val();
         let allFetchedQuestions = [];
 
-        Object.keys(data).forEach((date) => {
-          Object.keys(data[date]).forEach((questionId) => {
-            allFetchedQuestions.push({
-              id: questionId,
-              date,
-              ...data[date][questionId],
-            });
+        // ✅ Fetch questions directly by their IDs (no date nodes)
+        Object.keys(data).forEach((questionId) => {
+          allFetchedQuestions.push({
+            id: questionId,
+            ...data[questionId], // Spread question data
           });
         });
 
-        // Reverse the order so latest questions appear first
+        // Reverse to show latest first
         allFetchedQuestions.reverse();
 
         setQuestions(allFetchedQuestions);
@@ -49,56 +47,52 @@ const AllQuestions = () => {
     fetchAllQuestions();
   }, []);
 
-  // Function to filter questions based on the selected date
-  const handleDateChange = (e) => {
-    const selectedDateValue = e.target.value;
-    setSelectedDate(selectedDateValue);
-
-    if (selectedDateValue === "") {
-      setFilteredQuestions(questions);
-    } else {
-      const filtered = questions.filter((q) => q.date === selectedDateValue);
-      setFilteredQuestions(filtered);
-    }
+  // ✅ Convert timestamp to readable time
+  const convertTimestampToTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true, // AM/PM format
+    });
   };
 
-  // ✅ **Fixed handleDelete function**
+  // ✅ Delete question
   const handleDelete = async (question) => {
-    const { id, date, imageUrl } = question;
+    const { id, imageUrl } = question;
 
-    // / Extract only the file path from the URL
-  const filePath = imageUrl.replace(
-    "https://couvdshedcmsvofxouuz.supabase.co/storage/v1/object/public/questions/",
-    ""
-  );
+    // ✅ Extract file path from Supabase URL
+    const filePath = imageUrl?.replace(
+      "https://couvdshedcmsvofxouuz.supabase.co/storage/v1/object/public/questions/",
+      ""
+    );
 
-  // ✅ Step 1: Delete image from Supabase (if exists)
-  if (filePath) {
-    try {
-      const { error } = await supabase.storage
-        .from("questions") // Bucket name
-        .remove([filePath]); // Correct file path
-
-      if (error) {
-        console.error("❌ Error deleting image from Supabase:", error);
-      } else {
-        console.log("✅ Image deleted from Supabase:", filePath);
+    // ✅ Delete image from Supabase
+    if (filePath) {
+      try {
+        const { error } = await supabase.storage.from("questions").remove([filePath]);
+        if (error) {
+          console.error("❌ Error deleting image from Supabase:", error);
+        } else {
+          console.log("✅ Image deleted from Supabase:", filePath);
+        }
+      } catch (err) {
+        console.error("❌ Failed to delete image from Supabase:", err);
       }
-    } catch (err) {
-      console.error("❌ Failed to delete image from Supabase:", err);
     }
-  }
-    // 2️⃣ **Delete the question from Firebase**
+
+    // ✅ Delete from Firebase
     try {
-      await remove(ref(database, `questions/${date}/${id}`));
+      await remove(ref(database, `questions/${id}`));
 
       // Update UI after deletion
-      setQuestions((prevQuestions) => prevQuestions.filter((q) => q.id !== id));
-      setFilteredQuestions((prevFiltered) => prevFiltered.filter((q) => q.id !== id));
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+      setFilteredQuestions((prev) => prev.filter((q) => q.id !== id));
 
-      console.log("Question deleted successfully from Firebase.");
+      console.log("✅ Question deleted successfully from Firebase.");
     } catch (err) {
-      console.error("Error deleting question from Firebase:", err);
+      console.error("❌ Error deleting question from Firebase:", err);
       setError("Failed to delete question");
     }
   };
@@ -106,10 +100,6 @@ const AllQuestions = () => {
   return (
     <div className="allQuestionsContainer">
       <h2>All Questions</h2>
-      <hr />
-
-      {/* Date Picker to filter questions */}
-      <input type="date" value={selectedDate} onChange={handleDateChange} />
       <hr />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -120,7 +110,8 @@ const AllQuestions = () => {
         <ol>
           {filteredQuestions.map((q) => (
             <li key={q.id} className="questionItem">
-              <strong>{q.question}</strong> ({q.type}) - <small>{q.date}</small>
+              <strong>{q.question}</strong> ({q.type}) 
+              <small> - {q.timestamp ? convertTimestampToTime(q.timestamp) : "No Time"}</small>
 
               {/* Show image if available */}
               {q.imageUrl && (
@@ -144,10 +135,9 @@ const AllQuestions = () => {
 
               {/* Show the correct answer if available */}
               {q.correctAnswer && <p><strong>Correct Answer:</strong> {q.correctAnswer}</p>}
-
               {q.type === "Fill in the Blanks" && <p>Answer: {q.answer}</p>}
 
-              {/* ✅ Delete button - Now correctly passes the question object */}
+              {/* ✅ Delete button */}
               <button className="deleteButton" onClick={() => handleDelete(q)}>
                 Delete
               </button>
