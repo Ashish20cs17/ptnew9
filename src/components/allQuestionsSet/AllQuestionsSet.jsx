@@ -3,16 +3,17 @@ import { database } from "../firebase/FirebaseSetup";
 import { ref, get } from "firebase/database";
 
 const AllQuestionsSet = () => {
-  const [questionSets, setQuestionSets] = useState({});
+  const [questionSets, setQuestionSets] = useState([]);
   const [selectedSet, setSelectedSet] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Fetch all question sets from Firebase
   useEffect(() => {
-    const fetchAllSets = async () => {
+    const fetchQuestionSets = async () => {
       try {
-        const setsRef = ref(database, "attachedQuestionSets"); // ✅ Corrected node name
+        const setsRef = ref(database, "attachedQuestionSets");
         const snapshot = await get(setsRef);
 
         if (!snapshot.exists()) {
@@ -20,60 +21,42 @@ const AllQuestionsSet = () => {
           return;
         }
 
-        const data = snapshot.val();
-        console.log("✅ Fetched Question Sets:", data); // Debugging Log
-        setQuestionSets(data);
+        setQuestionSets(Object.entries(snapshot.val())); // Convert object to array
       } catch (err) {
         console.error("❌ Error fetching question sets:", err);
-        setError("Failed to fetch question sets");
+        setError("Failed to fetch question sets.");
       }
     };
 
-    fetchAllSets();
+    fetchQuestionSets();
   }, []);
 
-  // ✅ Fetch questions using IDs from the selected set
-  const handleSetClick = async (setName) => {
+  // ✅ Fetch questions when a set is selected
+  const handleSetClick = async (setName, setQuestionsData) => {
     setSelectedSet(setName);
     setQuestions([]);
     setLoading(true);
+    setError(null);
 
     try {
-      const setQuestions = questionSets[setName]; // ✅ Get question IDs inside the set
-      if (!setQuestions) {
-        setError("No questions found in this set.");
-        setLoading(false);
-        return;
-      }
-
-      console.log(`📌 Fetching questions for set: ${setName}`, setQuestions); // Debugging Log
-
+      const questionIds = Object.values(setQuestionsData); // Extract question IDs
       const fetchedQuestions = [];
 
-      for (const questionId of Object.values(setQuestions)) {
-        console.log(`🔍 Fetching question ID: ${questionId}`); // Debugging Log
-
+      // Fetch all questions in parallel (Optimized!)
+      const questionPromises = questionIds.map(async (questionId) => {
         const questionRef = ref(database, `questions/${questionId}`);
         const questionSnapshot = await get(questionRef);
+        return questionSnapshot.exists()
+          ? { id: questionId, ...questionSnapshot.val() }
+          : null;
+      });
 
-        if (questionSnapshot.exists()) {
-          fetchedQuestions.push({
-            id: questionId,
-            ...questionSnapshot.val(),
-          });
-        } else {
-          console.warn(`⚠️ Question ID ${questionId} not found in "questions" node.`);
-        }
-      }
-
-      console.log("✅ Successfully fetched questions:", fetchedQuestions); // Debugging Log
-      console.log("🔹 Before setting state:", questions);
-      setQuestions(fetchedQuestions);
-      console.log("✅ After setting state:", fetchedQuestions);
-      setLoading(false);
+      const results = await Promise.all(questionPromises);
+      setQuestions(results.filter(Boolean)); // Remove null values (missing questions)
     } catch (err) {
       console.error("❌ Error fetching questions:", err);
       setError("Failed to load questions.");
+    } finally {
       setLoading(false);
     }
   };
@@ -85,15 +68,14 @@ const AllQuestionsSet = () => {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* ✅ Show all sets */}
       {!selectedSet ? (
         <div className="questionSetsList">
-          {Object.keys(questionSets).length > 0 ? (
+          {questionSets.length > 0 ? (
             <ul>
-              {Object.keys(questionSets).map((setName) => (
+              {questionSets.map(([setName, setQuestionsData]) => (
                 <li
                   key={setName}
-                  onClick={() => handleSetClick(setName)}
+                  onClick={() => handleSetClick(setName, setQuestionsData)}
                   style={{ cursor: "pointer", color: "blue" }}
                 >
                   {setName}
@@ -116,24 +98,28 @@ const AllQuestionsSet = () => {
               questions.map((q) => (
                 <li key={q.id}>
                   <strong>{q.question}</strong> ({q.type})
-                  {q.imageUrl && (
+
+                  {q.questionImage && (
                     <div>
                       <img
-                        src={q.imageUrl}
+                        src={q.questionImage}
                         alt="Question Attachment"
                         style={{ maxWidth: "300px", marginTop: "10px" }}
                       />
                     </div>
                   )}
-                  {q.type === "MCQ" && q.options && (
-                    <ul>
-                      {q.options.map((option, index) => (
-                        <li key={index}>{option}</li>
-                      ))}
-                    </ul>
+
+                  {q.correctAnswer && (
+                    <p>
+                      <strong>Correct Answer:</strong> {q.correctAnswer.text}
+                    </p>
                   )}
-                  {q.correctAnswer && <p><strong>Correct Answer:</strong> {q.correctAnswer}</p>}
-                  {q.type === "Fill in the Blanks" && <p>Answer: {q.answer}</p>}
+
+                  {q.type === "Fill in the Blanks" && q.answer && (
+                    <p>
+                      <strong>Answer:</strong> {q.answer}
+                    </p>
+                  )}
                 </li>
               ))
             ) : (
