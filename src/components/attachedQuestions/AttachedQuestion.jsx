@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./AttachedQuestions.css";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, push } from "firebase/database";
+import { ToastContainer, toast } from 'react-toastify';
 
 const AttachedQuestion = () => {
   const [questions, setQuestions] = useState([]);
@@ -48,8 +49,11 @@ const AttachedQuestion = () => {
   // ✅ Function to add question ID to Firebase under the selected set name
   const handleAddToSet = async (question) => {
     if (!selectedSetName.trim()) {
+      
       setSetNameError("❌ Please enter a valid set name!");
       return;
+    }else{
+      
     }
 
     setSetNameError(""); // Clear error if valid
@@ -60,7 +64,8 @@ const AttachedQuestion = () => {
       // ✅ Store question ID inside the selected set (without using today's date)
       const setRef = ref(database, `attachedQuestionSets/${selectedSetName}`);
       await push(setRef, id);
-
+      const notify = () => toast("✅ Question added to set: "+selectedSetName);
+      notify();
       console.log(`✅ Question ${id} added to set: ${selectedSetName}`);
     } catch (err) {
       console.error("❌ Error adding question to set:", err);
@@ -105,9 +110,12 @@ const AttachedQuestion = () => {
               )}
 
               {/* ✅ Button with dynamic text */}
+              <div>
               <button className="addQuestionButton" onClick={() => handleAddToSet(q)}>
                 {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
               </button>
+              <ToastContainer />
+              </div>
             </li>
           ))}
         </ol>
