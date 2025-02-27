@@ -4,15 +4,15 @@ import { ref, get } from "firebase/database";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState({});
-  const [selectedDate, setSelectedDate] = useState("");
   const [selectedSet, setSelectedSet] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAllSets = async () => {
       try {
-        const setsRef = ref(database, "attachedQuestionSets");
+        const setsRef = ref(database, "attachedQuestionSets"); // ✅ Corrected node name
         const snapshot = await get(setsRef);
 
         if (!snapshot.exists()) {
@@ -20,9 +20,11 @@ const AllQuestionsSet = () => {
           return;
         }
 
-        setQuestionSets(snapshot.val());
+        const data = snapshot.val();
+        console.log("✅ Fetched Question Sets:", data); // Debugging Log
+        setQuestionSets(data);
       } catch (err) {
-        console.error("Error fetching question sets:", err);
+        console.error("❌ Error fetching question sets:", err);
         setError("Failed to fetch question sets");
       }
     };
@@ -30,58 +32,49 @@ const AllQuestionsSet = () => {
     fetchAllSets();
   }, []);
 
-  // ✅ Handle date selection
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setSelectedSet(null); // Reset selected set when date changes
-    setQuestions([]); // Clear questions list
-  };
-
-  // ✅ Fetch actual questions dynamically using the correct date
+  // ✅ Fetch questions using IDs from the selected set
   const handleSetClick = async (setName) => {
     setSelectedSet(setName);
-    setQuestions([]); // Clear old questions before fetching new ones
+    setQuestions([]);
+    setLoading(true);
 
     try {
-      const setQuestions = questionSets[selectedDate]?.[setName];
-      if (!setQuestions) return;
+      const setQuestions = questionSets[setName]; // ✅ Get question IDs inside the set
+      if (!setQuestions) {
+        setError("No questions found in this set.");
+        setLoading(false);
+        return;
+      }
+
+      console.log(`📌 Fetching questions for set: ${setName}`, setQuestions); // Debugging Log
 
       const fetchedQuestions = [];
 
-      // ✅ Step 1: Search for the correct date for each question ID
       for (const questionId of Object.values(setQuestions)) {
-        const questionsRef = ref(database, "questions");
-        const questionsSnapshot = await get(questionsRef);
+        console.log(`🔍 Fetching question ID: ${questionId}`); // Debugging Log
 
-        if (questionsSnapshot.exists()) {
-          const allDates = questionsSnapshot.val();
+        const questionRef = ref(database, `questions/${questionId}`);
+        const questionSnapshot = await get(questionRef);
 
-          let correctDate = null;
-          let questionData = null;
-
-          // ✅ Search through all dates to find the actual question
-          for (const date in allDates) {
-            if (allDates[date][questionId]) {
-              correctDate = date;
-              questionData = allDates[date][questionId];
-              break; // Stop searching once found
-            }
-          }
-
-          if (questionData) {
-            fetchedQuestions.push({
-              id: questionId,
-              date: correctDate, // ✅ Store the actual question date
-              ...questionData,
-            });
-          }
+        if (questionSnapshot.exists()) {
+          fetchedQuestions.push({
+            id: questionId,
+            ...questionSnapshot.val(),
+          });
+        } else {
+          console.warn(`⚠️ Question ID ${questionId} not found in "questions" node.`);
         }
       }
 
+      console.log("✅ Successfully fetched questions:", fetchedQuestions); // Debugging Log
+      console.log("🔹 Before setting state:", questions);
       setQuestions(fetchedQuestions);
+      console.log("✅ After setting state:", fetchedQuestions);
+      setLoading(false);
     } catch (err) {
-      console.error("Error fetching questions:", err);
+      console.error("❌ Error fetching questions:", err);
       setError("Failed to load questions.");
+      setLoading(false);
     }
   };
 
@@ -90,64 +83,39 @@ const AllQuestionsSet = () => {
       <h2>All Question Sets</h2>
       <hr />
 
-      {/* Date Picker to filter question sets */}
-      <input type="date" value={selectedDate} onChange={handleDateChange} />
-      <hr />
-
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Show list of question sets for the selected date */}
+      {/* ✅ Show all sets */}
       {!selectedSet ? (
         <div className="questionSetsList">
-          {selectedDate ? (
-            questionSets[selectedDate] ? (
-              <ul>
-                {Object.keys(questionSets[selectedDate]).map((setName) => (
-                  <li
-                    key={setName}
-                    onClick={() => handleSetClick(setName)}
-                    style={{ cursor: "pointer", color: "blue" }}
-                  >
-                    {setName}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No sets found for the selected date.</p>
-            )
-          ) : (
+          {Object.keys(questionSets).length > 0 ? (
             <ul>
-              {Object.keys(questionSets).map((date) => (
-                <li key={date}>
-                  <strong>{date}</strong>
-                  <ul>
-                    {Object.keys(questionSets[date]).map((setName) => (
-                      <li
-                        key={setName}
-                        onClick={() => {
-                          setSelectedDate(date);
-                          handleSetClick(setName);
-                        }}
-                        style={{ cursor: "pointer", color: "blue" }}
-                      >
-                        {setName}
-                      </li>
-                    ))}
-                  </ul>
+              {Object.keys(questionSets).map((setName) => (
+                <li
+                  key={setName}
+                  onClick={() => handleSetClick(setName)}
+                  style={{ cursor: "pointer", color: "blue" }}
+                >
+                  {setName}
                 </li>
               ))}
             </ul>
+          ) : (
+            <p>No sets available.</p>
           )}
         </div>
       ) : (
         <div>
           <button onClick={() => setSelectedSet(null)}>🔙 Back to Sets</button>
-          <h3>Questions in "{selectedSet}" ({selectedDate})</h3>
+          <h3>Questions in "{selectedSet}"</h3>
+
+          {loading ? <p>Loading questions...</p> : null}
+
           <ul>
             {questions.length > 0 ? (
               questions.map((q) => (
                 <li key={q.id}>
-                  <strong>{q.question}</strong> ({q.type}) - <small>Actual Date: {q.date}</small>
+                  <strong>{q.question}</strong> ({q.type})
                   {q.imageUrl && (
                     <div>
                       <img
@@ -169,7 +137,7 @@ const AllQuestionsSet = () => {
                 </li>
               ))
             ) : (
-              <p>Loading questions...</p>
+              !loading && <p>No questions found in this set.</p>
             )}
           </ul>
         </div>
