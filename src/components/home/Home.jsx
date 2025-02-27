@@ -68,13 +68,14 @@ const Home = () => {
       }
 
       const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-      const questionsRef = ref(database, `questions/${today}`);
+      const questionsRef = ref(database, `questions`);
       const newQuestionRef = push(questionsRef);
 
       const questionData = {
         question,
         type: questionType,
         timestamp: serverTimestamp(),
+        date: today,
         ...(imageUrl && { imageUrl }), // Include image URL only if an image is uploaded
       };
 
