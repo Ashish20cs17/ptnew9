@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import "./AttachedQuestions.css";
 import { database } from "../firebase/FirebaseSetup";
-import { ref, get, push } from "firebase/database";
-import { ToastContainer, toast } from 'react-toastify';
+import { ref, get, push, set } from "firebase/database";
+import { ToastContainer, toast } from "react-toastify";
 
 const AttachedQuestion = () => {
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
-  const [selectedSetName, setSelectedSetName] = useState(""); // Stores input field value
+  const [selectedSetName, setSelectedSetName] = useState("");
   const [error, setError] = useState(null);
-  const [setNameError, setSetNameError] = useState(""); // Error for empty set name
+  const [setNameError, setSetNameError] = useState("");
 
   useEffect(() => {
     const fetchAllQuestions = async () => {
@@ -23,18 +23,12 @@ const AttachedQuestion = () => {
         }
 
         const data = snapshot.val();
-        let allFetchedQuestions = [];
+        let allFetchedQuestions = Object.keys(data).map((questionId) => ({
+          id: questionId,
+          ...data[questionId],
+        }));
 
-        // ✅ Fetch questions properly (without looping over dates)
-        Object.keys(data).forEach((questionId) => {
-          allFetchedQuestions.push({
-            id: questionId,
-            ...data[questionId],
-          });
-        });
-
-        allFetchedQuestions.reverse(); // Show latest questions first
-
+        allFetchedQuestions.reverse();
         setQuestions(allFetchedQuestions);
         setFilteredQuestions(allFetchedQuestions);
       } catch (err) {
@@ -46,27 +40,20 @@ const AttachedQuestion = () => {
     fetchAllQuestions();
   }, []);
 
-  // ✅ Function to add question ID to Firebase under the selected set name
-  const handleAddToSet = async (question) => {
+  const handleAddToSet = async (questionId) => {
     if (!selectedSetName.trim()) {
-      
       setSetNameError("❌ Please enter a valid set name!");
       return;
-    }else{
-      
     }
 
-    setSetNameError(""); // Clear error if valid
-
-    const { id } = question;
+    setSetNameError("");
 
     try {
-      // ✅ Store question ID inside the selected set (without using today's date)
-      const setRef = ref(database, `attachedQuestionSets/${selectedSetName}`);
-      await push(setRef, id);
-      const notify = () => toast("✅ Question added to set: "+selectedSetName);
-      notify();
-      console.log(`✅ Question ${id} added to set: ${selectedSetName}`);
+      const setRef = ref(database, `attachedQuestionSets/${selectedSetName}/${questionId}`);
+      await set(setRef, questionId); // ✅ Store only question ID inside the set
+
+      toast.success(`✅ Question added to set: ${selectedSetName}`);
+      console.log(`✅ Question ${questionId} added to set: ${selectedSetName}`);
     } catch (err) {
       console.error("❌ Error adding question to set:", err);
       setError("Failed to attach question to set.");
@@ -97,24 +84,38 @@ const AttachedQuestion = () => {
           {filteredQuestions.map((q) => (
             <li key={q.id} className="attachedQuestionItem">
               <strong>{q.question}</strong> ({q.type})
-
-              {/* Show image if available */}
-              {q.imageUrl && (
+              
+              {/* Show question image if available */}
+              {q.questionImage && (
                 <div>
                   <img
-                    src={q.imageUrl}
+                    src={q.questionImage}
                     alt="Question Attachment"
                     style={{ maxWidth: "300px", marginTop: "10px" }}
                   />
                 </div>
               )}
 
-              {/* ✅ Button with dynamic text */}
+              {/* Show correct answer */}
+              {q.correctAnswer && (
+                <p>
+                  <strong>Correct Answer:</strong> {q.correctAnswer.text}
+                  {q.correctAnswer.image && (
+                    <img
+                      src={q.correctAnswer.image}
+                      alt="Correct Answer"
+                      style={{ maxWidth: "100px", marginLeft: "10px" }}
+                    />
+                  )}
+                </p>
+              )}
+
+              {/* Button to attach question */}
               <div>
-              <button className="addQuestionButton" onClick={() => handleAddToSet(q)}>
-                {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
-              </button>
-              <ToastContainer />
+                <button className="addQuestionButton" onClick={() => handleAddToSet(q.id)}>
+                  {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
+                </button>
+                <ToastContainer />
               </div>
             </li>
           ))}

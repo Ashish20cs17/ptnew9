@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, remove } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
-
 import "./AllQuestions.css";
 
 const AllQuestions = () => {
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
-  const [selectedDate, setSelectedDate] = useState("");
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -23,15 +21,10 @@ const AllQuestions = () => {
         }
 
         const data = snapshot.val();
-        let allFetchedQuestions = [];
-
-        // ✅ Fetch questions directly by their IDs (no date nodes)
-        Object.keys(data).forEach((questionId) => {
-          allFetchedQuestions.push({
-            id: questionId,
-            ...data[questionId], // Spread question data
-          });
-        });
+        let allFetchedQuestions = Object.keys(data).map((questionId) => ({
+          id: questionId,
+          ...data[questionId], // Spread question data
+        }));
 
         // Reverse to show latest first
         allFetchedQuestions.reverse();
@@ -47,49 +40,39 @@ const AllQuestions = () => {
     fetchAllQuestions();
   }, []);
 
-  // ✅ Convert timestamp to readable time
-  const convertTimestampToTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true, // AM/PM format
-    });
-  };
+  const deleteImageFromSupabase = async (url) => {
+    if (!url) return;
 
-  // ✅ Delete question
-  const handleDelete = async (question) => {
-    const { id, imageUrl } = question;
-
-    // ✅ Extract file path from Supabase URL
-    const filePath = imageUrl?.replace(
+    const filePath = url.replace(
       "https://couvdshedcmsvofxouuz.supabase.co/storage/v1/object/public/questions/",
       ""
     );
 
-    // ✅ Delete image from Supabase
-    if (filePath) {
-      try {
-        const { error } = await supabase.storage.from("questions").remove([filePath]);
-        if (error) {
-          console.error("❌ Error deleting image from Supabase:", error);
-        } else {
-          console.log("✅ Image deleted from Supabase:", filePath);
-        }
-      } catch (err) {
-        console.error("❌ Failed to delete image from Supabase:", err);
+    try {
+      const { error } = await supabase.storage.from("questions").remove([filePath]);
+      if (error) console.error("Error deleting image from Supabase:", error);
+    } catch (err) {
+      console.error("Failed to delete image from Supabase:", err);
+    }
+  };
+
+  const handleDelete = async (question) => {
+    const { id, questionImage, options, correctAnswer } = question;
+
+    // Delete all images associated with the question
+    await deleteImageFromSupabase(questionImage);
+    if (options) {
+      for (const option of options) {
+        await deleteImageFromSupabase(option.image);
       }
     }
+    await deleteImageFromSupabase(correctAnswer?.image);
 
-    // ✅ Delete from Firebase
+    // Delete from Firebase
     try {
       await remove(ref(database, `questions/${id}`));
-
-      // Update UI after deletion
       setQuestions((prev) => prev.filter((q) => q.id !== id));
       setFilteredQuestions((prev) => prev.filter((q) => q.id !== id));
-
       console.log("✅ Question deleted successfully from Firebase.");
     } catch (err) {
       console.error("❌ Error deleting question from Firebase:", err);
@@ -105,20 +88,19 @@ const AllQuestions = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {filteredQuestions.length === 0 && !error ? <p>No questions found!</p> : null}
 
-      {/* Scrollable Questions List */}
       <div className="questionList">
         <ol>
           {filteredQuestions.map((q) => (
             <li key={q.id} className="questionItem">
               <strong>{q.question}</strong> ({q.type}) 
-              <small> - {q.timestamp ? convertTimestampToTime(q.timestamp) : "No Time"}</small>
+              <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
 
-              {/* Show image if available */}
-              {q.imageUrl && (
+              {/* Show question image if available */}
+              {q.questionImage && (
                 <div>
                   <img
-                    src={q.imageUrl}
-                    alt="Question Attachment"
+                    src={q.questionImage}
+                    alt="Question"
                     style={{ maxWidth: "300px", marginTop: "10px" }}
                   />
                 </div>
@@ -128,16 +110,38 @@ const AllQuestions = () => {
               {q.type === "MCQ" && Array.isArray(q.options) && (
                 <ul>
                   {q.options.map((option, index) => (
-                    <li key={index}>{option}</li>
+                    <li key={index}>
+                      {option.text}
+                      {option.image && (
+                        <img
+                          src={option.image}
+                          alt={`Option ${index + 1}`}
+                          style={{ maxWidth: "100px", marginLeft: "10px" }}
+                        />
+                      )}
+                    </li>
                   ))}
                 </ul>
               )}
 
-              {/* Show the correct answer if available */}
-              {q.correctAnswer && <p><strong>Correct Answer:</strong> {q.correctAnswer}</p>}
-              {q.type === "Fill in the Blanks" && <p>Answer: {q.answer}</p>}
+              {/* Show correct answer */}
+              {q.correctAnswer && (
+                <p>
+                  <strong>Correct Answer:</strong> {q.correctAnswer.text}
+                  {q.correctAnswer.image && (
+                    <img
+                      src={q.correctAnswer.image}
+                      alt="Correct Answer"
+                      style={{ maxWidth: "100px", marginLeft: "10px" }}
+                    />
+                  )}
+                </p>
+              )}
 
-              {/* ✅ Delete button */}
+              {/* Show answer for Fill in the Blanks */}
+              {q.type === "FILL_IN_THE_BLANKS" && <p>Answer: {q.correctAnswer.text}</p>}
+
+              {/* Delete button */}
               <button className="deleteButton" onClick={() => handleDelete(q)}>
                 Delete
               </button>
