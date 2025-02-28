@@ -103,7 +103,7 @@ const AllQuestionsSet = () => {
       {!selectedSet ? (
         <div className="questionSetsList">
           {questionSets.length > 0 ? (
-            <ul>
+            <ol>
               {questionSets.map(([setName, setQuestionsData]) => (
                 <li
                   key={setName}
@@ -113,7 +113,7 @@ const AllQuestionsSet = () => {
                   {setName}
                 </li>
               ))}
-            </ul>
+            </ol>
           ) : (
             <p>No sets available.</p>
           )}
@@ -125,7 +125,7 @@ const AllQuestionsSet = () => {
 
           {loading ? <p>Loading questions...</p> : null}
 
-          <ul>
+          <ol>
             {questions.length > 0 ? (
               questions.map((q) => (
                 <li key={q.id}>
@@ -157,7 +157,7 @@ const AllQuestionsSet = () => {
             ) : (
               !loading && <p>No questions found in this set.</p>
             )}
-          </ul>
+          </ol>
           <hr />
           <h3>Attach this Set to a User</h3>
           <input
