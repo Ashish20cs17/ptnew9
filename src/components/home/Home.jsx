@@ -21,6 +21,11 @@ const Home = () => {
   const [answerImageUrl, setAnswerImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [questionID, setQuestionID] = useState("");
+  const [topic, setTopic] = useState("");
+  const [topicList, setTopicList] = useState("");
+  const [difficultyLevel, setDifficultyLevel] = useState("");
+  const [grade, setGrade] = useState("G1");
 
   // Upload image to Supabase and return the URL
   const uploadImageToSupabase = async (file) => {
@@ -92,6 +97,12 @@ const Home = () => {
       setError("Please enter a question or upload an image");
       return;
     }
+    
+    if (!questionID) {
+      setError("Please enter a Question ID");
+      return;
+    }
+    
     setError(null);
     setLoading(true);
     try {
@@ -99,6 +110,11 @@ const Home = () => {
       const questionsRef = ref(database, `questions`);
       const newQuestionRef = push(questionsRef);
       const questionData = {
+        questionID,
+        topic,
+        topicList,
+        difficultyLevel,
+        grade,
         question,
         questionImage: questionImageUrl,
         type: questionType,
@@ -124,6 +140,11 @@ const Home = () => {
       setAnswer("");
       setAnswerImage(null);
       setAnswerImageUrl(null);
+      setQuestionID("");
+      setTopic("");
+      setTopicList("");
+      setDifficultyLevel("");
+      setGrade("G1");
       setLoading(false);
       toast("Question uploaded successfully");
     } catch (error) {
@@ -134,38 +155,156 @@ const Home = () => {
 
   return (
     <div className="uploadContainer">
-      <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
-        <option value="MCQ">MCQ</option>
-        <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
-      </select>
-      <textarea placeholder="Enter the question" value={question} onChange={(e) => setQuestion(e.target.value)} />
-      <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
+      {/* Question Type Selection */}
+      <div className="formGroup">
+        <label>Question Type:</label>
+        <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
+          <option value="MCQ">MCQ</option>
+          <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+        </select>
+      </div>
+      
+    
+      
+      {/* Question Content */}
+      <div className="formGroup">
+        
+        <textarea 
+          placeholder="Enter the question" 
+          value={question} 
+          onChange={(e) => setQuestion(e.target.value)} 
+        />
+        <div className="imageUpload">
+          
+          <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
+          {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
+        </div>
+      </div>
+      
       {error && <p className="errorMessage">{error}</p>}
 
-      {questionType === "MCQ" && options.map((option, index) => (
-        <div key={index} className="optionContainer">
-          <input type="text" placeholder={`Option ${index + 1}`} value={option} onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[index] = e.target.value;
-            setOptions(updatedOptions);
-          }} />
-          <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
-        </div>
-      ))}
+        {/* Additional Fields */}
+        <div className="formGroup">
+        
+        <input 
+          type="text" 
+          placeholder="Enter Question ID" 
+          value={questionID} 
+          onChange={(e) => setQuestionID(e.target.value)} 
+        />
+      </div>
+      
+      <div className="formGroup">
+       
+        <input 
+          type="text" 
+          placeholder="Enter Topic" 
+          value={topic} 
+          onChange={(e) => setTopic(e.target.value)} 
+        />
+      </div>
+      
+      <div className="formGroup">
+        
+        <input 
+          type="text" 
+          placeholder="Enter Topic List" 
+          value={topicList} 
+          onChange={(e) => setTopicList(e.target.value)} 
+        />
+      </div>
+      
+      <div className="formGroup">
+        
+        <input 
+          type="text" 
+          placeholder="Enter Difficulty Level" 
+          value={difficultyLevel} 
+          onChange={(e) => setDifficultyLevel(e.target.value)} 
+        />
+      </div>
+      
+      <div className="formGroup">
+        
+        <select value={grade} onChange={(e) => setGrade(e.target.value)}>
+          <option value="G1">Grade 1</option>
+          <option value="G2">Grade 2</option>
+          <option value="G3">Grade 3</option>
+          <option value="G4">Grade 4</option>
+          <option value="G5">Grade 5</option>
+        </select>
+      </div>
 
-      {questionType === "MCQ" ? (
-        <div className="answerContainer">
-          <input type="text" placeholder="Correct Answer" value={mcqAnswer} onChange={(e) => setMcqAnswer(e.target.value)} />
-          <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
-        </div>
-      ) : (
-        <div className="answerContainer">
-          <input type="text" placeholder="Correct Answer" value={answer} onChange={(e) => setAnswer(e.target.value)} />
-          <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
+      {/* MCQ Options */}
+      {questionType === "MCQ" && (
+        <div className="optionsSection">
+          
+          {options.map((option, index) => (
+            <div key={index} className="optionContainer">
+              
+              <input 
+                type="text" 
+                placeholder={`Option ${index + 1}`} 
+                value={option} 
+                onChange={(e) => {
+                  const updatedOptions = [...options];
+                  updatedOptions[index] = e.target.value;
+                  setOptions(updatedOptions);
+                }} 
+              />
+              <div className="imageUpload">
+                
+                <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
+                {optionImageUrls[index] && <div className="imagePreview">Image uploaded</div>}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      <button onClick={uploadQuestion} disabled={loading}>{loading ? "Uploading..." : "Upload"}</button>
+      {/* Answer Section */}
+      <div className="answerSection">
+        
+        {questionType === "MCQ" ? (
+          <div className="answerContainer">
+            <input 
+              type="text" 
+              placeholder="Correct Answer" 
+              value={mcqAnswer} 
+              onChange={(e) => setMcqAnswer(e.target.value)} 
+            />
+            <div className="imageUpload">
+              
+              <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
+              {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded</div>}
+            </div>
+          </div>
+        ) : (
+          <div className="answerContainer">
+            <input 
+              type="text" 
+              placeholder="Correct Answer" 
+              value={answer} 
+              onChange={(e) => setAnswer(e.target.value)} 
+            />
+            <div className="imageUpload">
+              
+              <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
+              {answerImageUrl && <div className="imagePreview">Image uploaded</div>}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <button 
+        className="uploadButton" 
+        onClick={uploadQuestion} 
+        disabled={loading}
+      >
+        {loading ? "Uploading..." : "Upload Question"}
+      </button>
+      
       <ToastContainer />
     </div>
   );
