@@ -81,7 +81,7 @@ const AllQuestions = () => {
   };
 
   return (
-    <div className="allQuestionsContainer">
+    <div className="allQuestionContainer">
       <h2>All Questions</h2>
       <hr />
 
