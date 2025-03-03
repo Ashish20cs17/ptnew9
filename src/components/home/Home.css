@@ -47,4 +47,17 @@
     right: 10px;
     font-size: 12px;
   }
+  .uploadContainer .uploadButton{
+    color: #ffffff;
+    background-color: #4caf50;
+    border: none;
+    border-radius: 10px;
+    height: 25px;
+  }
+  .uploadContainer .uploadButton:hover {
+    background-color: #890dfe;
+    border: none;
+    border-radius: 10px;
+    height: 25px;
+  }
  
