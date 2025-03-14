@@ -98,7 +98,8 @@ const Home = () => {
       return;
     }
     
-    if (!questionID) {
+    // Only check for questionID if not Trivia type
+    if (questionType !== "TRIVIA" && !questionID) {
       setError("Please enter a Question ID");
       return;
     }
@@ -109,42 +110,55 @@ const Home = () => {
       const today = new Date().toISOString().split("T")[0];
       const questionsRef = ref(database, `questions`);
       const newQuestionRef = push(questionsRef);
-      const questionData = {
-        questionID,
-        topic,
-        topicList,
-        difficultyLevel,
-        grade,
+      
+      let questionData = {
         question,
         questionImage: questionImageUrl,
         type: questionType,
-        options: options.map((opt, i) => ({ text: opt, image: optionImageUrls[i] })),
-        correctAnswer: questionType === "MCQ"
-          ? { text: mcqAnswer, image: mcqAnswerImageUrl }
-          : { text: answer, image: answerImageUrl },
         timestamp: serverTimestamp(),
         date: today,
       };
+      
+      // Add additional fields only for non-Trivia questions
+      if (questionType !== "TRIVIA") {
+        questionData = {
+          ...questionData,
+          questionID,
+          topic,
+          topicList,
+          difficultyLevel,
+          grade,
+          options: questionType === "MCQ" ? options.map((opt, i) => ({ text: opt, image: optionImageUrls[i] })) : [],
+          correctAnswer: questionType === "MCQ"
+            ? { text: mcqAnswer, image: mcqAnswerImageUrl }
+            : { text: answer, image: answerImageUrl },
+        };
+      }
+      
       await set(newQuestionRef, questionData);
 
       // Reset states after upload
       setQuestion("");
       setQuestionImage(null);
       setQuestionImageUrl(null);
-      setOptions(["", "", "", ""]);
-      setOptionImages([null, null, null, null]);
-      setOptionImageUrls([null, null, null, null]);
-      setMcqAnswer("");
-      setMcqAnswerImage(null);
-      setMcqAnswerImageUrl(null);
-      setAnswer("");
-      setAnswerImage(null);
-      setAnswerImageUrl(null);
-      setQuestionID("");
-      setTopic("");
-      setTopicList("");
-      setDifficultyLevel("");
-      setGrade("G1");
+      
+      if (questionType !== "TRIVIA") {
+        setOptions(["", "", "", ""]);
+        setOptionImages([null, null, null, null]);
+        setOptionImageUrls([null, null, null, null]);
+        setMcqAnswer("");
+        setMcqAnswerImage(null);
+        setMcqAnswerImageUrl(null);
+        setAnswer("");
+        setAnswerImage(null);
+        setAnswerImageUrl(null);
+        setQuestionID("");
+        setTopic("");
+        setTopicList("");
+        setDifficultyLevel("");
+        setGrade("G1");
+      }
+      
       setLoading(false);
       toast("Question uploaded successfully");
     } catch (error) {
@@ -161,21 +175,18 @@ const Home = () => {
         <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
           <option value="MCQ">MCQ</option>
           <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+          <option value="TRIVIA">Trivia</option>
         </select>
       </div>
       
-    
-      
       {/* Question Content */}
       <div className="formGroup">
-        
         <textarea 
           placeholder="Enter the question" 
           value={question} 
           onChange={(e) => setQuestion(e.target.value)} 
         />
         <div className="imageUpload">
-          
           <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
           {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
         </div>
@@ -183,65 +194,62 @@ const Home = () => {
       
       {error && <p className="errorMessage">{error}</p>}
 
-        {/* Additional Fields */}
-        <div className="formGroup">
-        
-        <input 
-          type="text" 
-          placeholder="Enter Question ID" 
-          value={questionID} 
-          onChange={(e) => setQuestionID(e.target.value)} 
-        />
-      </div>
-      
-      <div className="formGroup">
-       
-        <input 
-          type="text" 
-          placeholder="Enter Topic" 
-          value={topic} 
-          onChange={(e) => setTopic(e.target.value)} 
-        />
-      </div>
-      
-      <div className="formGroup">
-        
-        <input 
-          type="text" 
-          placeholder="Enter Topic List" 
-          value={topicList} 
-          onChange={(e) => setTopicList(e.target.value)} 
-        />
-      </div>
-      
-      <div className="formGroup">
-        
-        <input 
-          type="text" 
-          placeholder="Enter Difficulty Level" 
-          value={difficultyLevel} 
-          onChange={(e) => setDifficultyLevel(e.target.value)} 
-        />
-      </div>
-      
-      <div className="formGroup">
-        
-        <select value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="G1">Grade 1</option>
-          <option value="G2">Grade 2</option>
-          <option value="G3">Grade 3</option>
-          <option value="G4">Grade 4</option>
-          <option value="G5">Grade 5</option>
-        </select>
-      </div>
+      {/* Additional Fields (only show for non-Trivia questions) */}
+      {questionType !== "TRIVIA" && (
+        <>
+          <div className="formGroup">
+            <input 
+              type="text" 
+              placeholder="Enter Question ID" 
+              value={questionID} 
+              onChange={(e) => setQuestionID(e.target.value)} 
+            />
+          </div>
+          
+          <div className="formGroup">
+            <input 
+              type="text" 
+              placeholder="Enter Topic" 
+              value={topic} 
+              onChange={(e) => setTopic(e.target.value)} 
+            />
+          </div>
+          
+          <div className="formGroup">
+            <input 
+              type="text" 
+              placeholder="Enter Topic List" 
+              value={topicList} 
+              onChange={(e) => setTopicList(e.target.value)} 
+            />
+          </div>
+          
+          <div className="formGroup">
+            <input 
+              type="text" 
+              placeholder="Enter Difficulty Level" 
+              value={difficultyLevel} 
+              onChange={(e) => setDifficultyLevel(e.target.value)} 
+            />
+          </div>
+          
+          <div className="formGroup">
+            <select value={grade} onChange={(e) => setGrade(e.target.value)}>
+              <option value="G1">Grade 1</option>
+              <option value="G2">Grade 2</option>
+              <option value="G3">Grade 3</option>
+              <option value="G4">Grade 4</option>
+              <option value="G5">Grade 5</option>
+            </select>
+          </div>
+        </>
+      )}
 
       {/* MCQ Options */}
       {questionType === "MCQ" && (
         <div className="optionsSection">
-          
           {options.map((option, index) => (
             <div key={index} className="optionContainer">
-              
               <input 
                 type="text" 
                 placeholder={`Option ${index + 1}`} 
@@ -253,7 +261,6 @@ const Home = () => {
                 }} 
               />
               <div className="imageUpload">
-                
                 <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
                 {optionImageUrls[index] && <div className="imagePreview">Image uploaded</div>}
               </div>
@@ -262,39 +269,38 @@ const Home = () => {
         </div>
       )}
 
-      {/* Answer Section */}
-      <div className="answerSection">
-        
-        {questionType === "MCQ" ? (
-          <div className="answerContainer">
-            <input 
-              type="text" 
-              placeholder="Correct Answer" 
-              value={mcqAnswer} 
-              onChange={(e) => setMcqAnswer(e.target.value)} 
-            />
-            <div className="imageUpload">
-              
-              <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
-              {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded</div>}
+      {/* Answer Section - only for MCQ and Fill in the Blanks */}
+      {questionType !== "TRIVIA" && (
+        <div className="answerSection">
+          {questionType === "MCQ" ? (
+            <div className="answerContainer">
+              <input 
+                type="text" 
+                placeholder="Correct Answer" 
+                value={mcqAnswer} 
+                onChange={(e) => setMcqAnswer(e.target.value)} 
+              />
+              <div className="imageUpload">
+                <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
+                {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded</div>}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="answerContainer">
-            <input 
-              type="text" 
-              placeholder="Correct Answer" 
-              value={answer} 
-              onChange={(e) => setAnswer(e.target.value)} 
-            />
-            <div className="imageUpload">
-              
-              <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
-              {answerImageUrl && <div className="imagePreview">Image uploaded</div>}
+          ) : (
+            <div className="answerContainer">
+              <input 
+                type="text" 
+                placeholder="Correct Answer" 
+                value={answer} 
+                onChange={(e) => setAnswer(e.target.value)} 
+              />
+              <div className="imageUpload">
+                <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
+                {answerImageUrl && <div className="imagePreview">Image uploaded</div>}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Submit Button */}
       <button 
