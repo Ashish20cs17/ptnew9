@@ -111,9 +111,10 @@ const Home = () => {
       const questionsRef = ref(database, `questions`);
       const newQuestionRef = push(questionsRef);
       
+      // Base question data for all question types
       let questionData = {
         question,
-        questionImage: questionImageUrl,
+        questionImage: questionImageUrl, // Include image URL for all question types
         type: questionType,
         timestamp: serverTimestamp(),
         date: today,
