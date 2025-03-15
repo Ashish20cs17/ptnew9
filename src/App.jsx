@@ -10,7 +10,7 @@ import AllQuestions from './components/questions/AllQuestions';
 import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 
 import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
-import Upload from '../src/components/upload/Upload';
+import Upload from './components/upload/Upload';
 
 const App = () => {
   const router = createBrowserRouter([

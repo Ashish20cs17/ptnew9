@@ -3,7 +3,7 @@ import { database } from "../firebase/FirebaseSetup";
 import { ref, push, set, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
-import "./upload.css";
+import "./Upload.css";
 
 const Upload = () => {
   const [questionType, setQuestionType] = useState("MCQ");

@@ -36,7 +36,7 @@ const Navbar = () => {
 
       <nav className={showmenu ? "menu-mobile" : "menu-web"}>
         <ul>
-          <li onClick={() => handleNavigation("/home")}>Add Questions</li>
+          <li onClick={() => handleNavigation("/upload")}>Add Questions</li>
           <li onClick={() => handleNavigation("/all-questions")} style={{ cursor: "pointer" }}>All Questions</li>
           <li onClick={() => handleNavigation("/attached-questions")}>Attached Questions</li>
           <li onClick={() => handleNavigation("/all-questions-set")}>All Questions set</li>
