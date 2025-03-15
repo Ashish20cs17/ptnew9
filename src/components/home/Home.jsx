@@ -1,316 +1,88 @@
-import React, { useState } from "react";
+import React from 'react';
 import { database } from "../firebase/FirebaseSetup";
 import { ref, push, set, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
 import "./Home.css";
+import { useNavigate } from 'react-router-dom';
+
 
 const Home = () => {
-  const [questionType, setQuestionType] = useState("MCQ");
-  const [question, setQuestion] = useState("");
-  const [questionImage, setQuestionImage] = useState(null);
-  const [questionImageUrl, setQuestionImageUrl] = useState(null);
-  const [options, setOptions] = useState(["", "", "", ""]);
-  const [optionImages, setOptionImages] = useState([null, null, null, null]);
-  const [optionImageUrls, setOptionImageUrls] = useState([null, null, null, null]);
-  const [mcqAnswer, setMcqAnswer] = useState("");
-  const [mcqAnswerImage, setMcqAnswerImage] = useState(null);
-  const [mcqAnswerImageUrl, setMcqAnswerImageUrl] = useState(null);
-  const [answer, setAnswer] = useState("");
-  const [answerImage, setAnswerImage] = useState(null);
-  const [answerImageUrl, setAnswerImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [questionID, setQuestionID] = useState("");
-  const [topic, setTopic] = useState("");
-  const [topicList, setTopicList] = useState("");
-  const [difficultyLevel, setDifficultyLevel] = useState("");
-  const [grade, setGrade] = useState("G1");
-
-  // Upload image to Supabase and return the URL
-  const uploadImageToSupabase = async (file) => {
-    if (!file) return null;
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const { data, error } = await supabase.storage.from("questions").upload(fileName, file);
-    return error ? null : supabase.storage.from("questions").getPublicUrl(fileName).data.publicUrl;
-  };
-
-  // Delete image from Supabase
-  const deleteImageFromSupabase = async (imageUrl) => {
-    if (!imageUrl) return;
-    const fileName = imageUrl.split("/").pop();
-    await supabase.storage.from("questions").remove([fileName]);
-  };
-
-  // Handle Question Image Selection
-  const handleQuestionImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (questionImageUrl) {
-      await deleteImageFromSupabase(questionImageUrl);
+  const navigate = useNavigate(); // ✅ React Router navigation
+  // Sample grid items - you can modify these as needed
+  const gridItems = [
+    { 
+      id: 1, 
+      title: 'Upload Questions', 
+      icon: '⬆️',
+      onClick: () => {navigate("/upload")} // ✅ Navigate to Home component
+    },
+    { 
+      id: 2, 
+      title: 'All Questions', 
+      icon: '📜', 
+      onClick: () => {navigate("/all-questions")} // ✅ Navigate to AllQuestions component
+    },
+    { 
+      id: 3, 
+      title: 'Attached Questions', 
+      icon: '📐', 
+      onClick: () => {navigate("/attached-questions")} // ✅ Navigate to AttachedQuestions component
+    },
+    { 
+      id: 4, 
+      title: 'All Questions Set', 
+      icon: '📑', 
+      onClick: () => {navigate("/all-questions-set")} // ✅ Navigate to AllQuestionsSet component
+    },
+    { 
+      id: 5, 
+      title: 'All Users', 
+      icon: '👥', 
+      onClick: () => {/* Navigate to Projects component */}
+    },
+    { 
+      id: 6, 
+      title: 'Chat', 
+      icon: '💬', 
+      onClick: () => {/* Navigate to Chat component */}
     }
-    const url = await uploadImageToSupabase(file);
-    setQuestionImage(file);
-    setQuestionImageUrl(url);
-  };
-
-  // Handle Option Image Selection
-  const handleOptionImageChange = async (e, index) => {
-    const file = e.target.files[0];
-    if (optionImageUrls[index]) {
-      await deleteImageFromSupabase(optionImageUrls[index]);
-    }
-    const url = await uploadImageToSupabase(file);
-    const newOptionImages = [...optionImages];
-    const newOptionImageUrls = [...optionImageUrls];
-    newOptionImages[index] = file;
-    newOptionImageUrls[index] = url;
-    setOptionImages(newOptionImages);
-    setOptionImageUrls(newOptionImageUrls);
-  };
-
-  // Handle MCQ Answer Image Selection
-  const handleMcqAnswerImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (mcqAnswerImageUrl) {
-      await deleteImageFromSupabase(mcqAnswerImageUrl);
-    }
-    const url = await uploadImageToSupabase(file);
-    setMcqAnswerImage(file);
-    setMcqAnswerImageUrl(url);
-  };
-
-  // Handle Fill-in-the-Blanks Answer Image Selection
-  const handleAnswerImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (answerImageUrl) {
-      await deleteImageFromSupabase(answerImageUrl);
-    }
-    const url = await uploadImageToSupabase(file);
-    setAnswerImage(file);
-    setAnswerImageUrl(url);
-  };
-
-  // Upload Question Data to Firebase
-  const uploadQuestion = async () => {
-    if (!question && !questionImageUrl) {
-      setError("Please enter a question or upload an image");
-      return;
-    }
-    
-    // Only check for questionID if not Trivia type
-    if (questionType !== "TRIVIA" && !questionID) {
-      setError("Please enter a Question ID");
-      return;
-    }
-    
-    setError(null);
-    setLoading(true);
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      const questionsRef = ref(database, `questions`);
-      const newQuestionRef = push(questionsRef);
-      
-      let questionData = {
-        question,
-        questionImage: questionImageUrl,
-        type: questionType,
-        timestamp: serverTimestamp(),
-        date: today,
-      };
-      
-      // Add additional fields only for non-Trivia questions
-      if (questionType !== "TRIVIA") {
-        questionData = {
-          ...questionData,
-          questionID,
-          topic,
-          topicList,
-          difficultyLevel,
-          grade,
-          options: questionType === "MCQ" ? options.map((opt, i) => ({ text: opt, image: optionImageUrls[i] })) : [],
-          correctAnswer: questionType === "MCQ"
-            ? { text: mcqAnswer, image: mcqAnswerImageUrl }
-            : { text: answer, image: answerImageUrl },
-        };
-      }
-      
-      await set(newQuestionRef, questionData);
-
-      // Reset states after upload
-      setQuestion("");
-      setQuestionImage(null);
-      setQuestionImageUrl(null);
-      
-      if (questionType !== "TRIVIA") {
-        setOptions(["", "", "", ""]);
-        setOptionImages([null, null, null, null]);
-        setOptionImageUrls([null, null, null, null]);
-        setMcqAnswer("");
-        setMcqAnswerImage(null);
-        setMcqAnswerImageUrl(null);
-        setAnswer("");
-        setAnswerImage(null);
-        setAnswerImageUrl(null);
-        setQuestionID("");
-        setTopic("");
-        setTopicList("");
-        setDifficultyLevel("");
-        setGrade("G1");
-      }
-      
-      setLoading(false);
-      toast("Question uploaded successfully");
-    } catch (error) {
-      setError("Failed to upload question");
-      setLoading(false);
-    }
-  };
+  ];
 
   return (
-    <div className="uploadContainer">
-      {/* Question Type Selection */}
-      <div className="formGroup">
-        <label>Question Type:</label>
-        <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
-          <option value="MCQ">MCQ</option>
-          <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
-          <option value="TRIVIA">Trivia</option>
-        </select>
+    <div className="homeContainer p-4 bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 ">
+        {gridItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={item.onClick}
+            className="
+              h-32
+              aspect-square 
+              bg-white 
+              rounded-lg 
+              shadow-md 
+              flex 
+              flex-col 
+              items-center 
+              justify-center 
+
+              p-4 
+              hover:bg-gray-50 
+              transition-all 
+              duration-300 
+              transform 
+              hover:scale-105 
+              focus:outline-none 
+              focus:ring-2 
+              focus:ring-blue-500
+            "
+          >
+            <span className="text-4xl mb-2">{item.icon}</span>
+            <span className="text-sm font-semibold text-gray-700">{item.title}</span>
+          </button>
+        ))}
       </div>
-      
-      {/* Question Content */}
-      <div className="formGroup">
-        <textarea 
-          placeholder="Enter the question" 
-          value={question} 
-          onChange={(e) => setQuestion(e.target.value)} 
-        />
-        <div className="imageUpload">
-          <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
-          {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
-        </div>
-      </div>
-      
-      {error && <p className="errorMessage">{error}</p>}
-
-      {/* Additional Fields (only show for non-Trivia questions) */}
-      {questionType !== "TRIVIA" && (
-        <>
-          <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Question ID" 
-              value={questionID} 
-              onChange={(e) => setQuestionID(e.target.value)} 
-            />
-          </div>
-          
-          <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Topic" 
-              value={topic} 
-              onChange={(e) => setTopic(e.target.value)} 
-            />
-          </div>
-          
-          <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Topic List" 
-              value={topicList} 
-              onChange={(e) => setTopicList(e.target.value)} 
-            />
-          </div>
-          
-          <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Difficulty Level" 
-              value={difficultyLevel} 
-              onChange={(e) => setDifficultyLevel(e.target.value)} 
-            />
-          </div>
-          
-          <div className="formGroup">
-            <select value={grade} onChange={(e) => setGrade(e.target.value)}>
-              <option value="G1">Grade 1</option>
-              <option value="G2">Grade 2</option>
-              <option value="G3">Grade 3</option>
-              <option value="G4">Grade 4</option>
-              <option value="G5">Grade 5</option>
-            </select>
-          </div>
-        </>
-      )}
-
-      {/* MCQ Options */}
-      {questionType === "MCQ" && (
-        <div className="optionsSection">
-          {options.map((option, index) => (
-            <div key={index} className="optionContainer">
-              <input 
-                type="text" 
-                placeholder={`Option ${index + 1}`} 
-                value={option} 
-                onChange={(e) => {
-                  const updatedOptions = [...options];
-                  updatedOptions[index] = e.target.value;
-                  setOptions(updatedOptions);
-                }} 
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
-                {optionImageUrls[index] && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Answer Section - only for MCQ and Fill in the Blanks */}
-      {questionType !== "TRIVIA" && (
-        <div className="answerSection">
-          {questionType === "MCQ" ? (
-            <div className="answerContainer">
-              <input 
-                type="text" 
-                placeholder="Correct Answer" 
-                value={mcqAnswer} 
-                onChange={(e) => setMcqAnswer(e.target.value)} 
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
-                {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
-          ) : (
-            <div className="answerContainer">
-              <input 
-                type="text" 
-                placeholder="Correct Answer" 
-                value={answer} 
-                onChange={(e) => setAnswer(e.target.value)} 
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
-                {answerImageUrl && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Submit Button */}
-      <button 
-        className="uploadButton" 
-        onClick={uploadQuestion} 
-        disabled={loading}
-      >
-        {loading ? "Uploading..." : "Upload Question"}
-      </button>
-      
       <ToastContainer />
     </div>
   );

@@ -10,17 +10,20 @@ import AllQuestions from './components/questions/AllQuestions';
 import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 
 import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
+import Upload from './components/upload/Upload';
 
 const App = () => {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <Login/>},
-      {
-        path: "/home",
-        element:<><Navbar /><ProtectedRoute> <Home/></ProtectedRoute></>},{
+      element: <Login />
+    },
+    {
+      path: "/home",
+      element: <><Navbar /><ProtectedRoute> <Home /></ProtectedRoute></>
+    }, {
 
-        path: "/all-questions", // ✅ Add new route
+      path: "/all-questions", // ✅ Add new route
       element: (
         <>
           <Navbar />
@@ -30,17 +33,23 @@ const App = () => {
     },
     {
       path: "/attached-questions", // ✅ Add new route
-      element:<><Navbar /><ProtectedRoute> <AttachedQuestion/></ProtectedRoute></>},
-      {
-        path: "/all-questions-set", // ✅ Add new route
-        element:<><Navbar /><ProtectedRoute> <AllQuestionsSet/></ProtectedRoute></>}
-   
+      element: <><Navbar /><ProtectedRoute> <AttachedQuestion /></ProtectedRoute></>
+    },
+    {
+      path: "/all-questions-set", // ✅ Add new route
+      element: <><Navbar /><ProtectedRoute> <AllQuestionsSet /></ProtectedRoute></>
+    },
+    {
+      path: "/upload", // ✅ Add new route
+      element: <><Navbar /><ProtectedRoute> <Upload /></ProtectedRoute></>
+    }
+
   ])
   return (
-    
+
     <>
-    
-    <RouterProvider router = {router}/>
+
+      <RouterProvider router={router} />
     </>
   )
 }
