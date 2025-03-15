@@ -3,9 +3,9 @@ import { database } from "../firebase/FirebaseSetup";
 import { ref, push, set, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
-import "./Home.css";
+import "./upload.css";
 
-const Home = () => {
+const Upload = () => {
   const [questionType, setQuestionType] = useState("MCQ");
   const [question, setQuestion] = useState("");
   const [questionImage, setQuestionImage] = useState(null);
@@ -317,4 +317,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Upload;
