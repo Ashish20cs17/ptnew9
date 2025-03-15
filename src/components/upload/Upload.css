@@ -1,4 +1,5 @@
 .uploadContainer{
+  all: revert;
   width: 285px;
   margin: auto;
   
