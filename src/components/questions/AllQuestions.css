@@ -11,13 +11,14 @@
   /* Scrollable Question List */
   .questionList {
     max-height: 600px;
+    
   
     
     width: 100%;
     overflow-y: auto;
     
     border: 1px solid #ffffff;
-    padding-left: 20px;
+    padding-left: 30px;
     
     border-radius: 8px;
     background: #ffffff;
