@@ -11,6 +11,7 @@ import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 
 import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
 import Upload from '../src/components/upload/upload';
+import AllUsers from '../src/components/allUsers/AllUsers';
 
 const App = () => {
   const router = createBrowserRouter([
@@ -42,6 +43,11 @@ const App = () => {
     {
       path: "/upload", // ✅ Add new route
       element: <><Navbar /><ProtectedRoute> <Upload /></ProtectedRoute></>
+    }
+    ,
+    {
+      path: "/allUsers", // ✅ Add new route
+      element: <><Navbar /><ProtectedRoute> <AllUsers/></ProtectedRoute></>
     }
 
   ])

@@ -39,12 +39,12 @@ const Home = () => {
       id: 5,
       title: 'All Users',
       icon: '👥',
-      onClick: () => {/* Navigate to Projects component */}
+      onClick: () => {navigate("/allUsers")}
     },
     {
       id: 6,
-      title: 'Chat',
-      icon: '💬',
+      title: 'Comming soon.......',
+      icon: '😶‍🌫️',
       onClick: () => {/* Navigate to Chat component */}
     }
   ];
