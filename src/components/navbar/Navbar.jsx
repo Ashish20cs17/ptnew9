@@ -40,6 +40,7 @@ const Navbar = () => {
           <li onClick={() => handleNavigation("/all-questions")} style={{ cursor: "pointer" }}>All Questions</li>
           <li onClick={() => handleNavigation("/attached-questions")}>Attached Questions</li>
           <li onClick={() => handleNavigation("/all-questions-set")}>All Questions set</li>
+          <li onClick={() => handleNavigation("/allUsers")}>All Users</li>
           <li onClick={handleLogout}>Log out</li>
         </ul>
       </nav>
