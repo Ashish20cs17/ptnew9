@@ -1,1 +1,66 @@
-@import "tailwindcss";
+.homeContainer {
+    padding: 16px;
+    background-color: #f3f4f6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .grid-item {
+    height: 128px;
+    aspect-ratio: 1 / 1;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    transition: all 0.3s;
+    transform: scale(1);
+    border: none;
+    cursor: pointer;
+  }
+  
+  .grid-item:hover {
+    background-color: #f9fafb;
+    transform: scale(1.05);
+  }
+  
+  .grid-item:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #3b82f6;
+  }
+  
+  .grid-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  
+  .grid-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  /* Media queries to match the responsiveness */
+  @media (min-width: 768px) {
+    .grid-container {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .grid-container {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
