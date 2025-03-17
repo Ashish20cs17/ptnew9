@@ -43,8 +43,8 @@ const Home = () => {
     },
     {
       id: 6,
-      title: 'Chat',
-      icon: '💬',
+      title: 'Comming soon.......',
+      icon: '😶‍🌫️',
       onClick: () => {/* Navigate to Chat component */}
     }
   ];
