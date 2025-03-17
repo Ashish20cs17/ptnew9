@@ -24,13 +24,14 @@
     
     max-height: 580px;
     width: 100%;
+    padding-left: 50px;
   
     
     
     overflow-y: auto;
     
     border: 1px solid #ffffff;
-    padding-left: 20px;
+    
     
     border-radius: 8px;
     background: #ffffff;
