@@ -230,17 +230,427 @@ const Upload = () => {
               <option value="Real Life all concept sums">Real Life all concept sums</option>
             </select>
           </div>
-          
-          
+
+
+          {grade === "G1" && (<>
           <div className="formGroup">
-            <input 
+          
+          <input 
               type="text" 
-              placeholder="Enter Topic List" 
+              placeholder="Enter sub topic"
               value={topicList} 
               onChange={(e) => setTopicList(e.target.value)} 
             />
            
           </div>
+          </>)}
+
+
+          {topic === "Number System" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2A.1">Place Value & Number
+              Names</option>
+              <option value="G2A.2">Skip Counting</option>
+              <option value="G2A.3">Comparing & Ordering
+              Numbers</option>
+              <option value="G2A.4">Ordinal Numbers</option>
+              <option value="G2A.5">Number Patterns</option>
+              <option value="G2A.6">Addition & Subtraction of
+              Larger Numbers</option>
+              <option value="G2A.7">Understanding the Concept
+              of Zero</option>
+              <option value="G2A.8">Writing Numbers in Expanded
+              & Standard Form</option>
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Number System" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3A.1">Place Value & Number
+              Names</option>
+              <option value="G3A.2">Skip Counting</option>
+              <option value="G3A.3">Comparing & Ordering
+              Numbers</option>
+              <option value="G3A.4">Ordinal Numbers</option>
+              <option value="G3A.5">Number Patterns</option>
+              <option value="G3A.6">Addition & Subtraction of
+              Larger Numbers</option>
+              <option value="G3A.7">Understanding the Concept
+              of Zero</option>
+              <option value="G3A.8">Writing Numbers in Expanded
+              & Standard Form</option>
+            </select>
+           
+          </div>
+          </>)}
+          
+          {topic === "Number System" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4A.1">Place Value & Number
+              Names</option>
+              <option value="G4A.2">Rounding & Estimation</option>
+              <option value="G4A.3">Roman Numerals</option>
+              <option value="G4A.4">Factors & Multiples</option>
+              <option value="G4A.5">Number Patterns</option>
+              <option value="G4A.6">Negative Numbers
+              (Introduction)</option>
+              <option value="G4A.7">Even & Odd Properties</option>
+              <option value="G4A.8">Operations with Larger
+              Numbers</option>
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Operations" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2B.1">Addition, Subtraction,
+              Multiplication, Division</option>
+              <option value="G2B.2">Multiplication as Repeated
+              Addition</option>
+              <option value="G2B.3">Understanding Multiplication
+              Tables</option>
+              <option value="G2B.4">Simple Division Concepts</option>
+              <option value="G2B.5">Fact Families</option>
+              <option value="G2B.6">Properties of Operations</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Operations" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3B.1">Addition, Subtraction,
+              Multiplication, Division</option>
+              <option value="G3B.2">Multiplication as Repeated
+              Addition</option>
+              <option value="G3B.3">Division Concepts</option>
+              <option value="G3B.4">Combined Concepts Additon, Subtraction...</option>
+              <option value="G3B.5">Fact Families</option>
+              <option value="G3B.6">Properties of Operations</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Operations" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4B.1">Addition & Subtraction
+              (Larger Numbers)</option>
+              <option value="G4B.2">Multiplication & Division
+              (Advanced)</option>
+              <option value="G4B.3">Properties of Operations</option>
+              <option value="G4B.4">Fractions & Decimals
+              Operations</option>
+              <option value="G4B.5">BODMAS & Order of
+              Operations</option>
+              <option value="G4B.6">Multiplication & Division of
+              Decimals</option>
+              <option value="G4B.7">Word Problems & Mixed
+              Operations</option>
+              <option value="G4B.8">Estimation & Approximation</option>
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Shapes and Geometry" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2C.1">Basic 2D Shapes</option>
+              <option value="G2C.2">Solid Shapes (3D Shapes)</option>
+              <option value="G2C.3">Symmetry</option>
+      
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Shapes and Geometry" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3C.1">Basic 2D Shapes</option>
+              <option value="G3C.2">Solid Shapes (3D Shapes)</option>
+              <option value="G3C.3">Symmetry & Transformations</option>
+      
+              
+            </select>
+           
+          </div>
+          </>)}
+
+
+          {topic === "Shapes and Geometry" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4C.1">2D & 3D Shapes</option>
+              <option value="G4C.2">Symmetry & Transformations</option>
+              <option value="G4C.3">Perimeter & Area</option>
+              <option value="G4C.4">Introduction to Volume</option>
+              <option value="G4C.5">Coordinate Geometry
+              (Introduction)</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Measurement" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2D.1">Length (cm, m)</option>
+              <option value="G2D.2">Weight (kg, g)</option>
+              <option value="G2D.3">Capacity (L, mL)</option>
+              <option value="G2D.4">Time (Hours, Minutes,
+                Seconds)</option>
+              <option value="G2D.5">Money (Coins, Notes)</option>
+              <option value="G2D.6">Introduction to Calendar(Days,Months,Years)</option>
+              
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Measurement" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3D.1">Length (cm, m, km)</option>
+              <option value="G3D.2">Weight (kg, g)</option>
+              <option value="G3D.3">Capacity (L, mL)</option>
+              <option value="G3D.4">Time (Hours, Minutes,
+                Seconds)</option>
+              <option value="G3D.5">Money & Transactions</option>
+              
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Measurement" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4D.1">Length, Weight & Capacity</option>
+              <option value="G4D.2">Time & Money</option>
+              <option value="G4D.3">Temperature & Speed</option>
+              <option value="G4D.4">Measurement Word
+              Problems</option>
+              <option value="G4D.5">Geometry & Measurement
+              Connection</option>
+              <option value="G4D.6">Volume Measurement</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Data Handling" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2E.1">Tally Marks</option>
+              <option value="G2E.2">Pictographs</option>
+              <option value="G2E.2">Simple Bar Graphs</option>
+              <option value="G2E.3">Understanding Data
+              Interpretation</option>
+              
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Data Handling" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3E.1">Tally Marks & Pictographs</option>
+              <option value="G3E.2">Bar Graphs</option>
+              <option value="G3E.3">Understanding Data
+              Interpretation</option>
+              
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Data Handling" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4E.1">Collecting and organizing
+              data</option>
+              <option value="G4E.2">Reading and interpreting bar
+              graphs</option>
+              <option value="G4E.3">Drawing and labeling bar
+              graphs</option>
+              <option value="G4E.4">Understanding pie charts</option>
+              <option value="G4E.5">Drawing pictographs</option>
+              <option value="G4E.6">Using tables to record data</option>
+              <option value="G4E.7">Solving word problems using
+              data representation</option>
+              <option value="G4E.8">Understanding averages
+              (mean, mode, median)</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Maths Puzzles" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2F.1">Odd One Out Challenges</option>
+              <option value="G2F.2">Visual Puzzles</option>
+              <option value="G2F.3">Number Series & Patterns</option>
+              <option value="G2F.4">Magic Squares</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Maths Puzzles" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3F.1">Odd One Out Challenges</option>
+              <option value="G3F.2">Visual Puzzles</option>
+              <option value="G3F.3">Patterns</option>
+              <option value="G3F.4">Magic Squares</option>
+              <option value="G3F.5">Fun Probability & Guessing
+              Games</option>
+              <option value="G3F.6">Code-Breaking & Math
+              Cyphers</option>
+              <option value="G3F.7">Math Maze</option>
+              <option value="G3F.8">Geometry Shapes/Symmetry</option>
+              <option value="G3F.9">Gridlock Challenge</option>
+              <option value="G3F.10">Logical Puzzles</option>
+              <option value="G3F.11">Riddles</option>
+              <option value="G3F.12">Balance the equations</option>
+              <option value="G3F.13">Clock and calendar based
+              challenges</option>
+              <option value="G3F.14">Block Puzzles</option>
+              <option value="G3F.15">Others</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Maths Puzzles" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4F.1">Odd One Out Challenges</option>
+              <option value="G4F.2">Visual Puzzles</option>
+              <option value="G4F.3">Patterns</option>
+              <option value="G4F.4">Magic Squares</option>
+              <option value="G4F.5">Fun Probability & Guessing
+              Games</option>
+              <option value="G4F.6">Code-Breaking & Math
+              Cyphers</option>
+              <option value="G4F.7">Math Maze</option>
+              <option value="G4F.8">Geometry Shapes/Symmetry</option>
+              <option value="G4F.9">Gridlock Challenge</option>
+              <option value="G4F.10">Logical Puzzles</option>
+              <option value="G4F.11">Riddles</option>
+              <option value="G4F.12">Balance the equations</option>
+              <option value="G4F.13">Clock and calendar based
+              challenges</option>
+              <option value="G4F.14">Block Puzzles</option>
+              <option value="G4F.15">Others</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Real Life all concept sums" && grade === "G2" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G2G.1">Geography</option>
+              <option value="G2G.2">History</option>
+              <option value="G2G.3">Civic Responsibilities</option>
+              <option value="G2G.4">Discoveries and Inventions</option>
+              <option value="G2G.5">Science</option>
+              <option value="G2G.6">Language and Literature</option>
+              <option value="G2G.7">Economics</option>
+              <option value="G2G.8">Art and Culture</option>
+              <option value="G2G.9">Safety</option>
+              <option value="G2G.10">Environment</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Real Life all concept sums" && grade === "G3" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G3G.1">Geography</option>
+              <option value="G3G.2">History</option>
+              <option value="G3G.3">Civic Responsibilities</option>
+              <option value="G3G.4">Discoveries and Inventions</option>
+              <option value="G3G.5">Science</option>
+              <option value="G3G.6">Language and Literature</option>
+              <option value="G3G.7">Economics</option>
+              <option value="G3G.8">Art and Culture</option>
+              <option value="G3G.9">Safety</option>
+              <option value="G3G.10">Environment</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Real Life all concept sums" && grade === "G4" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G4G.1">Geography</option>
+              <option value="G4G.2">History</option>
+              <option value="G4G.3">Civic Responsibilities</option>
+              <option value="G4G.4">Discoveries and Inventions</option>
+              <option value="G4G.5">Science</option>
+              <option value="G4G.6">Language and Literature</option>
+              <option value="G4G.7">Economics</option>
+              <option value="G4G.8">Art and Culture</option>
+              <option value="G4G.9">Safety</option>
+              <option value="G4G.10">Environment</option>
+              
+            </select>
+           
+          </div>
+          </>)}
           
           <div className="formGroup">
             <input 
