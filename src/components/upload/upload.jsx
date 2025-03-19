@@ -206,15 +206,31 @@ const Upload = () => {
               onChange={(e) => setQuestionID(e.target.value)} 
             />
           </div>
+          <div className="formGroup">
+            <select value={grade} onChange={(e) => setGrade(e.target.value)}>
+              <option value="G1">Grade 1</option>
+              <option value="G2">Grade 2</option>
+              <option value="G3">Grade 3</option>
+              <option value="G4">Grade 4</option>
+              
+            </select>
+          </div>
+
+          
           
           <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Topic" 
-              value={topic} 
-              onChange={(e) => setTopic(e.target.value)} 
-            />
+            
+             <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+              <option value="Number System">Number System</option>
+              <option value="Operations">Operations (Addition, Subtraction ....)</option>
+              <option value="Shapes and Geometry">Shapes and Geometry</option>
+              <option value="Measurement">Measurement</option>
+              <option value="Data Handling">Data Handling</option>
+              <option value="Maths Puzzles">Maths Puzzles</option>
+              <option value="Real Life all concept sums">Real Life all concept sums</option>
+            </select>
           </div>
+          
           
           <div className="formGroup">
             <input 
@@ -223,6 +239,7 @@ const Upload = () => {
               value={topicList} 
               onChange={(e) => setTopicList(e.target.value)} 
             />
+           
           </div>
           
           <div className="formGroup">
@@ -234,15 +251,7 @@ const Upload = () => {
             />
           </div>
           
-          <div className="formGroup">
-            <select value={grade} onChange={(e) => setGrade(e.target.value)}>
-              <option value="G1">Grade 1</option>
-              <option value="G2">Grade 2</option>
-              <option value="G3">Grade 3</option>
-              <option value="G4">Grade 4</option>
-              <option value="G5">Grade 5</option>
-            </select>
-          </div>
+          
         </>
       )}
 
