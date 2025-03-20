@@ -215,3 +215,40 @@
     background-color: #ffccbc;
     cursor: not-allowed;
   }
+  .searchContainer {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  
+  .searchInput {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+  }
+  
+  .searchInput:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+  }
+  
+  /* Optional: Add a highlight effect for search results */
+  .highlighted {
+    background-color: #fffbcc;
+  }
+  
+  /* Make the search input responsive */
+  @media (max-width: 768px) {
+    .searchContainer {
+      margin-bottom: 15px;
+    }
+    
+    .searchInput {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+  }

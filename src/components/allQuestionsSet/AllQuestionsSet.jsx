@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { database, auth } from "../firebase/FirebaseSetup";
-import { ref, get, set, remove, update } from "firebase/database";
+import { ref, get, set, remove } from "firebase/database";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,6 +8,8 @@ import "./AllQuestionsSet.css";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
+  const [filteredSets, setFilteredSets] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedSet, setSelectedSet] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
@@ -26,6 +28,19 @@ const AllQuestionsSet = () => {
     fetchQuestionSets();
   }, []);
 
+  // Effect to filter sets based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredSets(questionSets);
+    } else {
+      const lowercasedTerm = searchTerm.toLowerCase();
+      const filtered = questionSets.filter(([setName]) => 
+        setName.toLowerCase().includes(lowercasedTerm)
+      );
+      setFilteredSets(filtered);
+    }
+  }, [searchTerm, questionSets]);
+
   const fetchQuestionSets = async () => {
     try {
       setLoading(true);
@@ -34,11 +49,14 @@ const AllQuestionsSet = () => {
 
       if (!snapshot.exists()) {
         setQuestionSets([]);
+        setFilteredSets([]);
         setError("No question sets found!");
         return;
       }
 
-      setQuestionSets(Object.entries(snapshot.val()));
+      const sets = Object.entries(snapshot.val());
+      setQuestionSets(sets);
+      setFilteredSets(sets);
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching question sets:", err);
@@ -89,7 +107,9 @@ const AllQuestionsSet = () => {
       toast.success(`✅ Question set "${setName}" successfully deleted`);
       
       // Update local state
-      setQuestionSets(prevSets => prevSets.filter(([name]) => name !== setName));
+      const updatedSets = questionSets.filter(([name]) => name !== setName);
+      setQuestionSets(updatedSets);
+      setFilteredSets(updatedSets);
       
       // If the deleted set was the selected one, go back to the list
       if (selectedSet === setName) {
@@ -216,12 +236,17 @@ const AllQuestionsSet = () => {
     }
   };
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="allQuestionsContainer">
       <h2>All Question Sets</h2>
       <hr />
 
-      {/* Attach to User Section (Moved to top) */}
+      {/* Attach to User Section */}
       <div className="attachToUserSection">
         <h3>Attach Question Set to User</h3>
         <div className="attachForm">
@@ -257,11 +282,23 @@ const AllQuestionsSet = () => {
       {!selectedSet ? (
         <div className="questionSetsList">
           <h3>Available Question Sets</h3>
+          
+          {/* Search input field */}
+          <div className="searchContainer">
+            <input
+              type="text"
+              placeholder="Search question sets..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="searchInput"
+            />
+          </div>
+          
           {loading ? <p>Loading sets...</p> : null}
           
-          {questionSets.length > 0 ? (
+          {filteredSets.length > 0 ? (
             <ul className="setsList">
-              {questionSets.map(([setName, setQuestionsData]) => (
+              {filteredSets.map(([setName, setQuestionsData]) => (
                 <li key={setName} className="setItem">
                   <div 
                     className="setName"
@@ -280,7 +317,12 @@ const AllQuestionsSet = () => {
               ))}
             </ul>
           ) : (
-            !loading && <p>No sets available.</p>
+            !loading && 
+            <p>
+              {searchTerm 
+                ? "No matching sets found. Try a different search term." 
+                : "No sets available."}
+            </p>
           )}
         </div>
       ) : (
