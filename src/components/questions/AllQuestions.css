@@ -45,4 +45,72 @@
   .deleteButton:hover {
     background-color: rgb(97, 2, 2);
   }
+  .filterControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+  }
   
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+  }
+  
+  .formGroup label {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .formGroup select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+  }
+  
+  .questionStats {
+    margin: 10px 0;
+    font-style: italic;
+  }
+  
+  .questionMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  
+  .tag {
+    background-color: #e9f1fd;
+    color: #4a76c4;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  
+  .questionItem {
+    margin-bottom: 25px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+  }
+  
+  .deleteButton {
+    background-color: #ff5252;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .deleteButton:hover {
+    background-color: #ff0000;
+  }
