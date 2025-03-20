@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./AttachedQuestions.css";
 import { database } from "../firebase/FirebaseSetup";
-import { ref, get, push, set } from "firebase/database";
+import { ref, get, set } from "firebase/database";
 import { ToastContainer, toast } from "react-toastify";
 
 const AttachedQuestion = () => {
@@ -49,11 +49,43 @@ const AttachedQuestion = () => {
     setSetNameError("");
 
     try {
-      const setRef = ref(database, `attachedQuestionSets/${selectedSetName}/${questionId}`);
-      await set(setRef, questionId); // ✅ Store only question ID inside the set
+      // First get the current set data to determine the next order number
+      const setRef = ref(database, `attachedQuestionSets/${selectedSetName}`);
+      const snapshot = await get(setRef);
+      
+      let nextOrder = 0;
+      
+      if (snapshot.exists()) {
+        const existingSet = snapshot.val();
+        
+        // Check if question already exists in the set
+        const existingQuestion = Object.values(existingSet).find(item => 
+          (typeof item === 'string' && item === questionId) ||
+          (typeof item === 'object' && item.id === questionId)
+        );
+        
+        if (existingQuestion) {
+          toast.warning(`⚠️ This question is already in set: ${selectedSetName}`);
+          return;
+        }
+        
+        // Find the highest order value
+        const orders = Object.values(existingSet)
+          .map(item => typeof item === 'object' && item.order !== undefined ? item.order : -1)
+          .filter(order => order !== -1);
+          
+        nextOrder = orders.length > 0 ? Math.max(...orders) + 1 : 0;
+      }
+      
+      // Now add the question with order information
+      const questionRef = ref(database, `attachedQuestionSets/${selectedSetName}/${questionId}`);
+      await set(questionRef, {
+        id: questionId,
+        order: nextOrder,
+        addedAt: Date.now()
+      });
 
-      toast.success(`✅ Question added to set: ${selectedSetName}`);
-      console.log(`✅ Question ${questionId} added to set: ${selectedSetName}`);
+      toast.success(`✅ Question added to set: ${selectedSetName} at position ${nextOrder}`);
     } catch (err) {
       console.error("❌ Error adding question to set:", err);
       setError("Failed to attach question to set.");

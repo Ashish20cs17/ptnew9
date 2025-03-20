@@ -73,17 +73,37 @@ const AllQuestionsSet = () => {
     setError(null);
 
     try {
-      const questionIds = Object.values(setQuestionsData);
+      // Convert the set data to an array of objects with order information
+      const questionsWithOrder = Object.entries(setQuestionsData).map(([key, value]) => {
+        // Check if the value is a simple ID string (old format) or an object with order (new format)
+        if (typeof value === 'string') {
+          // Handle old format (just question IDs)
+          return { id: value, order: 0 }; // Default order to 0 for backward compatibility
+        } else {
+          // Handle new format (objects with order property)
+          return { 
+            id: value.id || key, 
+            order: value.order || 0 
+          };
+        }
+      });
+
+      // Sort by order
+      questionsWithOrder.sort((a, b) => a.order - b.order);
+      
+      // Now fetch the full question data for each ID
       const fetchedQuestions = [];
-      const questionPromises = questionIds.map(async (questionId) => {
-        const questionRef = ref(database, `questions/${questionId}`);
+      const questionPromises = questionsWithOrder.map(async ({ id, order }) => {
+        const questionRef = ref(database, `questions/${id}`);
         const questionSnapshot = await get(questionRef);
         return questionSnapshot.exists()
-          ? { id: questionId, ...questionSnapshot.val() }
+          ? { id, order, ...questionSnapshot.val() }
           : null;
       });
 
       const results = await Promise.all(questionPromises);
+      
+      // Set the questions in order
       setQuestions(results.filter(Boolean));
     } catch (err) {
       console.error("❌ Error fetching questions:", err);
@@ -143,8 +163,15 @@ const AllQuestionsSet = () => {
       
       const setData = snapshot.val();
       
-      // Find the key for this question ID
-      const keyToRemove = Object.keys(setData).find(key => setData[key] === questionId);
+      // Find the key for this question ID (considering both old and new formats)
+      let keyToRemove = null;
+      for (const [key, value] of Object.entries(setData)) {
+        if ((typeof value === 'string' && value === questionId) || 
+            (typeof value === 'object' && value.id === questionId)) {
+          keyToRemove = key;
+          break;
+        }
+      }
       
       if (!keyToRemove) {
         toast.error("❌ Question not found in set");
@@ -154,6 +181,38 @@ const AllQuestionsSet = () => {
       // Remove the question from the set
       const questionRef = ref(database, `attachedQuestionSets/${selectedSet}/${keyToRemove}`);
       await remove(questionRef);
+      
+      // After removing, we need to update the remaining questions' order if necessary
+      // This step is optional but helps keep orders consistent
+      const remainingQuestions = { ...setData };
+      delete remainingQuestions[keyToRemove];
+      
+      // Only reorder if we're using the new format with order properties
+      const hasOrderProperty = Object.values(remainingQuestions).some(
+        v => typeof v === 'object' && v.order !== undefined
+      );
+      
+      if (hasOrderProperty) {
+        // Convert to array, sort by order, then reassign orders sequentially
+        const orderedQuestions = Object.entries(remainingQuestions)
+          .map(([key, value]) => ({
+            key,
+            data: value,
+            order: typeof value === 'object' ? (value.order || 0) : 0
+          }))
+          .sort((a, b) => a.order - b.order);
+        
+        // Update each question's order sequentially
+        const orderUpdatePromises = orderedQuestions.map((item, index) => {
+          if (typeof item.data === 'object') {
+            const updatedRef = ref(database, `attachedQuestionSets/${selectedSet}/${item.key}`);
+            return set(updatedRef, { ...item.data, order: index });
+          }
+          return Promise.resolve();
+        });
+        
+        await Promise.all(orderUpdatePromises);
+      }
       
       // Update UI
       setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
@@ -223,9 +282,10 @@ const AllQuestionsSet = () => {
         }
       }
       
-      // Attach question set to user
+      // Attach question set to user - preserve question order
+      const orderedQuestionIds = questions.map(q => q.id);
       const userSetsRef = ref(database, `users/${userKey}/assignedSets/${selectedSet}`);
-      await set(userSetsRef, questions.map(q => q.id));
+      await set(userSetsRef, orderedQuestionIds);
       toast.success(`✅ Set "${selectedSet}" attached to ${formattedEmail}`);
       setUserEmail("");
     } catch (err) {
@@ -343,6 +403,9 @@ const AllQuestionsSet = () => {
                   <div className="questionContent">
                     <strong>{q.question}</strong> 
                     <span className="questionType">({q.type})</span>
+                    {q.order !== undefined && (
+                      <span className="questionOrder">(Order: {q.order})</span>
+                    )}
 
                     {q.questionImage && (
                       <div className="questionImage">
