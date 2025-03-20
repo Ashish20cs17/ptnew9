@@ -22,7 +22,7 @@ const Upload = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [questionID, setQuestionID] = useState("");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState("Number System");
   const [topicList, setTopicList] = useState("");
   const [difficultyLevel, setDifficultyLevel] = useState("");
   const [grade, setGrade] = useState("G1");
@@ -232,15 +232,22 @@ const Upload = () => {
           </div>
 
 
-          {grade === "G1" && (<>
+          {topic === "Number System" && grade === "G1" && (<>
           <div className="formGroup">
           
-          <input 
-              type="text" 
-              placeholder="Enter sub topic"
-              value={topicList} 
-              onChange={(e) => setTopicList(e.target.value)} 
-            />
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1A.1">Place Value & Number
+              Names</option>
+              <option value="G1A.2">Skip Counting</option>
+              <option value="G1A.3">Comparing & Ordering
+              Numbers</option>
+              <option value="G1A.4">Ordinal Numbers</option>
+              <option value="G1A.5">Number Patterns</option>
+              <option value="G1A.6">Addition & Subtraction of
+              Larger Numbers</option>
+              <option value="G1A.7">Understanding Zero</option>
+              <option value="G1A.8">Expanded & Standard Form</option>
+            </select>
            
           </div>
           </>)}
@@ -310,6 +317,26 @@ const Upload = () => {
           </div>
           </>)}
 
+          {topic === "Operations" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1B.1">Addition & Subtraction with
+              Carrying/Borrowing</option>
+              <option value="G1B.2">Multiplication as Repeated
+              Addition</option>
+              <option value="G1B.3">Understanding Multiplication
+              Tables</option>
+              <option value="G1B.4">Simple Division Concepts</option>
+              <option value="G1B.5">Fact Families</option>
+              <option value="G1B.6">Properties of Addition and
+              Multiplication</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
           {topic === "Operations" && grade === "G2" && (<>
           <div className="formGroup">
           
@@ -370,6 +397,21 @@ const Upload = () => {
           </div>
           </>)}
 
+
+          {topic === "Shapes and Geometry" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1C.1">Basic 2D Shapes</option>
+              <option value="G1C.2">Solid Shapes (3D Shapes)</option>
+              <option value="G1C.3">Symmetry</option>
+      
+              
+            </select>
+           
+          </div>
+          </>)}
+
           {topic === "Shapes and Geometry" && grade === "G2" && (<>
           <div className="formGroup">
           
@@ -409,6 +451,23 @@ const Upload = () => {
               <option value="G4C.4">Introduction to Volume</option>
               <option value="G4C.5">Coordinate Geometry
               (Introduction)</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Measurement" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1D.1">Length (cm, m)</option>
+              <option value="G1D.2">Weight (kg, g)</option>
+              <option value="G1D.3">Capacity (L, mL)</option>
+              <option value="G1D.4">Time (Hours, Minutes)</option>
+              <option value="G1D.5">Money (Coins, Notes)</option>
+              <option value="G1D.6">Introduction to Calendar(Days,Months,Years)</option>
+              
               
             </select>
            
@@ -468,6 +527,22 @@ const Upload = () => {
           </div>
           </>)}
 
+          {topic === "Data Handling" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1E.1">Tally Marks</option>
+              <option value="G1E.2">Pictographs</option>
+              <option value="G1E.2">Simple Bar Graphs</option>
+              <option value="G1E.3">Understanding Data
+              Interpretation</option>
+              
+              
+            </select>
+           
+          </div>
+          </>)}
+
           {topic === "Data Handling" && grade === "G2" && (<>
           <div className="formGroup">
           
@@ -516,6 +591,20 @@ const Upload = () => {
               data representation</option>
               <option value="G4E.8">Understanding averages
               (mean, mode, median)</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Maths Puzzles" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1F.1">Odd One Out Challenges</option>
+              <option value="G1F.2">Visual Puzzles</option>
+              <option value="G1F.3">Number Series & Patterns</option>
+              <option value="G1F.4">Magic Squares</option>
               
             </select>
            
@@ -586,6 +675,26 @@ const Upload = () => {
               challenges</option>
               <option value="G4F.14">Block Puzzles</option>
               <option value="G4F.15">Others</option>
+              
+            </select>
+           
+          </div>
+          </>)}
+
+          {topic === "Real Life all concept sums" && grade === "G1" && (<>
+          <div className="formGroup">
+          
+            <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+              <option value="G1G.1">Geography</option>
+              <option value="G1G.2">History</option>
+              <option value="G1G.3">Civic Responsibilities</option>
+              <option value="G1G.4">Discoveries and Inventions</option>
+              <option value="G1G.5">Science</option>
+              <option value="G1G.6">Language and Literature</option>
+              <option value="G1G.7">Economics</option>
+              <option value="G1G.8">Art and Culture</option>
+              <option value="G1G.9">Safety</option>
+              <option value="G1G.10">Environment</option>
               
             </select>
            
