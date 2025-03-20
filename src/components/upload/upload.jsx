@@ -198,14 +198,14 @@ const Upload = () => {
       {/* Additional Fields (only show for non-Trivia questions) */}
       {questionType !== "TRIVIA" && (
         <>
-          <div className="formGroup">
+          {/* <div className="formGroup">
             <input 
               type="text" 
               placeholder="Enter Question ID" 
               value={questionID} 
               onChange={(e) => setQuestionID(e.target.value)} 
             />
-          </div>
+          </div> */}
           <div className="formGroup">
             <select value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="G1">Grade 1</option>
@@ -762,12 +762,15 @@ const Upload = () => {
           </>)}
           
           <div className="formGroup">
-            <input 
-              type="text" 
-              placeholder="Enter Difficulty Level" 
-              value={difficultyLevel} 
-              onChange={(e) => setDifficultyLevel(e.target.value)} 
-            />
+          
+            <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
+              <option value="L1">L1</option>
+              <option value="L2">L2</option>
+              <option value="L3">L3</option>
+              <option value="Br">Br</option>
+              
+              
+            </select>
           </div>
           
           
