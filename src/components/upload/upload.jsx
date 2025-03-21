@@ -198,14 +198,15 @@ const Upload = () => {
       {/* Additional Fields (only show for non-Trivia questions) */}
       {questionType !== "TRIVIA" && (
         <>
-          {/* <div className="formGroup">
+          <div className="formGroup">
             <input 
               type="text" 
               placeholder="Enter Question ID" 
               value={questionID} 
               onChange={(e) => setQuestionID(e.target.value)} 
+              readOnly
             />
-          </div> */}
+          </div>
           <div className="formGroup">
             <select value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="G1">Grade 1</option>

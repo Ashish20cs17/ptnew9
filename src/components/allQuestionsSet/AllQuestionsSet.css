@@ -253,3 +253,15 @@
       font-size: 14px;
     }
   }
+  .exportButton {
+    background-image: linear-gradient(to right, #32a9dc, #0c1d9e);
+    
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  

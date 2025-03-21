@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { database, auth } from "../firebase/FirebaseSetup";
 import { ref, get, set, remove } from "firebase/database";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./AllQuestionsSet.css";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
@@ -17,6 +19,9 @@ const AllQuestionsSet = () => {
   const [userEmail, setUserEmail] = useState("");
   const [attachLoading, setAttachLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  
+  const pdfContentRef = useRef(null);
   
   // Format username to valid email
   const formatEmail = (username) => {
@@ -301,6 +306,212 @@ const AllQuestionsSet = () => {
     setSearchTerm(e.target.value);
   };
 
+  // Export the current question set to PDF
+  const exportToPDF = async () => {
+    if (!selectedSet || !questions.length) {
+      toast.error("❌ No question set selected or set is empty");
+      return;
+    }
+  
+    setExportLoading(true);
+  
+    try {
+      // Create a PDF with A4 dimensions
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add title
+      pdf.setFontSize(22);
+      pdf.setTextColor(44, 62, 80);
+      pdf.text(`Question Set: ${selectedSet}`, 15, 20);
+      
+      // Add date and count
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 100);
+      const date = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      });
+      pdf.text(`Generated on: ${date}`, 15, 30);
+      pdf.text(`Total Questions: ${questions.length}`, 15, 40);
+      pdf.line(15, 45, pageWidth - 15, 45);
+  
+      // Set starting y position for questions
+      let yPosition = 55;
+      let pageNumber = 1;
+  
+      // Process each question
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        
+        // Check if we need a new page
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+          pageNumber++;
+        }
+        
+        // Add question number and type
+        pdf.setFontSize(14);
+        pdf.setTextColor(44, 62, 80);
+        pdf.text(`Question ${i + 1} (${q.type})`, 15, yPosition);
+        yPosition += 10;
+        
+        // Add question text - handle wrapping
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        
+        // Split long text to fit page width
+        const questionLines = pdf.splitTextToSize(q.question, pageWidth - 30);
+        pdf.text(questionLines, 15, yPosition);
+        yPosition += (questionLines.length * 7);
+        
+        // Handle image if exists
+        if (q.questionImage) {
+          try {
+            // Add some space before the image
+            yPosition += 5;
+            
+            // Load the image and convert to data URL
+            const imgData = await loadImageAsDataURL(q.questionImage);
+            
+            // Calculate dimensions to fit within page width while maintaining aspect ratio
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgWidth = pageWidth - 30; // Full width minus margins
+            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+            
+            // Check if image will fit on current page
+            if (yPosition + imgHeight > pageHeight - 20) {
+              pdf.addPage();
+              yPosition = 20;
+              pageNumber++;
+            }
+            
+            // Add the image
+            pdf.addImage(imgData, 'JPEG', 15, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 10;
+          } catch (imgError) {
+            console.error("Error processing image:", imgError);
+            pdf.text("(Error loading image)", 15, yPosition);
+            yPosition += 10;
+          }
+        }
+        
+        // Add answer depending on question type
+        pdf.setFontSize(12);
+        pdf.setTextColor(44, 125, 190);
+        
+        if (q.type === "Fill in the Blanks" && q.answer) {
+          pdf.text(`Answer: ${q.answer}`, 15, yPosition);
+          yPosition += 10;
+        } else if (q.correctAnswer) {
+          pdf.text(`Correct Answer: ${q.correctAnswer.text}`, 15, yPosition);
+          yPosition += 10;
+        }
+        
+        // Add a separator line between questions
+        yPosition += 5;
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(15, yPosition, pageWidth - 15, yPosition);
+        yPosition += 15;
+      }
+      
+      // Add page numbers
+      for (let i = 1; i <= pageNumber; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(10);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i} of ${pageNumber}`, pageWidth - 40, pageHeight - 10);
+      }
+      
+      // Save the PDF
+      pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
+      toast.success("✅ PDF successfully exported");
+    } catch (err) {
+      console.error("❌ Error exporting PDF:", err);
+      toast.error("❌ Failed to export PDF");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+  
+  // Helper function to load an image as a data URL
+  const loadImageAsDataURL = (url) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous'; // Handle CORS issues
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        try {
+          const dataURL = canvas.toDataURL('image/jpeg');
+          resolve(dataURL);
+        } catch (e) {
+          reject(new Error("Cannot convert image to data URL"));
+        }
+      };
+      
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = url;
+    });
+  };
+
+  // For creating a visually rich PDF (optional alternative approach)
+  const exportToPDFWithCanvas = async () => {
+    if (!selectedSet || !questions.length || !pdfContentRef.current) {
+      toast.error("❌ No question set selected or set is empty");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      const content = pdfContentRef.current;
+      const canvas = await html2canvas(content, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: false,
+        onclone: (doc) => {
+          // Make visible and adjust styles for better rendering
+          const clonedContent = doc.getElementById(content.id);
+          if (clonedContent) {
+            clonedContent.style.display = 'block';
+            clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
+              btn.style.display = 'none';
+            });
+          }
+        }
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Get dimensions to fit to A4
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      
+      // Add image to cover first page while maintaining aspect ratio
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth * ratio, imgHeight * ratio);
+      
+      pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
+      toast.success("✅ PDF successfully exported");
+    } catch (err) {
+      console.error("❌ Error exporting PDF:", err);
+      toast.error("❌ Failed to export PDF");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   return (
     <div className="allQuestionsContainer">
       <h2>All Question Sets</h2>
@@ -392,55 +603,75 @@ const AllQuestionsSet = () => {
               🔙 Back to Sets
             </button>
             <h3>Questions in "{selectedSet}"</h3>
+            
+            {/* Export to PDF button */}
+            <button 
+              onClick={exportToPDF}
+              disabled={exportLoading || !questions.length}
+              className="exportButton"
+            >
+              {exportLoading ? "Exporting..." : "📄 Export to PDF"}
+            </button>
           </div>
 
           {loading ? <p>Loading questions...</p> : null}
 
-          {questions.length > 0 ? (
-            <ul className="questionsList">
-              {questions.map((q) => (
-                <li key={q.id} className="questionsItem">
-                  <div className="questionContent">
-                    <strong>{q.question}</strong> 
-                    <span className="questionType">({q.type})</span>
-                    {q.order !== undefined && (
-                      <span className="questionOrder">(Order: {q.order})</span>
-                    )}
-
-                    {q.questionImage && (
-                      <div className="questionImage">
-                        <img
-                          src={q.questionImage}
-                          alt="Question Attachment"
-                        />
+          {/* This div will be used to generate PDF content */}
+          <div 
+            id="pdf-content" 
+            ref={pdfContentRef} 
+            className="pdfContent"
+          >
+            {questions.length > 0 ? (
+              <ul className="questionsList">
+                {questions.map((q, index) => (
+                  <li key={q.id} className="questionsItem">
+                    <div className="questionContent">
+                      <div className="questionHeader">
+                        <span className="questionNumber">Question {index + 1}</span>
+                        <span className="questionType">({q.type})</span>
+                        {q.order !== undefined && (
+                          <span className="questionOrder">(Order: {q.order})</span>
+                        )}
                       </div>
-                    )}
+                      
+                      <div className="questionText">{q.question}</div>
 
-                    {q.correctAnswer && (
-                      <p className="answerText">
-                        <strong>Correct Answer:</strong> {q.correctAnswer.text}
-                      </p>
-                    )}
+                      {q.questionImage && (
+                        <div className="questionImage">
+                          <img
+                            src={q.questionImage}
+                            alt="Question Attachment"
+                          />
+                        </div>
+                      )}
 
-                    {q.type === "Fill in the Blanks" && q.answer && (
-                      <p className="answerText">
-                        <strong>Answer:</strong> {q.answer}
-                      </p>
-                    )}
-                  </div>
-                  <button 
-                    className="deleteQuestionButton"
-                    onClick={() => deleteQuestionFromSet(q.id)}
-                    disabled={deleteLoading}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            !loading && <p>No questions found in this set.</p>
-          )}
+                      {q.correctAnswer && (
+                        <p className="answerText">
+                          <strong>Correct Answer:</strong> {q.correctAnswer.text}
+                        </p>
+                      )}
+
+                      {q.type === "Fill in the Blanks" && q.answer && (
+                        <p className="answerText">
+                          <strong>Answer:</strong> {q.answer}
+                        </p>
+                      )}
+                    </div>
+                    <button 
+                      className="deleteQuestionButton"
+                      onClick={() => deleteQuestionFromSet(q.id)}
+                      disabled={deleteLoading}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              !loading && <p>No questions found in this set.</p>
+            )}
+          </div>
         </div>
       )}
       <ToastContainer />

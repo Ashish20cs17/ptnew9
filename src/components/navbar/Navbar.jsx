@@ -5,6 +5,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/FirebaseSetup";
 import { RxHamburgerMenu } from "react-icons/rx";
 
+
 const Navbar = () => {
   const [showmenu, setShowmenu] = React.useState(false);
   const navigate = useNavigate(); // ✅ React Router navigation
