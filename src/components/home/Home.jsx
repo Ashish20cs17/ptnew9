@@ -26,7 +26,7 @@ const Home = () => {
     {
       id: 3,
       title: 'Attached Questions',
-      icon: '📐',
+      icon: '🔖',
       onClick: () => {navigate("/attached-questions")} // ✅ Navigate to AttachedQuestions component
     },
     {
@@ -43,9 +43,9 @@ const Home = () => {
     },
     {
       id: 6,
-      title: 'Comming soon.......',
-      icon: '😶‍🌫️',
-      onClick: () => {/* Navigate to Chat component */}
+      title: 'Upload Syllabus',
+      icon: '📙',
+      onClick: () => {navigate("/syllabus")}
     }
   ];
   
