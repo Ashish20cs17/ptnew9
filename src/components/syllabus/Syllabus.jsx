@@ -103,8 +103,6 @@ const Syllabus = () => {
     // Reset form
     setFormData({
       grade: formData.grade,
-      topic: '',
-      topicCode: '',
       subtopic: '',
       subtopicCode: ''
     });
