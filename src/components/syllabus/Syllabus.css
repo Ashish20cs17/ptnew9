@@ -1,0 +1,259 @@
+.syllabusContainer {
+    background: white;
+    padding: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .page-title {
+    margin-bottom: 24px;
+    font-size: 28px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  /* New layout for side-by-side arrangement */
+  .syllabus-layout {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .syllabus-management {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .table-section {
+    flex: 1;
+    min-width: 350px;
+  }
+  
+  /* Form styles */
+  .form-container {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-title, .search-title, .table-title {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    flex: 1;
+    margin-bottom: 15px;
+  }
+  
+  .label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  
+  .input, .select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .input:focus, .select:focus {
+    outline: none;
+    border-color: #4d90fe;
+    box-shadow: 0 0 3px rgba(77, 144, 254, 0.5);
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-primary {
+    background-color: #4d90fe;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3a7be0;
+  }
+  
+  .btn-secondary {
+    background-color: #f1f1f1;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Search section */
+  .search-section {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-button-container {
+    display: flex;
+    align-items: flex-end;
+  }
+  
+  /* Table styles */
+  .table-container {
+    overflow-x: auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table-head {
+    background-color: #f1f1f1;
+  }
+  
+  .table-header {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  .table-row {
+    border-bottom: 1px solid #eee;
+  }
+  
+  .table-row:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .table-cell {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .badge-blue {
+    background-color: #e6f0ff;
+    color: #2d6cdf;
+  }
+  
+  .btn-edit, .btn-delete {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-edit {
+    background-color: #f0f7ff;
+    color: #2d6cdf;
+  }
+  
+  .btn-edit:hover {
+    background-color: #d1e6ff;
+  }
+  
+  .btn-delete {
+    background-color: #ffeaea;
+    color: #e44747;
+  }
+  
+  .btn-delete:hover {
+    background-color: #ffd1d1;
+  }
+  
+  .loading-message, .empty-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Responsive design */
+  @media (max-width: 1200px) {
+    .syllabus-layout {
+      flex-direction: column;
+    }
+    
+    .syllabus-management, .table-section {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .form-group {
+      width: 100%;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .table {
+      min-width: 600px;
+    }
+  }
