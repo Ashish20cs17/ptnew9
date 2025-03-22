@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './syllabus.css';
+import './Syllabus.css';
 import { database } from '../firebase/FirebaseSetup'; // Update this path to match your project structure
 import { ref, set, push, onValue, update, remove } from 'firebase/database';
 
