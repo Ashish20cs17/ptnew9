@@ -98,11 +98,11 @@ const Upload = () => {
       return;
     }
     
-    // Only check for questionID if not Trivia type
-    if (questionType !== "TRIVIA" && !questionID) {
-      setError("Please enter a Question ID");
-      return;
-    }
+    // // Only check for questionID if not Trivia type
+    // if (questionType !== "TRIVIA" && !questionID) {
+    //   setError("Please enter a Question ID");
+    //   return;
+    // }
     
     setError(null);
     setLoading(true);
