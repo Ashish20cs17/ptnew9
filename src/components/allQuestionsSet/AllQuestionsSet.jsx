@@ -60,8 +60,12 @@ const AllQuestionsSet = () => {
       }
 
       const sets = Object.entries(snapshot.val());
-      setQuestionSets(sets);
-      setFilteredSets(sets);
+      // Sort sets alphabetically by setName (the first element of each entry)
+    const sortedSets = sets.sort(([setNameA], [setNameB]) => 
+      setNameB.localeCompare(setNameA)
+    );
+      setQuestionSets(sortedSets);
+      setFilteredSets(sortedSets);
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching question sets:", err);
@@ -569,6 +573,7 @@ const AllQuestionsSet = () => {
           
           {filteredSets.length > 0 ? (
             <ul className="setsList">
+              
               {filteredSets.map(([setName, setQuestionsData]) => (
                 <li key={setName} className="setItem">
                   <div 
