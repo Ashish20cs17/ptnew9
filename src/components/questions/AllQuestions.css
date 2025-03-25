@@ -114,3 +114,68 @@
   .deleteButton:hover {
     background-color: #ff0000;
   }
+  .editForm {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .editForm .formGroup {
+    margin-bottom: 15px;
+  }
+  
+  .editForm label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .editForm input,
+  .editForm select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .editForm button {
+    margin-right: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .editForm button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .editForm button[type="button"] {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .questionActions {
+    margin-top: 10px;
+  }
+  
+  .editButton {
+    background-color: #2196F3;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  .deleteButton {
+    background-color: #f44336;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
