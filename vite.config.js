@@ -1,13 +1,13 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+// vite.config.js
 
-// https://vite.dev/config/
+import { defineConfig } from 'vite';    // Keep default Vite import
+import react from '@vitejs/plugin-react';  // React plugin for Vite
+import tailwindcss from '@tailwindcss/vite';  // Import Tailwind only once
+
+// Define Vite configuration
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
-  
-    server:{
-          host : '0.0.0.0'
-    }
-  
-})
+  plugins: [
+    react(),              // React setup
+    tailwindcss(),         // Tailwind plugin setup, use parentheses
+  ],
+});
