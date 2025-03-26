@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ref, onValue, get } from 'firebase/database';
+import { ref, onValue, get, remove } from 'firebase/database'; // Add 'remove' import
 import { database } from '../firebase/FirebaseSetup';
 import './AllUsers.css';
 
@@ -13,7 +13,6 @@ const AllUsers = () => {
 
     useEffect(() => {
         const usersRef = ref(database, 'users');
-
         onValue(usersRef, (snapshot) => {
             const usersData = snapshot.val();
             if (usersData) {
@@ -53,14 +52,10 @@ const AllUsers = () => {
         if (!selectedUser || !selectedUser.quizResults || !selectedUser.quizResults[quizId]) {
             return;
         }
-
         setSelectedQuiz(quizId);
-
         try {
-            // Get detailed quiz results for the selected user and quiz
             const quizResultRef = ref(database, `users/${selectedUser.id}/quizResults/${quizId}`);
             const snapshot = await get(quizResultRef);
-
             if (snapshot.exists()) {
                 setQuizDetails(snapshot.val());
             } else {
@@ -72,7 +67,36 @@ const AllUsers = () => {
         }
     };
 
-    // Format date
+    // New function to delete an assigned set
+    const handleDeleteAssignedSet = async (setId) => {
+        if (!selectedUser) return;
+
+        try {
+            const setRef = ref(database, `users/${selectedUser.id}/assignedSets/${setId}`);
+            await remove(setRef); // Remove the specific assigned set from Firebase
+
+            // Update the local state to reflect the change immediately
+            const updatedUser = {
+                ...selectedUser,
+                assignedSets: {
+                    ...selectedUser.assignedSets,
+                    [setId]: undefined // Mark as undefined to remove
+                }
+            };
+            delete updatedUser.assignedSets[setId]; // Delete the key
+            setSelectedUser(updatedUser);
+
+            // Update the users array too
+            setUsers(users.map(user => (user.id === selectedUser.id ? updatedUser : user)));
+            setFilteredUsers(filteredUsers.map(user => (user.id === selectedUser.id ? updatedUser : user)));
+
+            alert(`Assigned set ${setId} deleted successfully!`);
+        } catch (error) {
+            console.error("Error deleting assigned set:", error);
+            alert("Failed to delete the assigned set.");
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleString();
@@ -99,13 +123,11 @@ const AllUsers = () => {
             </div>
 
             <div className="content-layout">
-                {/* Users list */}
                 <div className="users-list-container">
                     <div className="panel-header">
                         <h2 className="panel-title">Users</h2>
                         <span className="user-count">{filteredUsers.length}</span>
                     </div>
-
                     {filteredUsers.length === 0 ? (
                         <div className="empty-message">No users found</div>
                     ) : (
@@ -128,7 +150,6 @@ const AllUsers = () => {
                     )}
                 </div>
 
-                {/* User details */}
                 <div className="user-details-container">
                     <div className="panel-header">
                         <h2 className="panel-title">
@@ -169,7 +190,6 @@ const AllUsers = () => {
                                     </div>
                                 </div>
 
-                                {/* Quiz Results */}
                                 {selectedUser.quizResults && Object.keys(selectedUser.quizResults).length > 0 && (
                                     <div className="detail-section">
                                         <h3 className="subsection-title">Quiz Results</h3>
@@ -186,21 +206,26 @@ const AllUsers = () => {
                                     </div>
                                 )}
 
-                                {/* Assigned Sets */}
                                 {selectedUser.assignedSets && Object.keys(selectedUser.assignedSets).length > 0 && (
                                     <div className="detail-section">
                                         <h3 className="subsection-title">Assigned Sets</h3>
                                         <ul className="item-list">
                                             {Object.keys(selectedUser.assignedSets).map(setId => (
-                                                <li key={setId}>{setId}</li>
+                                                <li key={setId} className="assigned-set-item">
+                                                    <span>{setId}</span>
+                                                    <button
+                                                        className="delete-button"
+                                                        onClick={() => handleDeleteAssignedSet(setId)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </li>
                                             ))}
                                         </ul>
                                     </div>
                                 )}
                             </div>
                         ) : selectedQuiz && quizDetails ? (
-                            console.log('Quiz details responses:', quizDetails.responses),
-
                             <div className="quiz-details">
                                 <div className="detail-section">
                                     <div className="detail-field">
@@ -229,7 +254,6 @@ const AllUsers = () => {
                                     </div>
                                 </div>
 
-                                {/* Responses */}
                                 {quizDetails.responses && (
                                     <div className="detail-section">
                                         <h3 className="subsection-title">Responses</h3>
