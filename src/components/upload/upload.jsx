@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+
 import { database } from "../firebase/FirebaseSetup";
 import { ref, push, set, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
+
+import React, { useState, useRef } from 'react';
+import JoditEditor from 'jodit-react';
 import "./Upload.css";
+
 
 const Upload = () => {
   const [questionType, setQuestionType] = useState("MCQ");
   const [question, setQuestion] = useState("");
+ 
+  const editor = useRef(null); // Reference for Jodit Editor
   const [questionImage, setQuestionImage] = useState(null);
   const [questionImageUrl, setQuestionImageUrl] = useState(null);
   const [options, setOptions] = useState(["", "", "", ""]);
@@ -26,7 +32,22 @@ const Upload = () => {
   const [topicList, setTopicList] = useState("");
   const [difficultyLevel, setDifficultyLevel] = useState("");
   const [grade, setGrade] = useState("G1");
+  const config = {
+    readonly: false,
+    toolbar: true,
+    placeholder: "Enter your question here...",
+    enter: "BR", // Adds line breaks instead of wrapping in <p>
+    removeButtons: "source", // Disable "Code View" to prevent manual tag editing
+    fullpage: false,
+    cleanHTML: true,
+    sanitize: true,
+  };
 
+  const handleTextChange = (content) => {
+    // Remove HTML tags to keep only the plain text
+    const plainText = content.replace(/<\/?[^>]+(>|$)/g, "");
+    setQuestion(plainText);
+  }
   // Upload image to Supabase and return the URL
   const uploadImageToSupabase = async (file) => {
     if (!file) return null;
@@ -82,6 +103,12 @@ const Upload = () => {
 
   // Handle Fill-in-the-Blanks Answer Image Selection
   const handleAnswerImageChange = async (e) => {
+
+
+    const editor = useRef(null);
+    const [content, setContent] = useState('');
+
+
     const file = e.target.files[0];
     if (answerImageUrl) {
       await deleteImageFromSupabase(answerImageUrl);
@@ -179,7 +206,16 @@ const Upload = () => {
           <option value="TRIVIA">Trivia</option>
         </select>
       </div>
-      
+      <div className="formGroup">
+        <label>Question:</label>
+        <JoditEditor
+        value={question}
+        config={config}
+        onChange={handleTextChange} // Passes plain text without HTML
+      />
+
+
+      </div>
       {/* Question Content */}
       <div className="formGroup">
         <textarea 
