@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, remove, update } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
+import parse from "html-react-parser"; // Import html-react-parser
 import "./AllQuestions.css";
 
 const AllQuestions = () => {
@@ -9,7 +10,7 @@ const AllQuestions = () => {
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  
+
   // Filter states
   const [grade, setGrade] = useState("all");
   const [topic, setTopic] = useState("all");
@@ -47,10 +48,10 @@ const AllQuestions = () => {
 
   useEffect(() => {
     let result = [...questions];
-    if (grade !== "all") result = result.filter(q => q.grade === grade);
-    if (topic !== "all") result = result.filter(q => q.topic === topic);
-    if (topicList !== "all") result = result.filter(q => q.topicList === topicList);
-    if (difficultyLevel !== "all") result = result.filter(q => q.difficultyLevel === difficultyLevel);
+    if (grade !== "all") result = result.filter((q) => q.grade === grade);
+    if (topic !== "all") result = result.filter((q) => q.topic === topic);
+    if (topicList !== "all") result = result.filter((q) => q.topicList === topicList);
+    if (difficultyLevel !== "all") result = result.filter((q) => q.difficultyLevel === difficultyLevel);
     setFilteredQuestions(result);
   }, [questions, grade, topic, topicList, difficultyLevel]);
 
@@ -64,9 +65,9 @@ const AllQuestions = () => {
 
     try {
       const questionRef = ref(database, `questions/${editingQuestion.id}`);
-      
+
       const updates = {
-        question: editingQuestion.question || '',
+        question: editingQuestion.question || "",
         type: editingQuestion.type,
         timestamp: editingQuestion.timestamp || new Date().toISOString(),
       };
@@ -76,19 +77,19 @@ const AllQuestions = () => {
       if (editingQuestion.topicList) updates.topicList = editingQuestion.topicList;
       if (editingQuestion.difficultyLevel) updates.difficultyLevel = editingQuestion.difficultyLevel;
       if (editingQuestion.type === "MCQ" && editingQuestion.options) {
-        updates.options = editingQuestion.options.filter(opt => opt.text || opt.image);
+        updates.options = editingQuestion.options.filter((opt) => opt.text || opt.image);
       }
       if (editingQuestion.correctAnswer) updates.correctAnswer = editingQuestion.correctAnswer;
 
       await update(questionRef, updates);
 
-      setQuestions(prev => 
-        prev.map(q => q.id === editingQuestion.id ? { ...q, ...updates } : q)
+      setQuestions((prev) =>
+        prev.map((q) => (q.id === editingQuestion.id ? { ...q, ...updates } : q))
       );
-      setFilteredQuestions(prev => 
-        prev.map(q => q.id === editingQuestion.id ? { ...q, ...updates } : q)
+      setFilteredQuestions((prev) =>
+        prev.map((q) => (q.id === editingQuestion.id ? { ...q, ...updates } : q))
       );
-      
+
       setEditingQuestion(null);
       console.log("✅ Question updated successfully");
     } catch (err) {
@@ -101,11 +102,11 @@ const AllQuestions = () => {
     const newOptions = [...editingQuestion.options];
     newOptions[index] = {
       ...newOptions[index],
-      [field]: value
+      [field]: value,
     };
     setEditingQuestion({
       ...editingQuestion,
-      options: newOptions
+      options: newOptions,
     });
   };
 
@@ -114,8 +115,8 @@ const AllQuestions = () => {
       ...editingQuestion,
       correctAnswer: {
         ...editingQuestion.correctAnswer,
-        [field]: value
-      }
+        [field]: value,
+      },
     });
   };
 
@@ -156,17 +157,22 @@ const AllQuestions = () => {
 
   const getUniqueValues = (field) => {
     if (questions.length === 0) return [];
-    const uniqueValues = [...new Set(questions.map(q => q[field]).filter(Boolean))];
+    const uniqueValues = [...new Set(questions.map((q) => q[field]).filter(Boolean))];
     return uniqueValues.sort();
   };
 
   const getFilteredTopicList = () => {
     if (grade === "all" || topic === "all") return getUniqueValues("topicList");
     const filteredValues = questions
-      .filter(q => q.grade === grade && q.topic === topic)
-      .map(q => q.topicList)
+      .filter((q) => q.grade === grade && q.topic === topic)
+      .map((q) => q.topicList)
       .filter(Boolean);
     return [...new Set(filteredValues)].sort();
+  };
+
+  // Function to check if a string contains HTML tags
+  const isHTML = (str) => {
+    return /<[^>]+>/.test(str);
   };
 
   return (
@@ -204,7 +210,7 @@ const AllQuestions = () => {
           <label>Subtopic:</label>
           <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
             <option value="all">All Subtopics</option>
-            {getFilteredTopicList().map(item => (
+            {getFilteredTopicList().map((item) => (
               <option key={item} value={item}>{item}</option>
             ))}
           </select>
@@ -214,7 +220,7 @@ const AllQuestions = () => {
           <label>Difficulty:</label>
           <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
             <option value="all">All Difficulty Levels</option>
-            {getUniqueValues("difficultyLevel").map(level => (
+            {getUniqueValues("difficultyLevel").map((level) => (
               <option key={level} value={level}>{level}</option>
             ))}
           </select>
@@ -230,10 +236,12 @@ const AllQuestions = () => {
               <input
                 type="text"
                 value={editingQuestion.question || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  question: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    question: e.target.value,
+                  })
+                }
                 required
               />
             </div>
@@ -242,10 +250,12 @@ const AllQuestions = () => {
               <label>Type:</label>
               <select
                 value={editingQuestion.type || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  type: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    type: e.target.value,
+                  })
+                }
                 required
               >
                 <option value="MCQ">Multiple Choice</option>
@@ -257,10 +267,12 @@ const AllQuestions = () => {
               <label>Grade:</label>
               <select
                 value={editingQuestion.grade || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  grade: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    grade: e.target.value,
+                  })
+                }
               >
                 <option value="">Select Grade</option>
                 <option value="G1">Grade 1</option>
@@ -274,10 +286,12 @@ const AllQuestions = () => {
               <label>Topic:</label>
               <select
                 value={editingQuestion.topic || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  topic: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    topic: e.target.value,
+                  })
+                }
               >
                 <option value="">Select Topic</option>
                 <option value="Number System">Number System</option>
@@ -295,10 +309,12 @@ const AllQuestions = () => {
               <input
                 type="text"
                 value={editingQuestion.topicList || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  topicList: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    topicList: e.target.value,
+                  })
+                }
               />
             </div>
 
@@ -307,10 +323,12 @@ const AllQuestions = () => {
               <input
                 type="text"
                 value={editingQuestion.difficultyLevel || ""}
-                onChange={(e) => setEditingQuestion({
-                  ...editingQuestion,
-                  difficultyLevel: e.target.value
-                })}
+                onChange={(e) =>
+                  setEditingQuestion({
+                    ...editingQuestion,
+                    difficultyLevel: e.target.value,
+                  })
+                }
               />
             </div>
 
@@ -322,7 +340,7 @@ const AllQuestions = () => {
                     <input
                       type="text"
                       value={option.text || ""}
-                      onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
+                      onChange={(e) => handleOptionChange(index, "text", e.target.value)}
                       placeholder={`Option ${index + 1} text`}
                     />
                     {option.image && (
@@ -342,7 +360,7 @@ const AllQuestions = () => {
               <input
                 type="text"
                 value={editingQuestion.correctAnswer?.text || ""}
-                onChange={(e) => handleCorrectAnswerChange('text', e.target.value)}
+                onChange={(e) => handleCorrectAnswerChange("text", e.target.value)}
                 placeholder="Correct answer text"
                 required
               />
@@ -374,9 +392,12 @@ const AllQuestions = () => {
         <ol>
           {filteredQuestions.map((q) => (
             <li key={q.id} className="questionItem">
-              <strong>{q.question}</strong> ({q.type}) 
+              <strong>
+                {isHTML(q.question) ? parse(q.question) : q.question}
+              </strong>{" "}
+              ({q.type})
               <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
-              
+
               <div className="questionMeta">
                 {q.grade && <span className="tag">Grade: {q.grade}</span>}
                 {q.topic && <span className="tag">Topic: {q.topic}</span>}
@@ -427,16 +448,10 @@ const AllQuestions = () => {
               {q.type === "FILL_IN_THE_BLANKS" && <p>Answer: {q.correctAnswer.text}</p>}
 
               <div className="questionActions">
-                <button 
-                  className="editButton" 
-                  onClick={() => handleEdit(q)}
-                >
+                <button className="editButton" onClick={() => handleEdit(q)}>
                   Edit
                 </button>
-                <button 
-                  className="deleteButton" 
-                  onClick={() => handleDelete(q)}
-                >
+                <button className="deleteButton" onClick={() => handleDelete(q)}>
                   Delete
                 </button>
               </div>
