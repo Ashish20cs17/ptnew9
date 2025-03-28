@@ -1,6 +1,4 @@
 /* Main Container */
-
-
 .homeContainer {
   padding: 32px;
   background-color: #f7fafc; /* Softened background color */
@@ -11,6 +9,7 @@
   justify-content: center; /* Centering content vertically */
   text-align: center; /* Center the text inside the container */
 }
+
 
 /* Grid Layout */
 .grid-container {
