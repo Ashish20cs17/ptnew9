@@ -3,6 +3,7 @@ import "./AttachedQuestions.css";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, set } from "firebase/database";
 import { ToastContainer, toast } from "react-toastify";
+import parse from "html-react-parser"; // Import html-react-parser
 
 const AttachedQuestion = () => {
   const [questions, setQuestions] = useState([]);
@@ -10,7 +11,7 @@ const AttachedQuestion = () => {
   const [selectedSetName, setSelectedSetName] = useState("");
   const [error, setError] = useState(null);
   const [setNameError, setSetNameError] = useState("");
-  
+
   // Filter states
   const [grade, setGrade] = useState("all");
   const [topic, setTopic] = useState("all");
@@ -50,24 +51,20 @@ const AttachedQuestion = () => {
   useEffect(() => {
     let result = [...questions];
 
-    // Apply grade filter
     if (grade !== "all") {
-      result = result.filter(q => q.grade === grade);
+      result = result.filter((q) => q.grade === grade);
     }
 
-    // Apply topic filter
     if (topic !== "all") {
-      result = result.filter(q => q.topic === topic);
+      result = result.filter((q) => q.topic === topic);
     }
 
-    // Apply topicList (subtopic) filter
     if (topicList !== "all") {
-      result = result.filter(q => q.topicList === topicList);
+      result = result.filter((q) => q.topicList === topicList);
     }
 
-    // Apply difficulty filter
     if (difficultyLevel !== "all") {
-      result = result.filter(q => q.difficultyLevel === difficultyLevel);
+      result = result.filter((q) => q.difficultyLevel === difficultyLevel);
     }
 
     setFilteredQuestions(result);
@@ -82,40 +79,37 @@ const AttachedQuestion = () => {
     setSetNameError("");
 
     try {
-      // First get the current set data to determine the next order number
       const setRef = ref(database, `attachedQuestionSets/${selectedSetName}`);
       const snapshot = await get(setRef);
-      
+
       let nextOrder = 0;
-      
+
       if (snapshot.exists()) {
         const existingSet = snapshot.val();
-        
-        // Check if question already exists in the set
-        const existingQuestion = Object.values(existingSet).find(item => 
-          (typeof item === 'string' && item === questionId) ||
-          (typeof item === 'object' && item.id === questionId)
+
+        const existingQuestion = Object.values(existingSet).find(
+          (item) =>
+            (typeof item === "string" && item === questionId) ||
+            (typeof item === "object" && item.id === questionId)
         );
-        
+
         if (existingQuestion) {
           toast.warning(`⚠️ This question is already in set: ${selectedSetName}`);
           return;
         }
-        
-        // Find the highest order value
+
         const orders = Object.values(existingSet)
-          .map(item => typeof item === 'object' && item.order !== undefined ? item.order : -1)
-          .filter(order => order !== -1);
-          
+          .map((item) => (typeof item === "object" && item.order !== undefined ? item.order : -1))
+          .filter((order) => order !== -1);
+
         nextOrder = orders.length > 0 ? Math.max(...orders) + 1 : 0;
       }
-      
-      // Now add the question with order information
+
       const questionRef = ref(database, `attachedQuestionSets/${selectedSetName}/${questionId}`);
       await set(questionRef, {
         id: questionId,
         order: nextOrder,
-        addedAt: Date.now()
+        addedAt: Date.now(),
       });
 
       toast.success(`✅ Question added to set: ${selectedSetName} at position ${nextOrder}`);
@@ -125,24 +119,27 @@ const AttachedQuestion = () => {
     }
   };
 
-  // Generate list of unique values for each filter
   const getUniqueValues = (field) => {
     if (questions.length === 0) return [];
-    
-    const uniqueValues = [...new Set(questions.map(q => q[field]).filter(Boolean))];
+
+    const uniqueValues = [...new Set(questions.map((q) => q[field]).filter(Boolean))];
     return uniqueValues.sort();
   };
 
-  // Get subtopics based on selected grade and topic
   const getFilteredTopicList = () => {
     if (grade === "all" || topic === "all") return getUniqueValues("topicList");
-    
+
     const filteredValues = questions
-      .filter(q => q.grade === grade && q.topic === topic)
-      .map(q => q.topicList)
+      .filter((q) => q.grade === grade && q.topic === topic)
+      .map((q) => q.topicList)
       .filter(Boolean);
-    
+
     return [...new Set(filteredValues)].sort();
+  };
+
+  // Function to check if a string contains HTML tags
+  const isHTML = (str) => {
+    return /<[^>]+>/.test(str);
   };
 
   return (
@@ -150,7 +147,6 @@ const AttachedQuestion = () => {
       <h2>All Questions</h2>
       <hr />
 
-      {/* Input field for set name */}
       <input
         type="text"
         value={selectedSetName}
@@ -160,7 +156,6 @@ const AttachedQuestion = () => {
       {setNameError && <p style={{ color: "red" }}>{setNameError}</p>}
       <hr />
 
-      {/* Filter Controls */}
       <div className="filterControls">
         <div className="formGroup">
           <label>Grade:</label>
@@ -191,7 +186,7 @@ const AttachedQuestion = () => {
           <label>Subtopic:</label>
           <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
             <option value="all">All Subtopics</option>
-            {getFilteredTopicList().map(item => (
+            {getFilteredTopicList().map((item) => (
               <option key={item} value={item}>{item}</option>
             ))}
           </select>
@@ -201,7 +196,7 @@ const AttachedQuestion = () => {
           <label>Difficulty:</label>
           <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
             <option value="all">All Difficulty Levels</option>
-            {getUniqueValues("difficultyLevel").map(level => (
+            {getUniqueValues("difficultyLevel").map((level) => (
               <option key={level} value={level}>{level}</option>
             ))}
           </select>
@@ -211,27 +206,23 @@ const AttachedQuestion = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {filteredQuestions.length === 0 && !error ? <p>No questions found!</p> : null}
 
-      {/* Question count info */}
       <div className="questionStats">
         <p>Showing {filteredQuestions.length} of {questions.length} questions</p>
       </div>
 
-      {/* Scrollable Questions List */}
       <div className="attachedQuestionList">
         <ol>
           {filteredQuestions.map((q) => (
             <li key={q.id} className="attachedQuestionItem">
-              <strong>{q.question}</strong> ({q.type})
-              
-              {/* Display grade, topic, and subtopic if available */}
+              <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
+
               <div className="questionMeta">
                 {q.grade && <span className="tag">Grade: {q.grade}</span>}
                 {q.topic && <span className="tag">Topic: {q.topic}</span>}
                 {q.topicList && <span className="tag">Subtopic: {q.topicList}</span>}
                 {q.difficultyLevel && <span className="tag">Difficulty: {q.difficultyLevel}</span>}
               </div>
-              
-              {/* Show question image if available */}
+
               {q.questionImage && (
                 <div>
                   <img
@@ -242,7 +233,6 @@ const AttachedQuestion = () => {
                 </div>
               )}
 
-              {/* Show MCQ options properly */}
               {q.type === "MCQ" && Array.isArray(q.options) && (
                 <ul>
                   {q.options.map((option, index) => (
@@ -260,7 +250,6 @@ const AttachedQuestion = () => {
                 </ul>
               )}
 
-              {/* Show correct answer */}
               {q.correctAnswer && (
                 <p>
                   <strong>Correct Answer:</strong> {q.correctAnswer.text}
@@ -274,7 +263,6 @@ const AttachedQuestion = () => {
                 </p>
               )}
 
-              {/* Button to attach question */}
               <div>
                 <button className="addQuestionButton" onClick={() => handleAddToSet(q.id)}>
                   {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
