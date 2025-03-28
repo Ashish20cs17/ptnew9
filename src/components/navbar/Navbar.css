@@ -99,6 +99,10 @@
     }
     .hamburger {
         display: flex;
+        background: #3f91d0;
+        padding: 10px;
+        border-radius: 7px;
+       
         
         
        
@@ -107,8 +111,9 @@
         background: #3f91d0;
         color: #fff;
         font-size: 25px;
-        border-radius: 5px;
-        width: 100%;
+        border-radius: 2px;
+       
+        
        
         cursor: pointer;
       
