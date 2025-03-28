@@ -1,12 +1,135 @@
 import React, { useEffect, useState, useRef } from "react";
 import { database } from "../firebase/FirebaseSetup";
-import { ref, get, remove, update, push, set, serverTimestamp } from "firebase/database";
+import { ref, get, remove, update } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
 import parse from "html-react-parser";
 import JoditEditor from "jodit-react";
 import "./AllQuestions.css";
-import "../upload/Upload.css"; // Assuming Upload.css exists and is compatible
+import "../upload/Upload.css";
+
+// Centralized data structure (moved from DynamicMathSelector)
+const MATH_DATA = {
+  grades: [
+    { code: "G1", text: "Grade 1" },
+    { code: "G2", text: "Grade 2" },
+    { code: "G3", text: "Grade 3" },
+    { code: "G4", text: "Grade 4" },
+  ],
+  topics: [
+    { grade: "G1", code: "G1A", text: "Number System" },
+    { grade: "G2", code: "G2A", text: "Number System" },
+    { grade: "G3", code: "G3A", text: "Number System" },
+    { grade: "G4", code: "G4A", text: "Number System" },
+    { grade: "G1", code: "G1B", text: "Operations (Addition, Subtraction ....)" },
+    { grade: "G2", code: "G2B", text: "Operations (Addition, Subtraction ....)" },
+    { grade: "G3", code: "G3B", text: "Operations (Addition, Subtraction ....)" },
+    { grade: "G4", code: "G4B", text: "Operations (Addition, Subtraction ....)" },
+    { grade: "G1", code: "G1C", text: "Shapes and Geometry" },
+    { grade: "G2", code: "G2C", text: "Shapes and Geometry" },
+    { grade: "G3", code: "G3C", text: "Shapes and Geometry" },
+    { grade: "G4", code: "G4C", text: "Shapes and Geometry" },
+    { grade: "G1", code: "G1D", text: "Measurement" },
+    { grade: "G2", code: "G2D", text: "Measurement" },
+    { grade: "G3", code: "G3D", text: "Measurement" },
+    { grade: "G4", code: "G4D", text: "Measurement" },
+    { grade: "G1", code: "G1E", text: "Data Handling" },
+    { grade: "G2", code: "G2E", text: "Data Handling" },
+    { grade: "G3", code: "G3E", text: "Data Handling" },
+    { grade: "G4", code: "G4E", text: "Data Handling" },
+    { grade: "G1", code: "G1F", text: "Maths Puzzles" },
+    { grade: "G2", code: "G2F", text: "Maths Puzzles" },
+    { grade: "G3", code: "G3F", text: "Maths Puzzles" },
+    { grade: "G4", code: "G4F", text: "Maths Puzzles" },
+    { grade: "G1", code: "G1G", text: "Real Life all concept sums" },
+    { grade: "G2", code: "G2G", text: "Real Life all concept sums" },
+    { grade: "G3", code: "G3G", text: "Real Life all concept sums" },
+    { grade: "G4", code: "G4G", text: "Real Life all concept sums" },
+  ],
+  subtopics: {
+    G1A: {
+      G1: [
+        { code: "G1A.1", text: "Place Value & Number Names" },
+        { code: "G1A.2", text: "Skip Counting" },
+        { code: "G1A.3", text: "Comparing & Ordering Numbers" },
+        { code: "G1A.4", text: "Ordinal Numbers" },
+        { code: "G1A.5", text: "Number Patterns" },
+        { code: "G1A.6", text: "Addition & Subtraction of Larger Numbers" },
+        { code: "G1A.7", text: "Understanding Zero" },
+        { code: "G1A.8", text: "Expanded & Standard Form" },
+      ],
+    },
+    G2A: {
+      G2: [
+        { code: "G2A.1", text: "Place Value & Number Names" },
+        { code: "G2A.2", text: "Skip Counting" },
+        { code: "G2A.3", text: "Comparing & Ordering Numbers" },
+        { code: "G2A.4", text: "Ordinal Numbers" },
+        { code: "G2A.5", text: "Number Patterns" },
+        { code: "G2A.6", text: "Addition & Subtraction of Larger Numbers" },
+        { code: "G2A.7", text: "Understanding the Concept of Zero" },
+        { code: "G2A.8", text: "Writing Numbers in Expanded & Standard Form" },
+      ],
+    },
+    G3A: {
+      G3: [
+        { code: "G3A.1", text: "Place Value & Number Names" },
+        { code: "G3A.2", text: "Skip Counting" },
+        { code: "G3A.3", text: "Comparing & Ordering Numbers" },
+        { code: "G3A.4", text: "Ordinal Numbers" },
+        { code: "G3A.5", text: "Number Patterns" },
+        { code: "G3A.6", text: "Addition & Subtraction of Larger Numbers" },
+        { code: "G3A.7", text: "Understanding the Concept of Zero" },
+        { code: "G3A.8", text: "Writing Numbers in Expanded & Standard Form" },
+      ],
+    },
+    G4A: {
+      G4: [
+        { code: "G4A.1", text: "Place Value & Number Names" },
+        { code: "G4A.2", text: "Rounding & Estimation" },
+        { code: "G4A.3", text: "Roman Numerals" },
+        { code: "G4A.4", text: "Factors & Multiples" },
+        { code: "G4A.5", text: "Number Patterns" },
+        { code: "G4A.6", text: "Negative Numbers (Introduction)" },
+        { code: "G4A.7", text: "Even & Odd Properties" },
+        { code: "G4A.8", text: "Operations with Larger Numbers" },
+      ],
+    },
+    G1B: {
+      G1: [
+        { code: "G1B.1", text: "Addition & Subtraction with Carrying/Borrowing" },
+        { code: "G1B.2", text: "Multiplication as Repeated Addition" },
+        { code: "G1B.3", text: "Understanding Multiplication Tables" },
+        { code: "G1B.4", text: "Simple Division Concepts" },
+        { code: "G1B.5", text: "Fact Families" },
+        { code: "G1B.6", text: "Properties of Addition and Multiplication" },
+      ],
+    },
+    G2B: {
+      G2: [
+        { code: "G2B.1", text: "Addition, Subtraction, Multiplication, Division" },
+        { code: "G2B.2", text: "Multiplication as Repeated Addition" },
+        { code: "G2B.3", text: "Understanding Multiplication Tables" },
+        { code: "G2B.4", text: "Simple Division Concepts" },
+        { code: "G2B.5", text: "Fact Families" },
+        { code: "G2B.6", text: "Properties of Operations" },
+      ],
+    },
+    G4B: {
+      G4: [
+        { code: "G4B.1", text: "Addition & Subtraction (Larger Numbers)" },
+        { code: "G4B.2", text: "Multiplication & Division (Advanced)" },
+        { code: "G4B.3", text: "Properties of Operations" },
+        { code: "G4B.4", text: "Fractions & Decimals Operations" },
+        { code: "G4B.5", text: "BODMAS & Order of Operations" },
+        { code: "G4B.6", text: "Multiplication & Division of Decimals" },
+        { code: "G4B.7", text: "Word Problems & Mixed Operations" },
+        { code: "G4B.8", text: "Estimation & Approximation" },
+      ],
+    },
+    // Add other subtopics as needed
+  },
+};
 
 const AllQuestions = () => {
   const [questions, setQuestions] = useState([]);
@@ -103,14 +226,9 @@ const AllQuestions = () => {
     return uniqueValues.sort();
   };
 
-  const getFilteredTopicList = () => {
-    if (grade === "all" || topic === "all") return getUniqueValues("topicList");
-    const filteredValues = questions
-      .filter((q) => q.grade === grade && q.topic === topic)
-      .map((q) => q.topicList)
-      .filter(Boolean);
-    return [...new Set(filteredValues)].sort();
-  };
+  const filteredTopics = grade === "all" ? MATH_DATA.topics : MATH_DATA.topics.filter((t) => t.grade === grade);
+  const filteredSubtopics =
+    grade === "all" || topic === "all" ? [] : MATH_DATA.subtopics[topic]?.[grade] || [];
 
   const isHTML = (str) => /<[^>]+>/.test(str);
 
@@ -147,10 +265,10 @@ const AllQuestions = () => {
     const [loading, setLoading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const [questionID, setQuestionID] = useState(questionData?.questionID || "");
-    const [topic, setTopic] = useState(questionData?.topic || "Number System");
+    const [topic, setTopic] = useState(questionData?.topic || "");
     const [topicList, setTopicList] = useState(questionData?.topicList || "");
     const [difficultyLevel, setDifficultyLevel] = useState(questionData?.difficultyLevel || "");
-    const [grade, setGrade] = useState(questionData?.grade || "G1");
+    const [grade, setGrade] = useState(questionData?.grade || "");
 
     const config = {
       readonly: false,
@@ -291,7 +409,11 @@ const AllQuestions = () => {
         <div className="formGroup">
           <div className="imageUpload">
             <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
-            {questionImageUrl && <div className="imagePreview">Image uploaded: <img src={questionImageUrl} alt="Question" style={{ maxWidth: "100px" }} /></div>}
+            {questionImageUrl && (
+              <div className="imagePreview">
+                Image uploaded: <img src={questionImageUrl} alt="Question" style={{ maxWidth: "100px" }} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -300,36 +422,49 @@ const AllQuestions = () => {
         {questionType !== "TRIVIA" && (
           <>
             <div className="formGroup">
+              <label>Grade:</label>
               <select value={grade} onChange={(e) => setGrade(e.target.value)}>
-                <option value="G1">Grade 1</option>
-                <option value="G2">Grade 2</option>
-                <option value="G3">Grade 3</option>
-                <option value="G4">Grade 4</option>
+                <option value="">Select Grade</option>
+                {MATH_DATA.grades.map((g) => (
+                  <option key={g.code} value={g.code}>
+                    {g.text}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="formGroup">
+              <label>Topic:</label>
               <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-                <option value="Number System">Number System</option>
-                <option value="Operations">Operations</option>
-                <option value="Shapes and Geometry">Shapes and Geometry</option>
-                <option value="Measurement">Measurement</option>
-                <option value="Data Handling">Data Handling</option>
-                <option value="Maths Puzzles">Maths Puzzles</option>
-                <option value="Real Life all concept sums">Real Life all concept sums</option>
+                <option value="">Select Topic</option>
+                {grade &&
+                  MATH_DATA.topics
+                    .filter((t) => t.grade === grade)
+                    .map((t) => (
+                      <option key={t.code} value={t.code}>
+                        {t.text}
+                      </option>
+                    ))}
               </select>
             </div>
             <div className="formGroup">
-              <input
-                type="text"
-                placeholder="Subtopic"
-                value={topicList}
-                onChange={(e) => setTopicList(e.target.value)}
-              />
+              <label>Subtopic:</label>
+              <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
+                <option value="">Select Subtopic</option>
+                {grade &&
+                  topic &&
+                  MATH_DATA.subtopics[topic]?.[grade]?.map((st) => (
+                    <option key={st.code} value={st.code}>
+                      {st.text}
+                    </option>
+                  ))}
+              </select>
             </div>
             <div className="formGroup">
+              <label>Difficulty Level:</label>
               <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
+                <option value="">Select Difficulty</option>
                 <option value="L1">L1</option>
-                <option value="L2 Acupuncture">L2</option>
+                <option value="L2">L2</option>
                 <option value="L3">L3</option>
                 <option value="Br">Br</option>
               </select>
@@ -353,7 +488,11 @@ const AllQuestions = () => {
                 />
                 <div className="imageUpload">
                   <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
-                  {optionImageUrls[index] && <div className="imagePreview">Image uploaded: <img src={optionImageUrls[index]} alt={`Option ${index + 1}`} style={{ maxWidth: "100px" }} /></div>}
+                  {optionImageUrls[index] && (
+                    <div className="imagePreview">
+                      Image uploaded: <img src={optionImageUrls[index]} alt={`Option ${index + 1}`} style={{ maxWidth: "100px" }} />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -372,7 +511,11 @@ const AllQuestions = () => {
                 />
                 <div className="imageUpload">
                   <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
-                  {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded: <img src={mcqAnswerImageUrl} alt="Answer" style={{ maxWidth: "100px" }} /></div>}
+                  {mcqAnswerImageUrl && (
+                    <div className="imagePreview">
+                      Image uploaded: <img src={mcqAnswerImageUrl} alt="Answer" style={{ maxWidth: "100px" }} />
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -385,7 +528,11 @@ const AllQuestions = () => {
                 />
                 <div className="imageUpload">
                   <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
-                  {answerImageUrl && <div className="imagePreview">Image uploaded: <img src={answerImageUrl} alt="Answer" style={{ maxWidth: "100px" }} /></div>}
+                  {answerImageUrl && (
+                    <div className="imagePreview">
+                      Image uploaded: <img src={answerImageUrl} alt="Answer" style={{ maxWidth: "100px" }} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -414,31 +561,32 @@ const AllQuestions = () => {
           <label>Grade:</label>
           <select value={grade} onChange={(e) => setGrade(e.target.value)}>
             <option value="all">All Grades</option>
-            <option value="G1">Grade 1</option>
-            <option value="G2">Grade 2</option>
-            <option value="G3">Grade 3</option>
-            <option value="G4">Grade 4</option>
+            {MATH_DATA.grades.map((g) => (
+              <option key={g.code} value={g.code}>
+                {g.text}
+              </option>
+            ))}
           </select>
         </div>
         <div className="formGroup">
           <label>Topic:</label>
           <select value={topic} onChange={(e) => setTopic(e.target.value)}>
             <option value="all">All Topics</option>
-            <option value="Number System">Number System</option>
-            <option value="Operations">Operations</option>
-            <option value="Shapes and Geometry">Shapes and Geometry</option>
-            <option value="Measurement">Measurement</option>
-            <option value="Data Handling">Data Handling</option>
-            <option value="Maths Puzzles">Maths Puzzles</option>
-            <option value="Real Life all concept sums">Real Life all concept sums</option>
+            {filteredTopics.map((t) => (
+              <option key={t.code} value={t.code}>
+                {t.text}
+              </option>
+            ))}
           </select>
         </div>
         <div className="formGroup">
           <label>Subtopic:</label>
           <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
             <option value="all">All Subtopics</option>
-            {getFilteredTopicList().map((item) => (
-              <option key={item} value={item}>{item}</option>
+            {filteredSubtopics.map((st) => (
+              <option key={st.code} value={st.code}>
+                {st.text}
+              </option>
             ))}
           </select>
         </div>
@@ -475,9 +623,23 @@ const AllQuestions = () => {
               <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
               <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
               <div className="questionMeta">
-                {q.grade && <span className="tag">Grade: {q.grade}</span>}
-                {q.topic && <span className="tag">Topic: {q.topic}</span>}
-                {q.topicList && <span className="tag">Subtopic: {q.topicList}</span>}
+                {q.grade && (
+                  <span className="tag">
+                    Grade: {MATH_DATA.grades.find((g) => g.code === q.grade)?.text || q.grade}
+                  </span>
+                )}
+                {q.topic && (
+                  <span className="tag">
+                    Topic: {MATH_DATA.topics.find((t) => t.code === q.topic)?.text || q.topic}
+                  </span>
+                )}
+                {q.topicList && (
+                  <span className="tag">
+                    Subtopic:{" "}
+                    {MATH_DATA.subtopics[q.topic]?.[q.grade]?.find((st) => st.code === q.topicList)?.text ||
+                      q.topicList}
+                  </span>
+                )}
                 {q.difficultyLevel && <span className="tag">Difficulty: {q.difficultyLevel}</span>}
               </div>
               {q.questionImage && (
