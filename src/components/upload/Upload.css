@@ -1,100 +1,194 @@
-.uploadContainer{
+/* Main upload container */
+.uploadContainer {
   all: revert;
-  width: 285px;
+  width: 100%;
+  max-width: 500px;
   margin: auto;
-  
-  background: white;
+  background: #f9f9f9;
   color: #262626;
   display: flex;
-  
   flex-direction: column;
-  
-
-  gap: 10px;
+  gap: 20px; /* Space between elements */
   border-radius: 10px;
-  padding: 30px 40px;
-  
-}
-.uploadContainer img{
-  width: 70%;
-  margin: auto;
-}
-.uploadContainer input{
-  width: 100%;
-  height: 24px;
-  
- border-radius: 5px;
-  
+  padding: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* File input container for proper spacing */
+.file-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Space between elements */
+  margin: 10px 0; /* Adds spacing from the top and bottom */
+}
 
+/* Styled file input to look like a button */
+.file-input-container input[type="file"] {
+  display: block;
+  width: 100%; /* Full width */
+  height: 45px; /* Standard height for consistency */
+  padding: 10px; /* Consistent padding */
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Styled file input label (Choose file) */
+.file-input-container label {
+  display: inline-block;
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 1rem;
+  text-transform: uppercase;
+  margin: 10px 0; /* Adds space around the label */
+}
+
+/* Hover effect for file input label */
+.file-input-container label:hover {
+  background-color: #3e8e41; /* Darker green on hover */
+  transform: scale(1.05); /* Slightly scale up on hover */
+}
+
+/* Focus styling for the file input */
+.file-input-container input[type="file"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Hide default file input button text */
+.file-input-container input[type="file"]::-webkit-file-upload-button {
+  display: none;
+}
+
+/* Correct Answer Bar - Same size as form group */
+.correct-answer-bar,
+.uploadContainer input[type="text"] {
+  width: 100%; /* Full width of the container */
+  padding: 12px; /* Matching padding for consistency */
+  font-size: 1rem; /* Standard font size */
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  margin: 0; /* Ensure no extra margin is applied */
+}
+
+/* Ensure same size for the correct answer input field as other inputs */
+.correct-answer-bar:focus,
+.uploadContainer input[type="text"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Option inputs, matching the formGroup style */
+.optionsSection input {
+  display: block;
+  width: 100%; /* Full width to match formGroup */
+  padding: 12px; /* Same padding as formGroup */
+  font-size: 1rem; /* Standard font size */
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+/* Focus styling for options */
+.optionsSection input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Form Group consistency */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Space between elements */
+}
+
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  width: 100%; /* Ensure full width */
+  padding: 12px; /* Matching padding */
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.formGroup label {
+  font-size: 1rem;
+  color: #334155;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* Progress bar styling */
 .progressBar {
-    width: 100%;
-    height: 8px;
-    background: #ddd;
-    border-radius: 5px;
-    margin: 10px 0;
-    position: relative;
-  }
-  .progressFill {
-    height: 100%;
-    background: #4caf50;
-    border-radius: 5px;
-    transition: width 0.3s ease-in-out;
-  }
-  .progressBar span {
-    position: absolute;
-    top: -20px;
-    right: 10px;
-    font-size: 12px;
-  }
-  .uploadContainer {
-    padding: 20px;
-    max-width: 500px;
-    margin: auto;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .formGroup {
-    margin-bottom: 15px;
-  }
-  
-  .optionsSection input {
-    display: block;
-    margin-bottom: 10px;
-  }
-  
-  button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  button:disabled {
-    background-color: #ccc;
-  }
-  
-  .uploadContainer .uploadButton{
-    color: #ffffff;
-    background-color: #4caf50;
-    border: none;
-    border-radius: 10px;
-    height: 25px;
-  }
-  .uploadContainer .uploadButton:hover {
-    background-color: #890dfe;
-    border: none;
-    border-radius: 10px;
-    height: 25px;
-  }
-  .formGroup textarea{
-    padding: 5px;
-    width: 100%;
-    height: 100px;
-    border-radius: 5px;
-  }
+  width: 100%;
+  height: 8px;
+  background: #ddd;
+  border-radius: 5px;
+  margin: 10px 0;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 5px;
+  transition: width 0.3s ease-in-out;
+}
+
+.progressBar span {
+  position: absolute;
+  top: -20px;
+  right: 10px;
+  font-size: 12px;
+}
+
+/* Upload button styling */
+.uploadButton {
+  background-color: #2dbb51;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}
+
+.uploadButton:disabled {
+  background-color: #ccc;
+}
+
+.uploadButton:hover {
+  background-color: #e03f3f;
+}
+
+.uploadButton:active {
+  background-color: #004085;
+}
