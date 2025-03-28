@@ -42,7 +42,7 @@ const Upload = () => {
     cleanHTML: true,
     sanitize: true,
     // Add focus-related config
-    autofocus: true, // Automatically focus the editor on mount
+    
     askBeforePasteHTML: false, // Prevent focus loss on past
   };
 
