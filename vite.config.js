@@ -10,4 +10,8 @@ export default defineConfig({
     react(),              // React setup
     tailwindcss(),         // Tailwind plugin setup, use parentheses
   ],
+  server: {
+    host: '0.0.0.0', // Allow all IP addresses to access the development server
+    // port: 3000, // Optional: You can change the port if needed
+  },
 });

@@ -24,17 +24,15 @@ const AllQuestionsSet = () => {
 
   const pdfContentRef = useRef(null);
 
-  // Format username to valid email
   const formatEmail = (username) => {
-    if (username.includes('@')) return username; // Already an email
-    return `${username}@gmail.com`; // Add domain if not present
+    if (username.includes('@')) return username;
+    return `${username}@gmail.com`;
   };
 
   useEffect(() => {
     fetchQuestionSets();
   }, []);
 
-  // Effect to filter sets based on search term
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredSets(questionSets);
@@ -61,7 +59,6 @@ const AllQuestionsSet = () => {
       }
 
       const sets = Object.entries(snapshot.val());
-      // Sort sets alphabetically by setName (the first element of each entry)
       const sortedSets = sets.sort(([setNameA], [setNameB]) =>
         setNameB.localeCompare(setNameA)
       );
@@ -87,14 +84,10 @@ const AllQuestionsSet = () => {
     setError(null);
 
     try {
-      // Convert the set data to an array of objects with order information
       const questionsWithOrder = Object.entries(setQuestionsData).map(([key, value]) => {
-        // Check if the value is a simple ID string (old format) or an object with order (new format)
         if (typeof value === 'string') {
-          // Handle old format (just question IDs)
-          return { id: value, order: 0 }; // Default order to 0 for backward compatibility
+          return { id: value, order: 0 };
         } else {
-          // Handle new format (objects with order property)
           return {
             id: value.id || key,
             order: value.order || 0
@@ -102,10 +95,8 @@ const AllQuestionsSet = () => {
         }
       });
 
-      // Sort by order
       questionsWithOrder.sort((a, b) => a.order - b.order);
 
-      // Now fetch the full question data for each ID
       const fetchedQuestions = [];
       const questionPromises = questionsWithOrder.map(async ({ id, order }) => {
         const questionRef = ref(database, `questions/${id}`);
@@ -116,8 +107,6 @@ const AllQuestionsSet = () => {
       });
 
       const results = await Promise.all(questionPromises);
-
-      // Set the questions in order
       setQuestions(results.filter(Boolean));
     } catch (err) {
       console.error("❌ Error fetching questions:", err);
@@ -128,8 +117,7 @@ const AllQuestionsSet = () => {
   };
 
   const deleteQuestionSet = async (setName, e) => {
-    e.stopPropagation(); // Prevent triggering the set click
-
+    e.stopPropagation();
     if (!window.confirm(`Are you sure you want to delete the set "${setName}"?`)) {
       return;
     }
@@ -140,12 +128,10 @@ const AllQuestionsSet = () => {
       await remove(setRef);
       toast.success(`✅ Question set "${setName}" successfully deleted`);
 
-      // Update local state
       const updatedSets = questionSets.filter(([name]) => name !== setName);
       setQuestionSets(updatedSets);
       setFilteredSets(updatedSets);
 
-      // If the deleted set was the selected one, go back to the list
       if (selectedSet === setName) {
         setSelectedSet(null);
         setQuestions([]);
@@ -165,8 +151,6 @@ const AllQuestionsSet = () => {
 
     try {
       setDeleteLoading(true);
-
-      // Get current questions in the set
       const setRef = ref(database, `attachedQuestionSets/${selectedSet}`);
       const snapshot = await get(setRef);
 
@@ -176,8 +160,6 @@ const AllQuestionsSet = () => {
       }
 
       const setData = snapshot.val();
-
-      // Find the key for this question ID (considering both old and new formats)
       let keyToRemove = null;
       for (const [key, value] of Object.entries(setData)) {
         if ((typeof value === 'string' && value === questionId) ||
@@ -192,22 +174,17 @@ const AllQuestionsSet = () => {
         return;
       }
 
-      // Remove the question from the set
       const questionRef = ref(database, `attachedQuestionSets/${selectedSet}/${keyToRemove}`);
       await remove(questionRef);
 
-      // After removing, we need to update the remaining questions' order if necessary
-      // This step is optional but helps keep orders consistent
       const remainingQuestions = { ...setData };
       delete remainingQuestions[keyToRemove];
 
-      // Only reorder if we're using the new format with order properties
       const hasOrderProperty = Object.values(remainingQuestions).some(
         v => typeof v === 'object' && v.order !== undefined
       );
 
       if (hasOrderProperty) {
-        // Convert to array, sort by order, then reassign orders sequentially
         const orderedQuestions = Object.entries(remainingQuestions)
           .map(([key, value]) => ({
             key,
@@ -216,7 +193,6 @@ const AllQuestionsSet = () => {
           }))
           .sort((a, b) => a.order - b.order);
 
-        // Update each question's order sequentially
         const orderUpdatePromises = orderedQuestions.map((item, index) => {
           if (typeof item.data === 'object') {
             const updatedRef = ref(database, `attachedQuestionSets/${selectedSet}/${item.key}`);
@@ -228,7 +204,6 @@ const AllQuestionsSet = () => {
         await Promise.all(orderUpdatePromises);
       }
 
-      // Update UI
       setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
       toast.success("✅ Question removed from set");
     } catch (err) {
@@ -254,13 +229,10 @@ const AllQuestionsSet = () => {
 
     try {
       const formattedEmail = formatEmail(userEmail.trim());
-
-      // Check if user exists
       const usersRef = ref(database, "users");
       const snapshot = await get(usersRef);
 
       let userKey = null;
-
       if (snapshot.exists()) {
         const users = snapshot.val();
         userKey = Object.keys(users).find(
@@ -268,35 +240,22 @@ const AllQuestionsSet = () => {
         );
       }
 
-      // If user doesn't exist, create a new one
       if (!userKey) {
-        try {
-          // Create user with email and default password
-          const userCredential = await createUserWithEmailAndPassword(
-            auth,
-            formattedEmail,
-            "123456" // Default password
-          );
-
-          // Add user to database
-          const newUserRef = ref(database, `users/${userCredential.user.uid}`);
-          await set(newUserRef, {
-            email: formattedEmail,
-            createdAt: new Date().toISOString(),
-            role: "user"
-          });
-
-          userKey = userCredential.user.uid;
-          toast.success(`✅ New user created with email: ${formattedEmail}`);
-        } catch (createError) {
-          console.error("❌ Error creating user:", createError);
-          toast.error(`❌ Failed to create user: ${createError.message}`);
-          setAttachLoading(false);
-          return;
-        }
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formattedEmail,
+          "123456"
+        );
+        const newUserRef = ref(database, `users/${userCredential.user.uid}`);
+        await set(newUserRef, {
+          email: formattedEmail,
+          createdAt: new Date().toISOString(),
+          role: "user"
+        });
+        userKey = userCredential.user.uid;
+        toast.success(`✅ New user created with email: ${formattedEmail}`);
       }
 
-      // Attach question set to user - preserve question order
       const orderedQuestionIds = questions.map(q => q.id);
       const userSetsRef = ref(database, `users/${userKey}/assignedSets/${selectedSet}`);
       await set(userSetsRef, orderedQuestionIds);
@@ -310,169 +269,11 @@ const AllQuestionsSet = () => {
     }
   };
 
-  // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Export the current question set to PDF
   const exportToPDF = async () => {
-    if (!selectedSet || !questions.length) {
-      toast.error("❌ No question set selected or set is empty");
-      return;
-    }
-
-    setExportLoading(true);
-
-    try {
-      // Create a PDF with A4 dimensions
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      // Add title
-      pdf.setFontSize(22);
-      pdf.setTextColor(44, 62, 80);
-      pdf.text(`Question Set: ${selectedSet}`, 15, 20);
-
-      // Add date and count
-      pdf.setFontSize(12);
-      pdf.setTextColor(100, 100, 100);
-      const date = new Date().toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-      pdf.text(`Generated on: ${date}`, 15, 30);
-      pdf.text(`Total Questions: ${questions.length}`, 15, 40);
-      pdf.line(15, 45, pageWidth - 15, 45);
-
-      // Set starting y position for questions
-      let yPosition = 55;
-      let pageNumber = 1;
-
-      // Process each question
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-
-        // Check if we need a new page
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-          pageNumber++;
-        }
-
-        // Add question number and type
-        pdf.setFontSize(14);
-        pdf.setTextColor(44, 62, 80);
-        pdf.text(`Question ${i + 1} (${q.type})`, 15, yPosition);
-        yPosition += 10;
-
-        // Add question text - handle wrapping
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
-
-        // Split long text to fit page width
-        const questionLines = pdf.splitTextToSize(q.question, pageWidth - 30);
-        pdf.text(questionLines, 15, yPosition);
-        yPosition += (questionLines.length * 7);
-
-        // Handle image if exists
-        if (q.questionImage) {
-          try {
-            // Add some space before the image
-            yPosition += 5;
-
-            // Load the image and convert to data URL
-            const imgData = await loadImageAsDataURL(q.questionImage);
-
-            // Calculate dimensions to fit within page width while maintaining aspect ratio
-            const imgProps = pdf.getImageProperties(imgData);
-            const imgWidth = pageWidth - 30; // Full width minus margins
-            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-            // Check if image will fit on current page
-            if (yPosition + imgHeight > pageHeight - 20) {
-              pdf.addPage();
-              yPosition = 20;
-              pageNumber++;
-            }
-
-            // Add the image
-            pdf.addImage(imgData, 'JPEG', 15, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10;
-          } catch (imgError) {
-            console.error("Error processing image:", imgError);
-            pdf.text("(Error loading image)", 15, yPosition);
-            yPosition += 10;
-          }
-        }
-
-        // Add answer depending on question type
-        pdf.setFontSize(12);
-        pdf.setTextColor(44, 125, 190);
-
-        if (q.type === "Fill in the Blanks" && q.answer) {
-          pdf.text(`Answer: ${q.answer}`, 15, yPosition);
-          yPosition += 10;
-        } else if (q.correctAnswer) {
-          pdf.text(`Correct Answer: ${q.correctAnswer.text}`, 15, yPosition);
-          yPosition += 10;
-        }
-
-        // Add a separator line between questions
-        yPosition += 5;
-        pdf.setDrawColor(200, 200, 200);
-        pdf.line(15, yPosition, pageWidth - 15, yPosition);
-        yPosition += 15;
-      }
-
-      // Add page numbers
-      for (let i = 1; i <= pageNumber; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(10);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`Page ${i} of ${pageNumber}`, pageWidth - 40, pageHeight - 10);
-      }
-
-      // Save the PDF
-      pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
-      toast.success("✅ PDF successfully exported");
-    } catch (err) {
-      console.error("❌ Error exporting PDF:", err);
-      toast.error("❌ Failed to export PDF");
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  // Helper function to load an image as a data URL
-  const loadImageAsDataURL = (url) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous'; // Handle CORS issues
-
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-
-        try {
-          const dataURL = canvas.toDataURL('image/jpeg');
-          resolve(dataURL);
-        } catch (e) {
-          reject(new Error("Cannot convert image to data URL"));
-        }
-      };
-
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = url;
-    });
-  };
-
-  // For creating a visually rich PDF (optional alternative approach)
-  const exportToPDFWithCanvas = async () => {
     if (!selectedSet || !questions.length || !pdfContentRef.current) {
       toast.error("❌ No question set selected or set is empty");
       return;
@@ -482,34 +283,69 @@ const AllQuestionsSet = () => {
 
     try {
       const content = pdfContentRef.current;
+      
       const canvas = await html2canvas(content, {
-        scale: 2, // Higher quality
+        scale: 2,
         useCORS: true,
         logging: false,
         onclone: (doc) => {
-          // Make visible and adjust styles for better rendering
-          const clonedContent = doc.getElementById(content.id);
+          const clonedContent = doc.getElementById('pdf-content');
           if (clonedContent) {
-            clonedContent.style.display = 'block';
+            clonedContent.style.padding = '20px';
+            clonedContent.style.background = 'white';
             clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
               btn.style.display = 'none';
             });
+            // Remove any answer text that might slip through
+            clonedContent.querySelectorAll('.answerText').forEach(answer => {
+              answer.style.display = 'none';
+            });
+            clonedContent.style.height = 'auto';
+            clonedContent.style.overflow = 'visible';
           }
         }
       });
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-
-      // Get dimensions to fit to A4
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const scaledWidth = imgWidth * ratio;
+      const scaledHeight = imgHeight * ratio;
 
-      // Add image to cover first page while maintaining aspect ratio
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth * ratio, imgHeight * ratio);
+      const totalHeight = scaledHeight;
+      const pageHeight = pdfHeight;
+      let position = 0;
+      let pageNumber = 1;
+
+      while (position < totalHeight) {
+        if (position > 0) {
+          pdf.addPage();
+          pageNumber++;
+        }
+        
+        pdf.addImage(
+          imgData,
+          'PNG',
+          0,
+          -position,
+          scaledWidth,
+          scaledHeight
+        );
+
+        pdf.setFontSize(10);
+        pdf.setTextColor(150);
+        pdf.text(
+          `Page ${pageNumber}`,
+          pdfWidth - 20,
+          pdfHeight - 10
+        );
+
+        position += pageHeight;
+      }
 
       pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
       toast.success("✅ PDF successfully exported");
@@ -526,7 +362,6 @@ const AllQuestionsSet = () => {
       <h2>All Question Sets</h2>
       <hr />
 
-      {/* Attach to User Section */}
       <div className="attachToUserSection">
         <h3>Attach Question Set to User</h3>
         <div className="attachForm">
@@ -562,8 +397,6 @@ const AllQuestionsSet = () => {
       {!selectedSet ? (
         <div className="questionSetsList">
           <h3>Available Question Sets</h3>
-
-          {/* Search input field */}
           <div className="searchContainer">
             <input
               type="text"
@@ -578,7 +411,6 @@ const AllQuestionsSet = () => {
 
           {filteredSets.length > 0 ? (
             <ul className="setsList">
-
               {filteredSets.map(([setName, setQuestionsData]) => (
                 <li key={setName} className="setItem">
                   <div
@@ -613,8 +445,6 @@ const AllQuestionsSet = () => {
               🔙 Back to Sets
             </button>
             <h3>Questions in "{selectedSet}"</h3>
-
-            {/* Export to PDF button */}
             <button
               onClick={exportToPDF}
               disabled={exportLoading || !questions.length}
@@ -626,7 +456,6 @@ const AllQuestionsSet = () => {
 
           {loading ? <p>Loading questions...</p> : null}
 
-          {/* This div will be used to generate PDF content */}
           <div
             id="pdf-content"
             ref={pdfContentRef}
@@ -658,16 +487,12 @@ const AllQuestionsSet = () => {
                         </div>
                       )}
 
-                      {q.correctAnswer && (
-                        <p className="answerText">
-                          <strong>Correct Answer:</strong> {q.correctAnswer.text}
-                        </p>
-                      )}
-
-                      {q.type === "Fill in the Blanks" && q.answer && (
-                        <p className="answerText">
-                          <strong>Answer:</strong> {q.answer}
-                        </p>
+                      {q.options && (
+                        <ul className="mcqOptions">
+                          {q.options.map((option, idx) => (
+                            <li key={idx}>{option.text}</li>
+                          ))}
+                        </ul>
                       )}
                     </div>
                     <button

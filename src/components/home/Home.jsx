@@ -43,8 +43,8 @@ const Home = () => {
     },
     {
       id: 6,
-      title: 'Upload Syllabus',
-      icon: '📙',
+      title: 'Offline Users',
+      icon: '👤',
       onClick: () => {navigate("/syllabus")}
     }
   ];
