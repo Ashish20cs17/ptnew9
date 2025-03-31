@@ -6,10 +6,13 @@
   padding: 20px;
   background: white;
   border-radius: 20px;
-  max-width: 1200px; /* Constrain width on large screens */
+  max-width: 1200px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 90vh; /* Adjust height to allow scrolling */
 }
+
 
 .allQuestionsContainer h2 {
   color: #333;
@@ -324,4 +327,13 @@
   .attachButton {
     width: 100%;
   }
+}
+.mcqOptions {
+  list-style-type: lower-alpha;
+  margin: 10px 0 0 20px;
+  padding: 0;
+}
+
+.mcqOptions li {
+  margin: 5px 0;
 }
