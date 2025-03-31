@@ -1,6 +1,6 @@
 /* Main Container */
 .homeContainer {
-  padding: 32px;
+ 
   background-color: #f7fafc; /* Softened background color */
   min-height: 100vh;
   display: flex;
@@ -13,18 +13,21 @@
 
 /* Grid Layout */
 .grid-container {
+  
   display: grid;
-  grid-template-columns: repeat(1, 1fr); /* One column by default */
+  grid-template-columns: repeat(2, 1fr); /* One column by default */
   gap: 24px;
-  max-width: 1200px; /* Max width for better alignment */
-  width: 100%;
+  
+  
+
+ 
   margin-top: 32px; /* Space from the top */
   padding: 0 16px; /* Added padding to prevent content touching sides */
 }
 
 /* Grid Items */
 .grid-item {
-  height: 200px; /* Increased height for better proportions */
+  height: 150px; /* Increased height for better proportions */
   aspect-ratio: 1 / 1;
   background-color: #ffffff;
   border-radius: 12px; /* Softer rounded corners */
