@@ -8,32 +8,56 @@
   color: #262626;
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Space between elements */
+  gap: 20px;
   border-radius: 10px;
   padding: 30px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .uploadContainer {
+    max-width: 90%;
+    margin: 0 15px;
+    padding: 20px;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .uploadContainer {
+    padding: 15px;
+    gap: 12px;
+  }
 }
 
 /* File input container for proper spacing */
 .file-input-container {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Space between elements */
-  margin: 10px 0; /* Adds spacing from the top and bottom */
+  gap: 12px;
+  margin: 10px 0;
 }
 
 /* Styled file input to look like a button */
 .file-input-container input[type="file"] {
   display: block;
-  width: 100%; /* Full width */
-  height: 45px; /* Standard height for consistency */
-  padding: 10px; /* Consistent padding */
+  width: 90%;
+  height: 45px;
+  padding: 10px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: #ffffff;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+@media (max-width: 480px) {
+  .file-input-container input[type="file"] {
+    height: 40px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Styled file input label (Choose file) */
@@ -49,13 +73,27 @@
   transition: background-color 0.3s ease, transform 0.3s ease;
   font-size: 1rem;
   text-transform: uppercase;
-  margin: 10px 0; /* Adds space around the label */
+  margin: 10px 0;
+}
+
+@media (max-width: 480px) {
+  .file-input-container label {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Hover effect for file input label */
 .file-input-container label:hover {
-  background-color: #3e8e41; /* Darker green on hover */
-  transform: scale(1.05); /* Slightly scale up on hover */
+  background-color: #3e8e41;
+  transform: scale(1.05);
+}
+
+/* Touch device hover adjustments */
+@media (hover: none) {
+  .file-input-container label:hover {
+    transform: none;
+  }
 }
 
 /* Focus styling for the file input */
@@ -73,14 +111,22 @@
 /* Correct Answer Bar - Same size as form group */
 .correct-answer-bar,
 .uploadContainer input[type="text"] {
-  width: 100%; /* Full width of the container */
-  padding: 12px; /* Matching padding for consistency */
-  font-size: 1rem; /* Standard font size */
+  width: 95%;
+  padding: 12px;
+  font-size: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: #ffffff;
   transition: all 0.3s ease;
-  margin: 0; /* Ensure no extra margin is applied */
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .correct-answer-bar,
+  .uploadContainer input[type="text"] {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Ensure same size for the correct answer input field as other inputs */
@@ -93,14 +139,23 @@
 
 /* Option inputs, matching the formGroup style */
 .optionsSection input {
+  
   display: block;
-  width: 100%; /* Full width to match formGroup */
-  padding: 12px; /* Same padding as formGroup */
-  font-size: 1rem; /* Standard font size */
+  width: 95%;
+  margin: 10px auto;
+  padding: 12px;
+  font-size: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: #ffffff;
   transition: all 0.3s ease;
+}
+
+@media (max-width: 480px) {
+  .optionsSection input {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Focus styling for options */
@@ -114,19 +169,32 @@
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Space between elements */
+  gap: 12px;
 }
 
 .formGroup input,
 .formGroup textarea,
 .formGroup select {
-  width: 100%; /* Ensure full width */
-  padding: 12px; /* Matching padding */
+  width: 90%;
+  padding: 12px;
   font-size: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: #ffffff;
   transition: all 0.3s ease;
+}
+
+@media (max-width: 480px) {
+  .formGroup input,
+  .formGroup textarea,
+  .formGroup select {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .formGroup {
+    gap: 8px;
+  }
 }
 
 .formGroup input:focus,
@@ -142,6 +210,13 @@
   color: #334155;
   font-weight: 500;
   margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+  .formGroup label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
 }
 
 /* Progress bar styling */
@@ -181,12 +256,26 @@
   transition: background-color 0.3s ease;
 }
 
+@media (max-width: 480px) {
+  .uploadButton {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+}
+
 .uploadButton:disabled {
   background-color: #ccc;
 }
 
 .uploadButton:hover {
   background-color: #e03f3f;
+}
+
+/* Touch device adjustments */
+@media (hover: none) {
+  .uploadButton:hover {
+    background-color: #2dbb51;
+  }
 }
 
 .uploadButton:active {
