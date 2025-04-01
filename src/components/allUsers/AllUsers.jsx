@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ref, onValue, get, remove } from 'firebase/database'; // Add 'remove' import
+import { ref, onValue, get, remove } from 'firebase/database';
 import { database } from '../firebase/FirebaseSetup';
 import './AllUsers.css';
 
@@ -10,15 +10,17 @@ const AllUsers = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedQuiz, setSelectedQuiz] = useState(null);
     const [quizDetails, setQuizDetails] = useState(null);
+    const [questionDetails, setQuestionDetails] = useState({}); // Store fetched question details
+    const [selectedQuestionId, setSelectedQuestionId] = useState(null); // Track which question's details to show
 
     useEffect(() => {
         const usersRef = ref(database, 'users');
         onValue(usersRef, (snapshot) => {
             const usersData = snapshot.val();
             if (usersData) {
-                const usersArray = Object.keys(usersData).map(key => ({
+                const usersArray = Object.keys(usersData).map((key) => ({
                     id: key,
-                    ...usersData[key]
+                    ...usersData[key],
                 }));
                 setUsers(usersArray);
                 setFilteredUsers(usersArray);
@@ -31,7 +33,7 @@ const AllUsers = () => {
             setFilteredUsers(users);
         } else {
             const query = searchQuery.toLowerCase();
-            const filtered = users.filter(user => {
+            const filtered = users.filter((user) => {
                 return (
                     user.id.toLowerCase().includes(query) ||
                     (user.email && user.email.toLowerCase().includes(query)) ||
@@ -42,10 +44,49 @@ const AllUsers = () => {
         }
     }, [searchQuery, users]);
 
+    // Fetch question details when a quiz is selected
+    useEffect(() => {
+        const fetchQuestionDetails = async () => {
+            if (!selectedQuiz || !quizDetails?.responses) {
+                setQuestionDetails({});
+                return;
+            }
+
+            const responses = quizDetails.responses;
+            const newQuestionDetails = {};
+
+            try {
+                for (const response of responses) {
+                    const questionId = response.questionId;
+                    const questionPath = `questions/${questionId}`;
+                    const questionRef = ref(database, questionPath);
+                    const snapshot = await get(questionRef);
+
+                    if (snapshot.exists()) {
+                        newQuestionDetails[questionId] = snapshot.val();
+                    } else {
+                        newQuestionDetails[questionId] = { question: 'Question not found' };
+                    }
+                }
+                setQuestionDetails(newQuestionDetails);
+            } catch (err) {
+                console.error('Error fetching question details:', err);
+                setQuestionDetails((prev) => ({
+                    ...prev,
+                    [responses[0]?.questionId]: { question: 'Error fetching question' },
+                }));
+            }
+        };
+
+        fetchQuestionDetails();
+    }, [selectedQuiz, quizDetails]);
+
     const handleUserClick = (user) => {
         setSelectedUser(user);
         setSelectedQuiz(null);
         setQuizDetails(null);
+        setQuestionDetails({});
+        setSelectedQuestionId(null);
     };
 
     const handleQuizClick = async (quizId) => {
@@ -53,6 +94,7 @@ const AllUsers = () => {
             return;
         }
         setSelectedQuiz(quizId);
+        setSelectedQuestionId(null);
         try {
             const quizResultRef = ref(database, `users/${selectedUser.id}/quizResults/${quizId}`);
             const snapshot = await get(quizResultRef);
@@ -62,38 +104,37 @@ const AllUsers = () => {
                 setQuizDetails(null);
             }
         } catch (error) {
-            console.error("Error fetching quiz details:", error);
+            console.error('Error fetching quiz details:', error);
             setQuizDetails(null);
         }
     };
 
-    // New function to delete an assigned set
     const handleDeleteAssignedSet = async (setId) => {
         if (!selectedUser) return;
 
         try {
             const setRef = ref(database, `users/${selectedUser.id}/assignedSets/${setId}`);
-            await remove(setRef); // Remove the specific assigned set from Firebase
+            await remove(setRef);
 
-            // Update the local state to reflect the change immediately
             const updatedUser = {
                 ...selectedUser,
                 assignedSets: {
                     ...selectedUser.assignedSets,
-                    [setId]: undefined // Mark as undefined to remove
-                }
+                    [setId]: undefined,
+                },
             };
-            delete updatedUser.assignedSets[setId]; // Delete the key
+            delete updatedUser.assignedSets[setId];
             setSelectedUser(updatedUser);
 
-            // Update the users array too
-            setUsers(users.map(user => (user.id === selectedUser.id ? updatedUser : user)));
-            setFilteredUsers(filteredUsers.map(user => (user.id === selectedUser.id ? updatedUser : user)));
+            setUsers(users.map((user) => (user.id === selectedUser.id ? updatedUser : user)));
+            setFilteredUsers(
+                filteredUsers.map((user) => (user.id === selectedUser.id ? updatedUser : user))
+            );
 
             alert(`Assigned set ${setId} deleted successfully!`);
         } catch (error) {
-            console.error("Error deleting assigned set:", error);
-            alert("Failed to delete the assigned set.");
+            console.error('Error deleting assigned set:', error);
+            alert('Failed to delete the assigned set.');
         }
     };
 
@@ -102,13 +143,32 @@ const AllUsers = () => {
         return new Date(dateString).toLocaleString();
     };
 
+    // Sort quiz results by completedAt date (latest first)
+    const sortedQuizResults = selectedUser?.quizResults
+        ? Object.keys(selectedUser.quizResults).sort((quizIdA, quizIdB) => {
+              const quizA = selectedUser.quizResults[quizIdA];
+              const quizB = selectedUser.quizResults[quizIdB];
+              return new Date(quizB.completedAt) - new Date(quizA.completedAt);
+          })
+        : [];
+
     return (
         <div className="users-container">
             <h1 className="page-title">User Management</h1>
 
             <div className="search-container">
                 <span className="search-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
@@ -135,9 +195,11 @@ const AllUsers = () => {
                             {filteredUsers.map((user, index) => (
                                 <li
                                     key={user.id}
-                                    className={`user-item ${selectedUser && selectedUser.id === user.id ? 'selected' : ''}`}
+                                    className={`user-item ${
+                                        selectedUser && selectedUser.id === user.id ? 'selected' : ''
+                                    }`}
                                     onClick={() => handleUserClick(user)}
-                                    style={{ "--index": index }}
+                                    style={{ '--index': index }}
                                 >
                                     <div className="user-email">{user.email || 'No email'}</div>
                                     <div className="user-meta">
@@ -161,6 +223,8 @@ const AllUsers = () => {
                                 onClick={() => {
                                     setSelectedQuiz(null);
                                     setQuizDetails(null);
+                                    setQuestionDetails({});
+                                    setSelectedQuestionId(null);
                                 }}
                             >
                                 Back to User
@@ -190,40 +254,46 @@ const AllUsers = () => {
                                     </div>
                                 </div>
 
-                                {selectedUser.quizResults && Object.keys(selectedUser.quizResults).length > 0 && (
-                                    <div className="detail-section">
-                                        <h3 className="subsection-title">Quiz Results</h3>
-                                        <ul className="item-list interactive">
-                                            {Object.keys(selectedUser.quizResults).map(quizId => (
-                                                <li key={quizId} onClick={() => handleQuizClick(quizId)} className="clickable">
-                                                    <div className="quiz-result-summary">
-                                                        <span className="quiz-id">{quizId}</span>
-                                                        <span className="view-details">View Details</span>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {selectedUser.assignedSets && Object.keys(selectedUser.assignedSets).length > 0 && (
-                                    <div className="detail-section">
-                                        <h3 className="subsection-title">Assigned Sets</h3>
-                                        <ul className="item-list">
-                                            {Object.keys(selectedUser.assignedSets).map(setId => (
-                                                <li key={setId} className="assigned-set-item">
-                                                    <span>{setId}</span>
-                                                    <button
-                                                        className="delete-button"
-                                                        onClick={() => handleDeleteAssignedSet(setId)}
+                                {selectedUser.quizResults &&
+                                    Object.keys(selectedUser.quizResults).length > 0 && (
+                                        <div className="detail-section">
+                                            <h3 className="subsection-title">Quiz Results</h3>
+                                            <ul className="item-list interactive">
+                                                {sortedQuizResults.map((quizId) => (
+                                                    <li
+                                                        key={quizId}
+                                                        onClick={() => handleQuizClick(quizId)}
+                                                        className="clickable"
                                                     >
-                                                        Delete
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
+                                                        <div className="quiz-result-summary">
+                                                            <span className="quiz-id">{quizId}</span>
+                                                            <span className="view-details">View Details</span>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                {selectedUser.assignedSets &&
+                                    Object.keys(selectedUser.assignedSets).length > 0 && (
+                                        <div className="detail-section">
+                                            <h3 className="subsection-title">Assigned Sets</h3>
+                                            <ul className="item-list">
+                                                {Object.keys(selectedUser.assignedSets).map((setId) => (
+                                                    <li key={setId} className="assigned-set-item">
+                                                        <span>{setId}</span>
+                                                        <button
+                                                            className="delete-button"
+                                                            onClick={() => handleDeleteAssignedSet(setId)}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                             </div>
                         ) : selectedQuiz && quizDetails ? (
                             <div className="quiz-details">
@@ -257,42 +327,102 @@ const AllUsers = () => {
                                 {quizDetails.responses && (
                                     <div className="detail-section">
                                         <h3 className="subsection-title">Responses</h3>
-                                        <div className="responses-container">
-                                            {Object.keys(quizDetails.responses).map(questionId => {
-                                                const response = quizDetails.responses[questionId];
-                                                return (
-                                                    <div key={questionId} className="response-item">
-                                                        <div className="response-header">
-                                                            <span>Question {questionId}</span>
-                                                        </div>
-                                                        <div className="response-content">
-                                                            <div className="response-detail">
-                                                                <span className="response-label">Selected Answer:</span>
-                                                                <span className="response-value">
-                                                                    {typeof response.selectedAnswer === 'object'
-                                                                        ? response.selectedAnswer.text
-                                                                        : response.selectedAnswer || 'Not answered'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="response-detail">
-                                                                <span className="response-label">Correct Answer:</span>
-                                                                <span className="response-value">
-                                                                    {typeof response.correctAnswer === 'object'
-                                                                        ? response.correctAnswer.text
-                                                                        : response.correctAnswer || 'N/A'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="response-detail">
-                                                                <span className="response-label">Is Correct:</span>
-                                                                <span className={`response-value ${response.isCorrect ? 'correct' : 'incorrect'}`}>
-                                                                    {response.isCorrect ? 'Yes' : 'No'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                        <table className="responses-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Question</th>
+                                                    <th>Your Answer</th>
+                                                    <th>Correct Answer</th>
+                                                    <th>Result</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {quizDetails.responses.map((response, index) => {
+                                                    const questionData =
+                                                        questionDetails[response.questionId] || {};
+                                                    return (
+                                                        <React.Fragment key={index}>
+                                                            <tr
+                                                                onClick={() =>
+                                                                    setSelectedQuestionId(
+                                                                        selectedQuestionId === response.questionId
+                                                                            ? null
+                                                                            : response.questionId
+                                                                    )
+                                                                }
+                                                                style={{ cursor: 'pointer' }}
+                                                            >
+                                                                <td>
+                                                                    {questionData.question ? (
+                                                                        <div
+                                                                            dangerouslySetInnerHTML={{
+                                                                                __html: questionData.question,
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        'Loading...'
+                                                                    )}
+                                                                </td>
+                                                                <td>{response.userAnswer}</td>
+                                                                <td>{response.correctAnswer.text}</td>
+                                                                <td
+                                                                    style={{
+                                                                        color: response.isCorrect
+                                                                            ? 'green'
+                                                                            : 'red',
+                                                                    }}
+                                                                >
+                                                                    {response.isCorrect
+                                                                        ? 'Correct'
+                                                                        : 'Incorrect'}
+                                                                </td>
+                                                            </tr>
+                                                            {selectedQuestionId === response.questionId &&
+                                                                questionData && (
+                                                                    <tr>
+                                                                        <td colSpan="4">
+                                                                            <div className="question-details">
+                                                                                <h4>Question Details</h4>
+                                                                                <p>
+                                                                                    <strong>Difficulty Level:</strong>{' '}
+                                                                                    {questionData.difficultyLevel ||
+                                                                                        'N/A'}
+                                                                                </p>
+                                                                                <p>
+                                                                                    <strong>Grade:</strong>{' '}
+                                                                                    {questionData.grade || 'N/A'}
+                                                                                </p>
+                                                                                <p>
+                                                                                    <strong>Topic:</strong>{' '}
+                                                                                    {questionData.topic || 'N/A'}
+                                                                                </p>
+                                                                                {questionData.options && (
+                                                                                    <p>
+                                                                                        <strong>Options:</strong>{' '}
+                                                                                        {Object.values(
+                                                                                            questionData.options
+                                                                                        ).join(', ')}
+                                                                                    </p>
+                                                                                )}
+                                                                                <p>
+                                                                                    <strong>Date Added:</strong>{' '}
+                                                                                    {questionData.date
+                                                                                        ? formatDate(questionData.date)
+                                                                                        : 'N/A'}
+                                                                                </p>
+                                                                                <p>
+                                                                                    <strong>Topic List:</strong>{' '}
+                                                                                    {questionData.topicList || 'N/A'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
                             </div>
