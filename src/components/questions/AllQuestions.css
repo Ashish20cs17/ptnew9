@@ -1,181 +1,79 @@
 .allQuestionContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    background: white;
-    margin: auto;
-    border-radius: 20px;
-  }
-  
-  /* Scrollable Question List */
-  .questionList {
-    max-height: 600px;
-    
-  
-    
-    width: 100%;
-    overflow-y: auto;
-    
-    border: 1px solid #ffffff;
-    padding-left: 40px;
-    
-    border-radius: 8px;
-    background: #ffffff;
-   
-  }
-  
-  .questionItem {
-    
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    
-  }
-  
-  .deleteButton {
-    background-color: red;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-top: 5px;
-  }
-  
-  .deleteButton:hover {
-    background-color: rgb(97, 2, 2);
-  }
-  .filterControls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f5f5f5;
-    border-radius: 5px;
-  }
-  
-  .formGroup {
-    display: flex;
-    flex-direction: column;
-    min-width: 200px;
-  }
-  
-  .formGroup label {
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
-  
-  .formGroup select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-  }
-  
-  .questionStats {
-    margin: 10px 0;
-    font-style: italic;
-  }
-  
-  .questionMeta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 8px 0;
-  }
-  
-  .tag {
-    background-color: #e9f1fd;
-    color: #4a76c4;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-  }
-  
-  .questionItem {
-    margin-bottom: 25px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: white;
-  }
-  
-  .deleteButton {
-    background-color: #ff5252;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  
-  .deleteButton:hover {
-    background-color: #ff0000;
-  }
-  .editForm {
-    margin: 20px 0;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-  }
-  
-  .editForm .formGroup {
-    margin-bottom: 15px;
-  }
-  
-  .editForm label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .editForm input,
-  .editForm select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .editForm button {
-    margin-right: 10px;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .editForm button[type="submit"] {
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  .editForm button[type="button"] {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .questionActions {
-    margin-top: 10px;
-  }
-  
-  .editButton {
-    background-color: #2196F3;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-  
-  .deleteButton {
-    background-color: #f44336;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  margin: auto;
+  border-radius: 20px;
+}
+
+.questionList {
+  max-height: 600px;
+  width: 100%;
+  overflow-y: auto;
+  border: 1px solid #ffffff;
+  padding-left: 40px;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.questionItem {
+  margin-bottom: 25px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+}
+
+.deleteButton {
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.deleteButton:hover {
+  background-color: #ff0000;
+}
+
+.editButton {
+  background-color: #2196f3;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.formGroup label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.formGroup select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
