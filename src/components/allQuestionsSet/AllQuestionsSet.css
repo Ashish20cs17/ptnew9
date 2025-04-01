@@ -325,12 +325,3 @@
     width: 100%;
   }
 }
-.mcqOptions {
-  list-style-type: lower-alpha;
-  margin: 10px 0 0 20px;
-  padding: 0;
-}
-
-.mcqOptions li {
-  margin: 5px 0;
-}
