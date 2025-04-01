@@ -36,6 +36,10 @@ const MATH_DATA = {
     { grade: "G2", code: "G2G", text: "Real Life all concept sums" },
     { grade: "G3", code: "G3G", text: "Real Life all concept sums" },
     { grade: "G4", code: "G4G", text: "Real Life all concept sums" },
+    { grade: "G1", code: "G1Z", text: "Others" },
+    { grade: "G2", code: "G2Z", text: "Others" },
+    { grade: "G3", code: "G3Z", text: "Others" },
+    { grade: "G4", code: "G4Z", text: "Others" },
   ],
   subtopics: {
     G1A: { G1: [
@@ -285,6 +289,67 @@ const MATH_DATA = {
       { code: "G4G.8", text: "Art and Culture" },
       { code: "G4G.9", text: "Safety" },
       { code: "G4G.10", text: "Environment" },
+    ]},
+    G1Z: { G1: [
+      
+      { code: "G1Z.1", text: "Geography" },
+      { code: "G1Z.2", text: "History" },
+      { code: "G1Z.3", text: "Civic Responsibilities" },
+      { code: "G1Z.4", text: "Discoveries and Inventions" },
+      { code: "G1Z.5", text: "Science" },
+      { code: "G1Z.6", text: "Language and Literature" },
+      { code: "G1Z.7", text: "Economics" },
+      { code: "G1Z.8", text: "Art and Culture" },
+      { code: "G1Z.9", text: "Safety" },
+      { code: "G1Z.10", text: "Environment" },
+      { code: "G1Z.1000", text: "Others" },
+      
+      
+    ]},
+    G2Z: { G2: [
+      
+      { code: "G2Z.1", text: "Geography" },
+      { code: "G2Z.2", text: "History" },
+      { code: "G2Z.3", text: "Civic Responsibilities" },
+      { code: "G2Z.4", text: "Discoveries and Inventions" },
+      { code: "G2Z.5", text: "Science" },
+      { code: "G2Z.6", text: "Language and Literature" },
+      { code: "G2Z.7", text: "Economics" },
+      { code: "G2Z.8", text: "Art and Culture" },
+      { code: "G2Z.9", text: "Safety" },
+      { code: "G2Z.10", text: "Environment" },
+      { code: "G2Z.1000", text: "Others" },
+      
+    ]},
+    G3Z: { G3: [
+      
+      { code: "G3Z.1", text: "Geography" },
+      { code: "G3Z.2", text: "History" },
+      { code: "G3Z.3", text: "Civic Responsibilities" },
+      { code: "G3Z.4", text: "Discoveries and Inventions" },
+      { code: "G3Z.5", text: "Science" },
+      { code: "G3Z.6", text: "Language and Literature" },
+      { code: "G3Z.7", text: "Economics" },
+      { code: "G3Z.8", text: "Art and Culture" },
+      { code: "G3Z.9", text: "Safety" },
+      { code: "G3Z.10", text: "Environment" },
+      { code: "G3Z.1000", text: "Others" },
+      
+    ]},
+    G4Z: { G4: [
+      
+      { code: "G4Z.1", text: "Geography" },
+      { code: "G4Z.2", text: "History" },
+      { code: "G4Z.3", text: "Civic Responsibilities" },
+      { code: "G4Z.4", text: "Discoveries and Inventions" },
+      { code: "G4Z.5", text: "Science" },
+      { code: "G4Z.6", text: "Language and Literature" },
+      { code: "G4Z.7", text: "Economics" },
+      { code: "G4Z.8", text: "Art and Culture" },
+      { code: "G4Z.9", text: "Safety" },
+      { code: "G4Z.10", text: "Environment" },
+      { code: "G4G.1000", text: "Others" },
+      
     ]},
   },
 };
