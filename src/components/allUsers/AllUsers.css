@@ -286,3 +286,55 @@ footer {
   font-size: 0.875rem;
   color: #4b5563;
 }
+.responses-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.responses-table th,
+.responses-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.responses-table th {
+  background-color: #f1f1f1;
+  font-weight: bold;
+}
+
+.responses-table tr:hover {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+.question-details {
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.question-details h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+}
+
+.question-details p {
+  margin: 5px 0;
+}
+
+/* Ensure HTML content in the question column is styled properly */
+.responses-table td div {
+  line-height: 1.5;
+}
+
+/* Optional: Style specific HTML tags within the question */
+.responses-table td div b {
+  font-weight: bold;
+}
+
+.responses-table td div i {
+  font-style: italic;
+}
