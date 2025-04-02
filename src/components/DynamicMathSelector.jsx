@@ -51,6 +51,7 @@ const MATH_DATA = {
       { code: "G1A.6", text: "Addition & Subtraction of Larger Numbers" },
       { code: "G1A.7", text: "Understanding Zero" },
       { code: "G1A.8", text: "Expanded & Standard Form" },
+      { code: "G1A.1000", text: "Others" },
     ]},
     G2A: { G2: [
       { code: "G2A.1", text: "Place Value & Number Names" },
@@ -61,6 +62,7 @@ const MATH_DATA = {
       { code: "G2A.6", text: "Addition & Subtraction of Larger Numbers" },
       { code: "G2A.7", text: "Understanding the Concept of Zero" },
       { code: "G2A.8", text: "Writing Numbers in Expanded & Standard Form" },
+      { code: "G2A.1000", text: "Others" },
     ]},
     G3A: { G3: [
       { code: "G3A.1", text: "Place Value & Number Names" },
@@ -71,6 +73,7 @@ const MATH_DATA = {
       { code: "G3A.6", text: "Addition & Subtraction of Larger Numbers" },
       { code: "G3A.7", text: "Understanding the Concept of Zero" },
       { code: "G3A.8", text: "Writing Numbers in Expanded & Standard Form" },
+      { code: "G3A.1000", text: "Others" },
     ]},
     G4A: { G4: [
       { code: "G4A.1", text: "Place Value & Number Names" },
@@ -81,6 +84,7 @@ const MATH_DATA = {
       { code: "G4A.6", text: "Negative Numbers (Introduction)" },
       { code: "G4A.7", text: "Even & Odd Properties" },
       { code: "G4A.8", text: "Operations with Larger Numbers" },
+      { code: "G4A.1000", text: "Others" },
     ]},
     G1B: { G1: [
       { code: "G1B.1", text: "Addition & Subtraction with Carrying/Borrowing" },
@@ -89,6 +93,7 @@ const MATH_DATA = {
       { code: "G1B.4", text: "Simple Division Concepts" },
       { code: "G1B.5", text: "Fact Families" },
       { code: "G1B.6", text: "Properties of Addition and Multiplication" },
+      { code: "G1B.1000", text: "Others" },
     ]},
     G2B: { G2: [
       { code: "G2B.1", text: "Addition, Subtraction, Multiplication, Division" },
@@ -97,6 +102,7 @@ const MATH_DATA = {
       { code: "G2B.4", text: "Simple Division Concepts" },
       { code: "G2B.5", text: "Fact Families" },
       { code: "G2B.6", text: "Properties of Operations" },
+      { code: "G2B.1000", text: "Others" },
     ]},
     G3B: { G3: [
       { code: "G3B.1", text: "Addition, Subtraction, Multiplication, Division" },
@@ -105,6 +111,7 @@ const MATH_DATA = {
       { code: "G3B.4", text: "Combined Concepts Addition, Subtraction..." },
       { code: "G3B.5", text: "Fact Families" },
       { code: "G3B.6", text: "Properties of Operations" },
+      { code: "G3B.1000", text: "Others" },
     ]},
     G4B: { G4: [
       { code: "G4B.1", text: "Addition & Subtraction (Larger Numbers)" },
@@ -115,21 +122,25 @@ const MATH_DATA = {
       { code: "G4B.6", text: "Multiplication & Division of Decimals" },
       { code: "G4B.7", text: "Word Problems & Mixed Operations" },
       { code: "G4B.8", text: "Estimation & Approximation" },
+      { code: "G4B.1000", text: "Others" },
     ]},
     G1C: { G1: [
       { code: "G1C.1", text: "Basic 2D Shapes" },
       { code: "G1C.2", text: "Solid Shapes (3D Shapes)" },
       { code: "G1C.3", text: "Symmetry" },
+      { code: "G1C.1000", text: "Others" },
     ]},
     G2C: { G2: [
       { code: "G2C.1", text: "Basic 2D Shapes" },
       { code: "G2C.2", text: "Solid Shapes (3D Shapes)" },
       { code: "G2C.3", text: "Symmetry" },
+      { code: "G2C.1000", text: "Others" },
     ]},
     G3C: { G3: [
       { code: "G3C.1", text: "Basic 2D Shapes" },
       { code: "G3C.2", text: "Solid Shapes (3D Shapes)" },
       { code: "G3C.3", text: "Symmetry & Transformations" },
+      { code: "G3C.1000", text: "Others" },
     ]},
     G4C: { G4: [
       { code: "G4C.1", text: "2D & 3D Shapes" },
@@ -137,6 +148,7 @@ const MATH_DATA = {
       { code: "G4C.3", text: "Perimeter & Area" },
       { code: "G4C.4", text: "Introduction to Volume" },
       { code: "G4C.5", text: "Coordinate Geometry (Introduction)" },
+      { code: "G4C.1000", text: "Others" },
     ]},
     G1D: { G1: [
       { code: "G1D.1", text: "Length (cm, m)" },
@@ -145,6 +157,7 @@ const MATH_DATA = {
       { code: "G1D.4", text: "Time (Hours, Minutes)" },
       { code: "G1D.5", text: "Money (Coins, Notes)" },
       { code: "G1D.6", text: "Introduction to Calendar (Days, Months, Years)" },
+      { code: "G1D.1000", text: "Others" },
     ]},
     G2D: { G2: [
       { code: "G2D.1", text: "Length (cm, m)" },
@@ -153,6 +166,7 @@ const MATH_DATA = {
       { code: "G2D.4", text: "Time (Hours, Minutes, Seconds)" },
       { code: "G2D.5", text: "Money (Coins, Notes)" },
       { code: "G2D.6", text: "Introduction to Calendar (Days, Months, Years)" },
+      { code: "G2D.1000", text: "Others" },
     ]},
     G3D: { G3: [
       { code: "G3D.1", text: "Length (cm, m, km)" },
@@ -160,6 +174,7 @@ const MATH_DATA = {
       { code: "G3D.3", text: "Capacity (L, mL)" },
       { code: "G3D.4", text: "Time (Hours, Minutes, Seconds)" },
       { code: "G3D.5", text: "Money & Transactions" },
+      { code: "G3D.1000", text: "Others" },
     ]},
     G4D: { G4: [
       { code: "G4D.1", text: "Length, Weight & Capacity" },
@@ -168,23 +183,27 @@ const MATH_DATA = {
       { code: "G4D.4", text: "Measurement Word Problems" },
       { code: "G4D.5", text: "Geometry & Measurement Connection" },
       { code: "G4D.6", text: "Volume Measurement" },
+      { code: "G4D.1000", text: "Others" },
     ]},
     G1E: { G1: [
       { code: "G1E.1", text: "Tally Marks" },
       { code: "G1E.2", text: "Pictographs" },
       { code: "G1E.3", text: "Simple Bar Graphs" },
       { code: "G1E.4", text: "Understanding Data Interpretation" },
+      { code: "G1E.1000", text: "Others" },
     ]},
     G2E: { G2: [
       { code: "G2E.1", text: "Tally Marks" },
       { code: "G2E.2", text: "Pictographs" },
       { code: "G2E.3", text: "Simple Bar Graphs" },
       { code: "G2E.4", text: "Understanding Data Interpretation" },
+      { code: "G2E.1000", text: "Others" },
     ]},
     G3E: { G3: [
       { code: "G3E.1", text: "Tally Marks & Pictographs" },
       { code: "G3E.2", text: "Bar Graphs" },
       { code: "G3E.3", text: "Understanding Data Interpretation" },
+      { code: "G3E.1000", text: "Others" },
     ]},
     G4E: { G4: [
       { code: "G4E.1", text: "Collecting and organizing data" },
@@ -195,18 +214,21 @@ const MATH_DATA = {
       { code: "G4E.6", text: "Using tables to record data" },
       { code: "G4E.7", text: "Solving word problems using data representation" },
       { code: "G4E.8", text: "Understanding averages (mean, mode, median)" },
+      { code: "G4E.1000", text: "Others" },
     ]},
     G1F: { G1: [
       { code: "G1F.1", text: "Odd One Out Challenges" },
       { code: "G1F.2", text: "Visual Puzzles" },
       { code: "G1F.3", text: "Number Series & Patterns" },
       { code: "G1F.4", text: "Magic Squares" },
+      { code: "G1F.1000", text: "Others" },
     ]},
     G2F: { G2: [
       { code: "G2F.1", text: "Odd One Out Challenges" },
       { code: "G2F.2", text: "Visual Puzzles" },
       { code: "G2F.3", text: "Number Series & Patterns" },
       { code: "G2F.4", text: "Magic Squares" },
+      { code: "G2F.1000", text: "Others" },
     ]},
     G3F: { G3: [
       { code: "G3F.1", text: "Odd One Out Challenges" },
@@ -224,6 +246,7 @@ const MATH_DATA = {
       { code: "G3F.13", text: "Clock and calendar based challenges" },
       { code: "G3F.14", text: "Block Puzzles" },
       { code: "G3F.15", text: "Others" },
+      { code: "G3F.1000", text: "Others" },
     ]},
     G4F: { G4: [
       { code: "G4F.1", text: "Odd One Out Challenges" },
@@ -241,6 +264,7 @@ const MATH_DATA = {
       { code: "G4F.13", text: "Clock and calendar based challenges" },
       { code: "G4F.14", text: "Block Puzzles" },
       { code: "G4F.15", text: "Others" },
+      { code: "G4F.1000", text: "Others" },
     ]},
     G1G: { G1: [
       { code: "G1G.1", text: "Geography" },
@@ -253,6 +277,7 @@ const MATH_DATA = {
       { code: "G1G.8", text: "Art and Culture" },
       { code: "G1G.9", text: "Safety" },
       { code: "G1G.10", text: "Environment" },
+      { code: "G1G.1000", text: "Others" },
     ]},
     G2G: { G2: [
       { code: "G2G.1", text: "Geography" },
@@ -265,6 +290,7 @@ const MATH_DATA = {
       { code: "G2G.8", text: "Art and Culture" },
       { code: "G2G.9", text: "Safety" },
       { code: "G2G.10", text: "Environment" },
+      { code: "G2G.1000", text: "Others" },
     ]},
     G3G: { G3: [
       { code: "G3G.1", text: "Geography" },
@@ -277,6 +303,7 @@ const MATH_DATA = {
       { code: "G3G.8", text: "Art and Culture" },
       { code: "G3G.9", text: "Safety" },
       { code: "G3G.10", text: "Environment" },
+      { code: "G3G.1000", text: "Others" },
     ]},
     G4G: { G4: [
       { code: "G4G.1", text: "Geography" },
@@ -289,6 +316,7 @@ const MATH_DATA = {
       { code: "G4G.8", text: "Art and Culture" },
       { code: "G4G.9", text: "Safety" },
       { code: "G4G.10", text: "Environment" },
+      { code: "G4G.1000", text: "Others" },
     ]},
     G1Z: { G1: [
       
