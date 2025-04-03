@@ -13,6 +13,7 @@ import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
 import Upload from '../src/components/upload/upload';
 import AllUsers from '../src/components/allUsers/AllUsers';
 import Syllabus from './components/syllabus/Syllabus';
+import OfflineUsers from '../src/components/offlineUsers/OfflineUsers';
 
 const App = () => {
   const router = createBrowserRouter([
@@ -51,8 +52,8 @@ const App = () => {
       element: <><Navbar /><ProtectedRoute> <AllUsers/></ProtectedRoute></>
     },
     {
-      path: "/syllabus", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <Syllabus/></ProtectedRoute></>
+      path: "/offlineUsers", // ✅ Add new route
+      element: <><Navbar /><ProtectedRoute> <OfflineUsers/></ProtectedRoute></>
     }
 
   ])
