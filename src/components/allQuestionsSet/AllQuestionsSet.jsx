@@ -278,11 +278,14 @@ const AllQuestionsSet = () => {
       toast.error("❌ No question set selected or set is empty");
       return;
     }
-
+    
     setExportLoading(true);
-
+    
     try {
       const content = pdfContentRef.current;
+      
+      // First, we need to identify the positions of all questions
+      let questionPositions = [];
       
       const canvas = await html2canvas(content, {
         scale: 2,
@@ -291,41 +294,89 @@ const AllQuestionsSet = () => {
         onclone: (doc) => {
           const clonedContent = doc.getElementById('pdf-content');
           if (clonedContent) {
+            // Basic styling for PDF
             clonedContent.style.padding = '20px';
             clonedContent.style.background = 'white';
+            
+            // Hide delete buttons only
             clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
               btn.style.display = 'none';
             });
-            // Remove any answer text that might slip through
+            
+            // Format answer section with space for writing
             clonedContent.querySelectorAll('.answerText').forEach(answer => {
-              answer.style.display = 'none';
+              answer.style.display = 'block';
+              answer.innerHTML = '<h5>Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
             });
+            
+            // Calculate positions of each question element
+            const questionElements = clonedContent.querySelectorAll('.questionsItem');
+            questionPositions = Array.from(questionElements).map(el => {
+              const rect = el.getBoundingClientRect();
+              return {
+                top: rect.top,
+                bottom: rect.bottom,
+                height: rect.height
+              };
+            });
+            
             clonedContent.style.height = 'auto';
             clonedContent.style.overflow = 'visible';
           }
         }
       });
-
+      
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const ratio = pdfWidth / imgWidth;
       const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
-
-      const totalHeight = scaledHeight;
-      const pageHeight = pdfHeight;
-      let position = 0;
-      let pageNumber = 1;
-
-      while (position < totalHeight) {
-        if (position > 0) {
-          pdf.addPage();
-          pageNumber++;
+      
+      // Convert question positions to PDF units (mm)
+      const questionPositionsMM = questionPositions.map(pos => ({
+        top: pos.top * ratio,
+        bottom: pos.bottom * ratio,
+        height: pos.height * ratio
+      }));
+      
+      // Calculate page breaks that don't split questions
+      const pageBreaks = [];
+      let currentHeight = 0;
+      
+      while (currentHeight < scaledHeight) {
+        const nextPageBreak = currentHeight + pdfHeight;
+        
+        // Find any question that would be split by this page break
+        const splitQuestionIndex = questionPositionsMM.findIndex(q => 
+          q.top < nextPageBreak && q.bottom > nextPageBreak
+        );
+        
+        if (splitQuestionIndex !== -1) {
+          // Question would be split, so break at its top instead
+          pageBreaks.push(questionPositionsMM[splitQuestionIndex].top);
+          currentHeight = questionPositionsMM[splitQuestionIndex].top;
+        } else {
+          // No split, use regular page break
+          pageBreaks.push(nextPageBreak);
+          currentHeight = nextPageBreak;
         }
+      }
+      
+      // Generate the PDF with our smart page breaks
+      let pageNumber = 1;
+      let previousBreak = 0;
+      
+      for (const pageBreak of pageBreaks) {
+        if (pageNumber > 1) {
+          pdf.addPage();
+        }
+        
+        // Calculate position adjustment to show the right portion of the image
+        const position = previousBreak;
         
         pdf.addImage(
           imgData,
@@ -335,7 +386,8 @@ const AllQuestionsSet = () => {
           scaledWidth,
           scaledHeight
         );
-
+        
+        // Add page number
         pdf.setFontSize(10);
         pdf.setTextColor(150);
         pdf.text(
@@ -343,10 +395,14 @@ const AllQuestionsSet = () => {
           pdfWidth - 20,
           pdfHeight - 10
         );
-
-        position += pageHeight;
+        
+        previousBreak = pageBreak;
+        pageNumber++;
+        
+        // If we've processed all content, break
+        if (pageBreak >= scaledHeight) break;
       }
-
+      
       pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
       toast.success("✅ PDF successfully exported");
     } catch (err) {
@@ -485,15 +541,19 @@ const AllQuestionsSet = () => {
                             alt="Question Attachment"
                           />
                         </div>
+                        
                       )}
 
                       {q.options && (
-                        <ul className="mcqOptions">
+                        <ol className="mcqOptions">
                           {q.options.map((option, idx) => (
                             <li key={idx}>{option.text}</li>
                           ))}
-                        </ul>
+                        </ol>
                       )}
+                      <div className="answerText">
+                        <h5>Answer:</h5>
+                      </div>
                     </div>
                     <button
                       className="deleteQuestionButton"

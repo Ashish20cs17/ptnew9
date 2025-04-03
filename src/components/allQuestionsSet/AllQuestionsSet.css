@@ -199,6 +199,7 @@
 
 .questionContent {
   flex: 1;
+  
 }
 
 .questionType {
@@ -325,4 +326,8 @@
   .attachButton {
     width: 100%;
   }
+}
+.mcqOptions{
+  margin-left: 15px;
+  
 }
