@@ -45,7 +45,7 @@ const Home = () => {
       id: 6,
       title: 'Offline Users',
       icon: '👤',
-      onClick: () => {navigate("/syllabus")}
+      onClick: () => {navigate("/offlineUsers")}
     }
   ];
   

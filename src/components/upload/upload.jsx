@@ -176,12 +176,16 @@ const Upload = () => {
       console.log("uploadQuestion: Validation failed - no question or image");
       return;
     }
-    if (!grade || !topic || !topicList || !difficultyLevel) {
+    
+    // Only validate these fields if not a trivia question
+    if (questionType !== "TRIVIA" && (!grade || !topic || !topicList || !difficultyLevel)) {
       setError("Please select grade, topic, subtopic, and difficulty");
       console.log("uploadQuestion: Validation failed - missing selections");
       return;
     }
-    if (!questionID) {
+    
+    // Only validate questionID for non-trivia questions
+    if (questionType !== "TRIVIA" && !questionID) {
       setError("Question ID not generated");
       console.log("uploadQuestion: Validation failed - no questionID");
       return;
@@ -192,17 +196,18 @@ const Upload = () => {
     console.log("uploadQuestion: Validation passed, proceeding with upload");
 
     try {
-      console.log("uploadQuestion: Using questionID:", questionID);
-
       // Push the question to get a Firebase key
       const questionsRef = ref(database, "questions");
       const newQuestionRef = push(questionsRef);
       const firebaseKey = newQuestionRef.key;
       console.log("uploadQuestion: Generated Firebase key:", firebaseKey);
 
-      // Reserve the question ID
-      await reserveQuestionID(questionID, firebaseKey);
-      console.log("uploadQuestion: Question ID reserved successfully");
+      // Only reserve question ID if not a trivia question
+      if (questionType !== "TRIVIA") {
+        console.log("uploadQuestion: Using questionID:", questionID);
+        await reserveQuestionID(questionID, firebaseKey);
+        console.log("uploadQuestion: Question ID reserved successfully");
+      }
 
       // Prepare question data
       const today = new Date().toISOString().split("T")[0];
