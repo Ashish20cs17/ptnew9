@@ -1,11 +1,11 @@
-import React, { useEffect, useState,useRef} from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { database } from "../firebase/FirebaseSetup";
-import { ref, get, remove, update } from "firebase/database";
+import { ref, get, remove, update, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
 import parse from "html-react-parser";
 import JoditEditor from "jodit-react";
-import DynamicMathSelector from "../DynamicMathSelector"; // Import the component
+import DynamicMathSelector from "../DynamicMathSelector";
 import "./AllQuestions.css";
 import "../upload/Upload.css";
 
@@ -14,14 +14,11 @@ const AllQuestions = () => {
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  
-  // Filter states
   const [grade, setGrade] = useState("all");
   const [topic, setTopic] = useState("all");
   const [topicList, setTopicList] = useState("all");
   const [difficultyLevel, setDifficultyLevel] = useState("all");
 
-  // Fetch questions from Firebase
   useEffect(() => {
     const fetchAllQuestions = async () => {
       try {
@@ -32,9 +29,7 @@ const AllQuestions = () => {
           return;
         }
         const data = snapshot.val();
-        const allFetchedQuestions = Object.entries(data)
-          .map(([id, question]) => ({ id, ...question }))
-          .reverse();
+        const allFetchedQuestions = Object.entries(data).map(([id, question]) => ({ id, ...question })).reverse();
         setQuestions(allFetchedQuestions);
         setFilteredQuestions(allFetchedQuestions);
       } catch (err) {
@@ -45,7 +40,6 @@ const AllQuestions = () => {
     fetchAllQuestions();
   }, []);
 
-  // Filter questions based on selections
   useEffect(() => {
     const filtered = questions.filter((q) => (
       (grade === "all" || q.grade === grade) &&
@@ -56,7 +50,6 @@ const AllQuestions = () => {
     setFilteredQuestions(filtered);
   }, [questions, grade, topic, topicList, difficultyLevel]);
 
-  // Handle edit and delete actions
   const handleEdit = (question) => setEditingQuestion(question);
 
   const handleDelete = async (question) => {
@@ -91,7 +84,6 @@ const AllQuestions = () => {
 
   const isHTML = (str) => /<[^>]+>/.test(str);
 
-  // Upload/Edit Component
   const UploadComponent = ({ questionData, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
       questionType: questionData?.type || "MCQ",
@@ -148,6 +140,10 @@ const AllQuestions = () => {
         toast.error("Please enter a question or upload an image");
         return;
       }
+      if (!questionData?.id) {
+        toast.error("Invalid question ID. Cannot update.");
+        return;
+      }
       setLoading(true);
       try {
         const questionRef = ref(database, `questions/${questionData.id}`);
@@ -181,7 +177,7 @@ const AllQuestions = () => {
         <JoditEditor ref={editor} value={formData.question} config={config} onBlur={(content) => setFormData({ ...formData, question: content })} />
         <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "questionImageUrl")} />
         {formData.questionImageUrl && <img src={formData.questionImageUrl} alt="Question" style={{ maxWidth: "100px" }} />}
-        
+
         {formData.questionType !== "TRIVIA" && (
           <>
             <DynamicMathSelector
@@ -203,15 +199,11 @@ const AllQuestions = () => {
           <div className="optionsSection">
             {formData.options.map((option, index) => (
               <div key={index}>
-                <input
-                  type="text"
-                  value={option.text}
-                  onChange={(e) => {
-                    const newOptions = [...formData.options];
-                    newOptions[index].text = e.target.value;
-                    setFormData({ ...formData, options: newOptions });
-                  }}
-                />
+                <input type="text" value={option.text} onChange={(e) => {
+                  const newOptions = [...formData.options];
+                  newOptions[index].text = e.target.value;
+                  setFormData({ ...formData, options: newOptions });
+                }} />
                 <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "options", index)} />
                 {option.image && <img src={option.image} alt={`Option ${index + 1}`} style={{ maxWidth: "100px" }} />}
               </div>
@@ -221,11 +213,7 @@ const AllQuestions = () => {
 
         {formData.questionType !== "TRIVIA" && (
           <div>
-            <input
-              type="text"
-              value={formData.correctAnswer.text}
-              onChange={(e) => setFormData({ ...formData, correctAnswer: { ...formData.correctAnswer, text: e.target.value } })}
-            />
+            <input type="text" value={formData.correctAnswer.text} onChange={(e) => setFormData({ ...formData, correctAnswer: { ...formData.correctAnswer, text: e.target.value } })} />
             <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "correctAnswer")} />
             {formData.correctAnswer.image && <img src={formData.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />}
           </div>
@@ -243,78 +231,37 @@ const AllQuestions = () => {
       <h2>All Questions</h2>
       <hr />
       <div className="filterControls">
-        <DynamicMathSelector
-          grade={grade}
-          setGrade={setGrade}
-          topic={topic}
-          setTopic={setTopic}
-          topicList={topicList}
-          setTopicList={setTopicList}
-        />
-        <select
-          value={difficultyLevel}
-          onChange={(e) => setDifficultyLevel(e.target.value)}
-        >
+        <DynamicMathSelector grade={grade} setGrade={setGrade} topic={topic} setTopic={setTopic} topicList={topicList} setTopicList={setTopicList} />
+        <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
           <option value="all">All Difficulty Levels</option>
-          {["L1", "L2", "L3", "Br"].map((level) => (
-            <option key={level} value={level}>
-              {level}
-            </option>
-          ))}
+          {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
         </select>
       </div>
-  
-      {editingQuestion && (
-        <UploadComponent
-          questionData={editingQuestion}
-          onSave={() => setEditingQuestion(null)}
-          onCancel={() => setEditingQuestion(null)}
-        />
-      )}
-  
+
+      {editingQuestion && <UploadComponent questionData={editingQuestion} onSave={() => setEditingQuestion(null)} onCancel={() => setEditingQuestion(null)} />}
       {error && <p style={{ color: "red" }}>{error}</p>}
       {filteredQuestions.length === 0 && !error && <p>No questions found!</p>}
-      <p>
-        Showing {filteredQuestions.length} of {questions.length} questions
-      </p>
-  
+      <p>Showing {filteredQuestions.length} of {questions.length} questions</p>
+
       <div className="questionList">
         <ol>
           {filteredQuestions.map((q) => (
             <li key={q.id} className="questionItem">
               <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
               <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
-              <div>
-                {q.questionImage && (
-                  <img src={q.questionImage} alt="Question" style={{ maxWidth: "300px" }} />
-                )}
-              </div>
+              <div>{q.questionImage && (<img src={q.questionImage} alt="Question" style={{ maxWidth: "300px" }} />)}</div>
               {q.type === "MCQ" && Array.isArray(q.options) && (
                 <ul>
                   {q.options.map((opt, idx) => (
-                    <li key={idx}>
-                      {opt.text}{" "}
-                      {opt.image && (
-                        <img src={opt.image} alt={`Option ${idx + 1}`} style={{ maxWidth: "100px" }} />
-                      )}
-                    </li>
+                    <li key={idx}>{opt.text} {opt.image && (<img src={opt.image} alt={`Option ${idx + 1}`} style={{ maxWidth: "100px" }} />)}</li>
                   ))}
                 </ul>
               )}
               {q.correctAnswer && (
-                <p>
-                  <strong>Correct Answer:</strong> {q.correctAnswer.text}{" "}
-                  {q.correctAnswer.image && (
-                    <img src={q.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />
-                  )}
-                </p>
+                <p><strong>Correct Answer:</strong> {q.correctAnswer.text} {q.correctAnswer.image && (<img src={q.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />)}</p>
               )}
-              <button className="editButton" onClick={() => handleEdit(q)}>
-                Edit
-              </button>
-              <button className="deleteButton" onClick={() => handleDelete(q)}>
-                Delete
-              </button>
+              <button className="editButton" onClick={() => handleEdit(q)}>Edit</button>
+              <button className="deleteButton" onClick={() => handleDelete(q)}>Delete</button>
             </li>
           ))}
         </ol>
