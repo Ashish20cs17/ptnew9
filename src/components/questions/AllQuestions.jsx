@@ -18,6 +18,7 @@ const AllQuestions = () => {
   const [topic, setTopic] = useState("all");
   const [topicList, setTopicList] = useState("all");
   const [difficultyLevel, setDifficultyLevel] = useState("all");
+  const [questionType, setQuestionType] = useState("all");
 
   useEffect(() => {
     const fetchAllQuestions = async () => {
@@ -45,10 +46,11 @@ const AllQuestions = () => {
       (grade === "all" || q.grade === grade) &&
       (topic === "all" || q.topic === topic) &&
       (topicList === "all" || q.topicList === topicList) &&
-      (difficultyLevel === "all" || q.difficultyLevel === difficultyLevel)
+      (difficultyLevel === "all" || q.difficultyLevel === difficultyLevel) &&
+      (questionType === "all" || q.type === questionType)
     ));
     setFilteredQuestions(filtered);
-  }, [questions, grade, topic, topicList, difficultyLevel]);
+  }, [questions, grade, topic, topicList, difficultyLevel, questionType]);
 
   const handleEdit = (question) => setEditingQuestion(question);
 
@@ -231,11 +233,36 @@ const AllQuestions = () => {
       <h2>All Questions</h2>
       <hr />
       <div className="filterControls">
-        <DynamicMathSelector grade={grade} setGrade={setGrade} topic={topic} setTopic={setTopic} topicList={topicList} setTopicList={setTopicList} />
-        <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
-          <option value="all">All Difficulty Levels</option>
-          {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
-        </select>
+        {/* Using the horizontal-filters class to override DynamicMathSelector vertical styles */}
+        <div className="horizontal-filters">
+          <DynamicMathSelector grade={grade} setGrade={setGrade} topic={topic} setTopic={setTopic} topicList={topicList} setTopicList={setTopicList} />
+          
+          <div className="formGroup">
+            <label htmlFor="questionTypeFilter">Question Type:</label>
+            <select 
+              id="questionTypeFilter"
+              value={questionType} 
+              onChange={(e) => setQuestionType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              <option value="MCQ">MCQ</option>
+              <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+              <option value="TRIVIA">Trivia</option>
+            </select>
+          </div>
+          
+          <div className="formGroup">
+            <label htmlFor="difficultyFilter">Difficulty Level:</label>
+            <select 
+              id="difficultyFilter"
+              value={difficultyLevel} 
+              onChange={(e) => setDifficultyLevel(e.target.value)}
+            >
+              <option value="all">All Difficulty Levels</option>
+              {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
 
       {editingQuestion && <UploadComponent questionData={editingQuestion} onSave={() => setEditingQuestion(null)} onCancel={() => setEditingQuestion(null)} />}
