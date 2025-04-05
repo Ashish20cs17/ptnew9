@@ -524,10 +524,8 @@ const AllQuestionsSet = () => {
                     <div className="questionContent">
                       <div className="questionHeader">
                         <span className="questionNumber">Question {index + 1}</span>
-                        <span className="questionType">({q.type})</span>
-                        {q.order !== undefined && (
-                          <span className="questionOrder">(Order: {q.order})</span>
-                        )}
+                        
+                        
                       </div>
 
                       <div className="questionText">
