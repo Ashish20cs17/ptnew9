@@ -284,7 +284,6 @@ const AllQuestionsSet = () => {
     try {
       const content = pdfContentRef.current;
       
-      // First, we need to identify the positions of all questions
       let questionPositions = [];
       
       const canvas = await html2canvas(content, {
@@ -294,19 +293,24 @@ const AllQuestionsSet = () => {
         onclone: (doc) => {
           const clonedContent = doc.getElementById('pdf-content');
           if (clonedContent) {
-            // Basic styling for PDF
             clonedContent.style.padding = '20px';
             clonedContent.style.background = 'white';
             
-            // Hide delete buttons only
+            // Hide delete buttons
             clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
               btn.style.display = 'none';
             });
             
-            // Format answer section with space for writing
+            // Format answer section only for non-trivia questions
             clonedContent.querySelectorAll('.answerText').forEach(answer => {
-              answer.style.display = 'block';
-              answer.innerHTML = '<h5>Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
+              const questionItem = answer.closest('.questionsItem');
+              const questionType = questionItem.dataset.questionType;
+              if (questionType !== 'trivia') {
+                answer.style.display = 'block';
+                answer.innerHTML = '<h5>Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
+              } else {
+                answer.style.display = 'none';
+              }
             });
             
             // Calculate positions of each question element
@@ -336,37 +340,31 @@ const AllQuestionsSet = () => {
       const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
       
-      // Convert question positions to PDF units (mm)
       const questionPositionsMM = questionPositions.map(pos => ({
         top: pos.top * ratio,
         bottom: pos.bottom * ratio,
         height: pos.height * ratio
       }));
       
-      // Calculate page breaks that don't split questions
       const pageBreaks = [];
       let currentHeight = 0;
       
       while (currentHeight < scaledHeight) {
         const nextPageBreak = currentHeight + pdfHeight;
         
-        // Find any question that would be split by this page break
         const splitQuestionIndex = questionPositionsMM.findIndex(q => 
           q.top < nextPageBreak && q.bottom > nextPageBreak
         );
         
         if (splitQuestionIndex !== -1) {
-          // Question would be split, so break at its top instead
           pageBreaks.push(questionPositionsMM[splitQuestionIndex].top);
           currentHeight = questionPositionsMM[splitQuestionIndex].top;
         } else {
-          // No split, use regular page break
           pageBreaks.push(nextPageBreak);
           currentHeight = nextPageBreak;
         }
       }
       
-      // Generate the PDF with our smart page breaks
       let pageNumber = 1;
       let previousBreak = 0;
       
@@ -375,7 +373,6 @@ const AllQuestionsSet = () => {
           pdf.addPage();
         }
         
-        // Calculate position adjustment to show the right portion of the image
         const position = previousBreak;
         
         pdf.addImage(
@@ -387,7 +384,6 @@ const AllQuestionsSet = () => {
           scaledHeight
         );
         
-        // Add page number
         pdf.setFontSize(10);
         pdf.setTextColor(150);
         pdf.text(
@@ -399,7 +395,6 @@ const AllQuestionsSet = () => {
         previousBreak = pageBreak;
         pageNumber++;
         
-        // If we've processed all content, break
         if (pageBreak >= scaledHeight) break;
       }
       
@@ -520,12 +515,14 @@ const AllQuestionsSet = () => {
             {questions.length > 0 ? (
               <ul className="questionsList">
                 {questions.map((q, index) => (
-                  <li key={q.id} className="questionsItem">
+                  <li 
+                    key={q.id} 
+                    className="questionsItem"
+                    data-question-type={q.type || 'default'}
+                  >
                     <div className="questionContent">
                       <div className="questionHeader">
                         <span className="questionNumber">Question {index + 1}</span>
-                        
-                        
                       </div>
 
                       <div className="questionText">
@@ -539,7 +536,6 @@ const AllQuestionsSet = () => {
                             alt="Question Attachment"
                           />
                         </div>
-                        
                       )}
 
                       {q.options && (
@@ -549,9 +545,13 @@ const AllQuestionsSet = () => {
                           ))}
                         </ol>
                       )}
-                      <div className="answerText">
-                        <h5>Answer:</h5>
-                      </div>
+
+                      {/* Show answer section only for non-trivia questions */}
+                      {q.type !== 'TRIVIA' && (
+                        <div className="answerText">
+                          <h5>Answer:</h5>
+                        </div>
+                      )}
                     </div>
                     <button
                       className="deleteQuestionButton"
