@@ -3,7 +3,8 @@ import "./AttachedQuestions.css";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, set } from "firebase/database";
 import { ToastContainer, toast } from "react-toastify";
-import parse from "html-react-parser"; // Import html-react-parser
+import parse from "html-react-parser";
+import DynamicMathSelector from "../DynamicMathSelector";
 
 const AttachedQuestion = () => {
   const [questions, setQuestions] = useState([]);
@@ -17,6 +18,7 @@ const AttachedQuestion = () => {
   const [topic, setTopic] = useState("all");
   const [topicList, setTopicList] = useState("all");
   const [difficultyLevel, setDifficultyLevel] = useState("all");
+  const [questionType, setQuestionType] = useState("all");
 
   useEffect(() => {
     const fetchAllQuestions = async () => {
@@ -49,26 +51,15 @@ const AttachedQuestion = () => {
 
   // Apply filters when any filter value changes
   useEffect(() => {
-    let result = [...questions];
-
-    if (grade !== "all") {
-      result = result.filter((q) => q.grade === grade);
-    }
-
-    if (topic !== "all") {
-      result = result.filter((q) => q.topic === topic);
-    }
-
-    if (topicList !== "all") {
-      result = result.filter((q) => q.topicList === topicList);
-    }
-
-    if (difficultyLevel !== "all") {
-      result = result.filter((q) => q.difficultyLevel === difficultyLevel);
-    }
-
-    setFilteredQuestions(result);
-  }, [questions, grade, topic, topicList, difficultyLevel]);
+    const filtered = questions.filter((q) => (
+      (grade === "all" || q.grade === grade) &&
+      (topic === "all" || q.topic === topic) &&
+      (topicList === "all" || q.topicList === topicList) &&
+      (difficultyLevel === "all" || q.difficultyLevel === difficultyLevel) &&
+      (questionType === "all" || q.type === questionType)
+    ));
+    setFilteredQuestions(filtered);
+  }, [questions, grade, topic, topicList, difficultyLevel, questionType]);
 
   const handleAddToSet = async (questionId) => {
     if (!selectedSetName.trim()) {
@@ -119,87 +110,64 @@ const AttachedQuestion = () => {
     }
   };
 
-  const getUniqueValues = (field) => {
-    if (questions.length === 0) return [];
-
-    const uniqueValues = [...new Set(questions.map((q) => q[field]).filter(Boolean))];
-    return uniqueValues.sort();
-  };
-
-  const getFilteredTopicList = () => {
-    if (grade === "all" || topic === "all") return getUniqueValues("topicList");
-
-    const filteredValues = questions
-      .filter((q) => q.grade === grade && q.topic === topic)
-      .map((q) => q.topicList)
-      .filter(Boolean);
-
-    return [...new Set(filteredValues)].sort();
-  };
-
   // Function to check if a string contains HTML tags
   const isHTML = (str) => {
     return /<[^>]+>/.test(str);
   };
 
   return (
-    <div className="attachedQuestionsContainer">
+    <div className="allQuestionContainer attachedQuestionsContainer">
       <h2>All Questions</h2>
       <hr />
 
-      <input
-        type="text"
-        value={selectedSetName}
-        onChange={(e) => setSelectedSetName(e.target.value)}
-        placeholder="Enter set name"
-      />
-      {setNameError && <p style={{ color: "red" }}>{setNameError}</p>}
+      <div className="set-name-input">
+        <input
+          type="text"
+          value={selectedSetName}
+          onChange={(e) => setSelectedSetName(e.target.value)}
+          placeholder="Enter set name"
+          className="set-name-field"
+        />
+        {setNameError && <p style={{ color: "red" }}>{setNameError}</p>}
+      </div>
       <hr />
 
       <div className="filterControls">
-        <div className="formGroup">
-          <label>Grade:</label>
-          <select value={grade} onChange={(e) => setGrade(e.target.value)}>
-            <option value="all">All Grades</option>
-            <option value="G1">Grade 1</option>
-            <option value="G2">Grade 2</option>
-            <option value="G3">Grade 3</option>
-            <option value="G4">Grade 4</option>
-          </select>
-        </div>
-
-        <div className="formGroup">
-          <label>Topic:</label>
-          <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-            <option value="all">All Topics</option>
-            <option value="Number System">Number System</option>
-            <option value="Operations">Operations</option>
-            <option value="Shapes and Geometry">Shapes and Geometry</option>
-            <option value="Measurement">Measurement</option>
-            <option value="Data Handling">Data Handling</option>
-            <option value="Maths Puzzles">Maths Puzzles</option>
-            <option value="Real Life all concept sums">Real Life all concept sums</option>
-          </select>
-        </div>
-
-        <div className="formGroup">
-          <label>Subtopic:</label>
-          <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
-            <option value="all">All Subtopics</option>
-            {getFilteredTopicList().map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="formGroup">
-          <label>Difficulty:</label>
-          <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
-            <option value="all">All Difficulty Levels</option>
-            {getUniqueValues("difficultyLevel").map((level) => (
-              <option key={level} value={level}>{level}</option>
-            ))}
-          </select>
+        <div className="horizontal-filters">
+          <DynamicMathSelector 
+            grade={grade} 
+            setGrade={setGrade} 
+            topic={topic} 
+            setTopic={setTopic} 
+            topicList={topicList} 
+            setTopicList={setTopicList} 
+          />
+          
+          <div className="formGroup">
+            <label htmlFor="questionTypeFilter">Question Type:</label>
+            <select 
+              id="questionTypeFilter"
+              value={questionType} 
+              onChange={(e) => setQuestionType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              <option value="MCQ">MCQ</option>
+              <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+              <option value="TRIVIA">Trivia</option>
+            </select>
+          </div>
+          
+          <div className="formGroup">
+            <label htmlFor="difficultyFilter">Difficulty Level:</label>
+            <select 
+              id="difficultyFilter"
+              value={difficultyLevel} 
+              onChange={(e) => setDifficultyLevel(e.target.value)}
+            >
+              <option value="all">All Difficulty Levels</option>
+              {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -210,10 +178,10 @@ const AttachedQuestion = () => {
         <p>Showing {filteredQuestions.length} of {questions.length} questions</p>
       </div>
 
-      <div className="attachedQuestionList">
+      <div className="questionList attachedQuestionList">
         <ol>
           {filteredQuestions.map((q) => (
-            <li key={q.id} className="attachedQuestionItem">
+            <li key={q.id} className="questionItem attachedQuestionItem">
               <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
 
               <div className="questionMeta">
@@ -267,12 +235,12 @@ const AttachedQuestion = () => {
                 <button className="addQuestionButton" onClick={() => handleAddToSet(q.id)}>
                   {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
                 </button>
-                <ToastContainer />
               </div>
             </li>
           ))}
         </ol>
       </div>
+      <ToastContainer />
     </div>
   );
 };
