@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./AllQuestionsSet.css";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import parse from 'html-react-parser';
+import parse from "html-react-parser";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
@@ -25,7 +25,7 @@ const AllQuestionsSet = () => {
   const pdfContentRef = useRef(null);
 
   const formatEmail = (username) => {
-    if (username.includes('@')) return username;
+    if (username.includes("@")) return username;
     return `${username}@gmail.com`;
   };
 
@@ -84,16 +84,18 @@ const AllQuestionsSet = () => {
     setError(null);
 
     try {
-      const questionsWithOrder = Object.entries(setQuestionsData).map(([key, value]) => {
-        if (typeof value === 'string') {
-          return { id: value, order: 0 };
-        } else {
-          return {
-            id: value.id || key,
-            order: value.order || 0
-          };
+      const questionsWithOrder = Object.entries(setQuestionsData).map(
+        ([key, value]) => {
+          if (typeof value === "string") {
+            return { id: value, order: 0 };
+          } else {
+            return {
+              id: value.id || key,
+              order: value.order || 0,
+            };
+          }
         }
-      });
+      );
 
       questionsWithOrder.sort((a, b) => a.order - b.order);
 
@@ -145,7 +147,9 @@ const AllQuestionsSet = () => {
   };
 
   const deleteQuestionFromSet = async (questionId) => {
-    if (!window.confirm("Are you sure you want to remove this question from the set?")) {
+    if (
+      !window.confirm("Are you sure you want to remove this question from the set?")
+    ) {
       return;
     }
 
@@ -162,8 +166,10 @@ const AllQuestionsSet = () => {
       const setData = snapshot.val();
       let keyToRemove = null;
       for (const [key, value] of Object.entries(setData)) {
-        if ((typeof value === 'string' && value === questionId) ||
-          (typeof value === 'object' && value.id === questionId)) {
+        if (
+          (typeof value === "string" && value === questionId) ||
+          (typeof value === "object" && value.id === questionId)
+        ) {
           keyToRemove = key;
           break;
         }
@@ -174,14 +180,17 @@ const AllQuestionsSet = () => {
         return;
       }
 
-      const questionRef = ref(database, `attachedQuestionSets/${selectedSet}/${keyToRemove}`);
+      const questionRef = ref(
+        database,
+        `attachedQuestionSets/${selectedSet}/${keyToRemove}`
+      );
       await remove(questionRef);
 
       const remainingQuestions = { ...setData };
       delete remainingQuestions[keyToRemove];
 
       const hasOrderProperty = Object.values(remainingQuestions).some(
-        v => typeof v === 'object' && v.order !== undefined
+        (v) => typeof v === "object" && v.order !== undefined
       );
 
       if (hasOrderProperty) {
@@ -189,13 +198,16 @@ const AllQuestionsSet = () => {
           .map(([key, value]) => ({
             key,
             data: value,
-            order: typeof value === 'object' ? (value.order || 0) : 0
+            order: typeof value === "object" ? value.order || 0 : 0,
           }))
           .sort((a, b) => a.order - b.order);
 
         const orderUpdatePromises = orderedQuestions.map((item, index) => {
-          if (typeof item.data === 'object') {
-            const updatedRef = ref(database, `attachedQuestionSets/${selectedSet}/${item.key}`);
+          if (typeof item.data === "object") {
+            const updatedRef = ref(
+              database,
+              `attachedQuestionSets/${selectedSet}/${item.key}`
+            );
             return set(updatedRef, { ...item.data, order: index });
           }
           return Promise.resolve();
@@ -204,7 +216,9 @@ const AllQuestionsSet = () => {
         await Promise.all(orderUpdatePromises);
       }
 
-      setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
+      setQuestions((prevQuestions) =>
+        prevQuestions.filter((q) => q.id !== questionId)
+      );
       toast.success("✅ Question removed from set");
     } catch (err) {
       console.error("❌ Error removing question:", err);
@@ -250,14 +264,17 @@ const AllQuestionsSet = () => {
         await set(newUserRef, {
           email: formattedEmail,
           createdAt: new Date().toISOString(),
-          role: "user"
+          role: "user",
         });
         userKey = userCredential.user.uid;
         toast.success(`✅ New user created with email: ${formattedEmail}`);
       }
 
-      const orderedQuestionIds = questions.map(q => q.id);
-      const userSetsRef = ref(database, `users/${userKey}/assignedSets/${selectedSet}`);
+      const orderedQuestionIds = questions.map((q) => q.id);
+      const userSetsRef = ref(
+        database,
+        `users/${userKey}/assignedSets/${selectedSet}`
+      );
       await set(userSetsRef, orderedQuestionIds);
       toast.success(`✅ Set "${selectedSet}" attached to ${formattedEmail}`);
       setUserEmail("");
@@ -278,60 +295,79 @@ const AllQuestionsSet = () => {
       toast.error("❌ No question set selected or set is empty");
       return;
     }
-    
+
     setExportLoading(true);
-    
+
     try {
       const content = pdfContentRef.current;
-      
+
       let questionPositions = [];
-      
+
       const canvas = await html2canvas(content, {
         scale: 2,
         useCORS: true,
-        logging: false,
+        logging: true, // Enable logging for debugging
         onclone: (doc) => {
-          const clonedContent = doc.getElementById('pdf-content');
+          const clonedContent = doc.getElementById("pdf-content");
           if (clonedContent) {
-            clonedContent.style.padding = '20px';
-            clonedContent.style.background = 'white';
-            
+            // Apply consistent styling to avoid CSS parsing issues
+            clonedContent.style.padding = "20px";
+            clonedContent.style.background = "white";
+            clonedContent.style.fontFamily = "Arial, sans-serif";
+            clonedContent.style.fontSize = "12px";
+            clonedContent.style.lineHeight = "1.5";
+            clonedContent.style.color = "#000000";
+
             // Hide delete buttons
-            clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
-              btn.style.display = 'none';
+            clonedContent.querySelectorAll(".deleteQuestionButton").forEach((btn) => {
+              btn.style.display = "none";
             });
-            
+
+            // Ensure rich text is preserved and styled correctly
+            clonedContent.querySelectorAll(".questionText").forEach((qt) => {
+              qt.style.width = "100%";
+              qt.style.overflowWrap = "break-word";
+              // Ensure all child elements inherit basic styles
+              qt.querySelectorAll("*").forEach((el) => {
+                el.style.margin = "2px 0";
+                el.style.padding = "0";
+                el.style.fontFamily = "Arial, sans-serif";
+                el.style.color = "#000000";
+              });
+            });
+
             // Format answer section only for non-trivia questions
-            clonedContent.querySelectorAll('.answerText').forEach(answer => {
-              const questionItem = answer.closest('.questionsItem');
+            clonedContent.querySelectorAll(".answerText").forEach((answer) => {
+              const questionItem = answer.closest(".questionsItem");
               const questionType = questionItem.dataset.questionType;
-              if (questionType !== 'trivia') {
-                answer.style.display = 'block';
-                answer.innerHTML = '<h5>Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
+              if (questionType !== "trivia") {
+                answer.style.display = "block";
+                answer.innerHTML =
+                  '<h5 style="margin: 10px 0; font-size: 14px;">Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
               } else {
-                answer.style.display = 'none';
+                answer.style.display = "none";
               }
             });
-            
+
             // Calculate positions of each question element
-            const questionElements = clonedContent.querySelectorAll('.questionsItem');
-            questionPositions = Array.from(questionElements).map(el => {
+            const questionElements = clonedContent.querySelectorAll(".questionsItem");
+            questionPositions = Array.from(questionElements).map((el) => {
               const rect = el.getBoundingClientRect();
               return {
                 top: rect.top,
                 bottom: rect.bottom,
-                height: rect.height
+                height: rect.height,
               };
             });
-            
-            clonedContent.style.height = 'auto';
-            clonedContent.style.overflow = 'visible';
+
+            clonedContent.style.height = "auto";
+            clonedContent.style.overflow = "visible";
           }
-        }
+        },
       });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
@@ -339,23 +375,23 @@ const AllQuestionsSet = () => {
       const ratio = pdfWidth / imgWidth;
       const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
-      
-      const questionPositionsMM = questionPositions.map(pos => ({
+
+      const questionPositionsMM = questionPositions.map((pos) => ({
         top: pos.top * ratio,
         bottom: pos.bottom * ratio,
-        height: pos.height * ratio
+        height: pos.height * ratio,
       }));
-      
+
       const pageBreaks = [];
       let currentHeight = 0;
-      
+
       while (currentHeight < scaledHeight) {
         const nextPageBreak = currentHeight + pdfHeight;
-        
-        const splitQuestionIndex = questionPositionsMM.findIndex(q => 
-          q.top < nextPageBreak && q.bottom > nextPageBreak
+
+        const splitQuestionIndex = questionPositionsMM.findIndex(
+          (q) => q.top < nextPageBreak && q.bottom > nextPageBreak
         );
-        
+
         if (splitQuestionIndex !== -1) {
           pageBreaks.push(questionPositionsMM[splitQuestionIndex].top);
           currentHeight = questionPositionsMM[splitQuestionIndex].top;
@@ -364,41 +400,30 @@ const AllQuestionsSet = () => {
           currentHeight = nextPageBreak;
         }
       }
-      
+
       let pageNumber = 1;
       let previousBreak = 0;
-      
+
       for (const pageBreak of pageBreaks) {
         if (pageNumber > 1) {
           pdf.addPage();
         }
-        
+
         const position = previousBreak;
-        
-        pdf.addImage(
-          imgData,
-          'PNG',
-          0,
-          -position,
-          scaledWidth,
-          scaledHeight
-        );
-        
+
+        pdf.addImage(imgData, "PNG", 0, -position, scaledWidth, scaledHeight);
+
         pdf.setFontSize(10);
         pdf.setTextColor(150);
-        pdf.text(
-          `Page ${pageNumber}`,
-          pdfWidth - 20,
-          pdfHeight - 10
-        );
-        
+        pdf.text(`Page ${pageNumber}`, pdfWidth - 20, pdfHeight - 10);
+
         previousBreak = pageBreak;
         pageNumber++;
-        
+
         if (pageBreak >= scaledHeight) break;
       }
-      
-      pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
+
+      pdf.save(`${selectedSet.replace(/\s+/g, "_")}_questions.pdf`);
       toast.success("✅ PDF successfully exported");
     } catch (err) {
       console.error("❌ Error exporting PDF:", err);
@@ -430,13 +455,13 @@ const AllQuestionsSet = () => {
             {attachLoading ? "Attaching..." : "Attach Set"}
           </button>
           <div className="hintText">
-            {selectedSet ?
-              `Selected set: "${selectedSet}"` :
-              "Select a question set from below"
-            }
+            {selectedSet
+              ? `Selected set: "${selectedSet}"`
+              : "Select a question set from below"}
           </div>
           <div className="noteText">
-            Note: If user does not exist, a new account will be created with default password "123456"
+            Note: If user does not exist, a new account will be created with default
+            password "123456"
           </div>
         </div>
       </div>
@@ -481,12 +506,13 @@ const AllQuestionsSet = () => {
               ))}
             </ul>
           ) : (
-            !loading &&
-            <p>
-              {searchTerm
-                ? "No matching sets found. Try a different search term."
-                : "No sets available."}
-            </p>
+            !loading && (
+              <p>
+                {searchTerm
+                  ? "No matching sets found. Try a different search term."
+                  : "No sets available."}
+              </p>
+            )
           )}
         </div>
       ) : (
@@ -507,18 +533,14 @@ const AllQuestionsSet = () => {
 
           {loading ? <p>Loading questions...</p> : null}
 
-          <div
-            id="pdf-content"
-            ref={pdfContentRef}
-            className="pdfContent"
-          >
+          <div id="pdf-content" ref={pdfContentRef} className="pdfContent">
             {questions.length > 0 ? (
               <ul className="questionsList">
                 {questions.map((q, index) => (
-                  <li 
-                    key={q.id} 
+                  <li
+                    key={q.id}
                     className="questionsItem"
-                    data-question-type={q.type || 'default'}
+                    data-question-type={q.type || "default"}
                   >
                     <div className="questionContent">
                       <div className="questionHeader">
@@ -531,10 +553,7 @@ const AllQuestionsSet = () => {
 
                       {q.questionImage && (
                         <div className="questionImage">
-                          <img
-                            src={q.questionImage}
-                            alt="Question Attachment"
-                          />
+                          <img src={q.questionImage} alt="Question Attachment" />
                         </div>
                       )}
 
@@ -546,8 +565,7 @@ const AllQuestionsSet = () => {
                         </ol>
                       )}
 
-                      {/* Show answer section only for non-trivia questions */}
-                      {q.type !== 'TRIVIA' && (
+                      {q.type !== "TRIVIA" && (
                         <div className="answerText">
                           <h5>Answer:</h5>
                         </div>
