@@ -8,6 +8,7 @@ import "./AllQuestionsSet.css";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import parse from "html-react-parser";
+import practiceTime from "../../assets/practiceTime.jpg";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
@@ -295,134 +296,147 @@ const AllQuestionsSet = () => {
       toast.error("❌ No question set selected or set is empty");
       return;
     }
-
+  
     setExportLoading(true);
-
+  
     try {
-      const content = pdfContentRef.current;
-
-      let questionPositions = [];
-
-      const canvas = await html2canvas(content, {
-        scale: 2,
-        useCORS: true,
-        logging: true, // Enable logging for debugging
-        onclone: (doc) => {
-          const clonedContent = doc.getElementById("pdf-content");
-          if (clonedContent) {
-            // Apply consistent styling to avoid CSS parsing issues
-            clonedContent.style.padding = "20px";
-            clonedContent.style.background = "white";
-            clonedContent.style.fontFamily = "Arial, sans-serif";
-            clonedContent.style.fontSize = "12px";
-            clonedContent.style.lineHeight = "1.5";
-            clonedContent.style.color = "#000000";
-
-            // Hide delete buttons
-            clonedContent.querySelectorAll(".deleteQuestionButton").forEach((btn) => {
-              btn.style.display = "none";
-            });
-
-            // Ensure rich text is preserved and styled correctly
-            clonedContent.querySelectorAll(".questionText").forEach((qt) => {
-              qt.style.width = "100%";
-              qt.style.overflowWrap = "break-word";
-              // Ensure all child elements inherit basic styles
-              qt.querySelectorAll("*").forEach((el) => {
-                el.style.margin = "2px 0";
-                el.style.padding = "0";
-                el.style.fontFamily = "Arial, sans-serif";
-                el.style.color = "#000000";
-              });
-            });
-
-            // Format answer section only for non-trivia questions
-            clonedContent.querySelectorAll(".answerText").forEach((answer) => {
-              const questionItem = answer.closest(".questionsItem");
-              const questionType = questionItem.dataset.questionType;
-              if (questionType !== "trivia") {
-                answer.style.display = "block";
-                answer.innerHTML =
-                  '<h5 style="margin: 10px 0; font-size: 14px;">Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
-              } else {
-                answer.style.display = "none";
-              }
-            });
-
-            // Calculate positions of each question element
-            const questionElements = clonedContent.querySelectorAll(".questionsItem");
-            questionPositions = Array.from(questionElements).map((el) => {
-              const rect = el.getBoundingClientRect();
-              return {
-                top: rect.top,
-                bottom: rect.bottom,
-                height: rect.height,
-              };
-            });
-
-            clonedContent.style.height = "auto";
-            clonedContent.style.overflow = "visible";
-          }
-        },
+      // Convert logo to data URL
+      const img = new Image();
+      img.src = practiceTime;
+  
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
       });
-
-      const imgData = canvas.toDataURL("image/png");
+  
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = img.width;
+      tempCanvas.height = img.height;
+      const ctx = tempCanvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const logoDataUrl = tempCanvas.toDataURL("image/jpeg");
+  
+      // Initialize PDF
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = pdfWidth / imgWidth;
-      const scaledWidth = imgWidth * ratio;
-      const scaledHeight = imgHeight * ratio;
-
-      const questionPositionsMM = questionPositions.map((pos) => ({
-        top: pos.top * ratio,
-        bottom: pos.bottom * ratio,
-        height: pos.height * ratio,
-      }));
-
-      const pageBreaks = [];
-      let currentHeight = 0;
-
-      while (currentHeight < scaledHeight) {
-        const nextPageBreak = currentHeight + pdfHeight;
-
-        const splitQuestionIndex = questionPositionsMM.findIndex(
-          (q) => q.top < nextPageBreak && q.bottom > nextPageBreak
-        );
-
-        if (splitQuestionIndex !== -1) {
-          pageBreaks.push(questionPositionsMM[splitQuestionIndex].top);
-          currentHeight = questionPositionsMM[splitQuestionIndex].top;
-        } else {
-          pageBreaks.push(nextPageBreak);
-          currentHeight = nextPageBreak;
+      const margin = 10; // Left and right margin
+      const maxContentWidth = pdfWidth - 2 * margin; // Usable width
+      const headerHeight = 35; // Space for header
+      const footerHeight = 15; // Space for footer (page number)
+  
+      // Get each question element separately
+      const questionItems = pdfContentRef.current.querySelectorAll(".questionsItem");
+  
+      let currentPage = 1;
+      let currentY = headerHeight; // Start after header
+  
+      // Calculate a consistent scale factor based on the widest question
+      let maxWidth = 0;
+      for (let i = 0; i < questionItems.length; i++) {
+        const rect = questionItems[i].getBoundingClientRect();
+        if (rect.width > maxWidth) {
+          maxWidth = rect.width;
         }
       }
-
-      let pageNumber = 1;
-      let previousBreak = 0;
-
-      for (const pageBreak of pageBreaks) {
-        if (pageNumber > 1) {
-          pdf.addPage();
+      const consistentScaleFactor = maxContentWidth / maxWidth; // Scale to fit within margins
+  
+      for (let i = 0; i < questionItems.length; i++) {
+        const questionItem = questionItems[i];
+  
+        // Create a clone of the question for capture
+        const questionClone = questionItem.cloneNode(true);
+  
+        // Remove delete buttons and apply styling
+        const deleteBtn = questionClone.querySelector(".deleteQuestionButton");
+        if (deleteBtn) {
+          deleteBtn.style.display = "none";
         }
-
-        const position = previousBreak;
-
-        pdf.addImage(imgData, "PNG", 0, -position, scaledWidth, scaledHeight);
-
+  
+        // Apply styles to ensure text wraps and fits within PDF width
+        questionClone.style.background = "white";
+        questionClone.style.padding = "10px";
+        questionClone.style.margin = "0";
+        questionClone.style.border = "none";
+        questionClone.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Set width before scaling
+        questionClone.style.boxSizing = "border-box";
+        questionClone.style.wordWrap = "break-word"; // Ensure text wraps
+        questionClone.style.overflowWrap = "break-word"; // Modern equivalent of word-wrap
+        questionClone.style.whiteSpace = "normal"; // Allow text to wrap naturally
+  
+        // Ensure all child elements respect the width
+        const allElements = questionClone.querySelectorAll("*");
+        allElements.forEach((el) => {
+          el.style.maxWidth = "100%"; // Prevent child elements from overflowing
+          el.style.wordWrap = "break-word";
+          el.style.overflowWrap = "break-word";
+        });
+  
+        // Append to a temporary container for capture
+        const tempContainer = document.createElement("div");
+        tempContainer.style.position = "absolute";
+        tempContainer.style.left = "-9999px";
+        tempContainer.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Match clone width
+        tempContainer.appendChild(questionClone);
+        document.body.appendChild(tempContainer);
+  
+        // Capture this single question
+        const questionCanvas = await html2canvas(questionClone, {
+          scale: 2, // High resolution for clarity
+          useCORS: true,
+          logging: false,
+          width: maxContentWidth / consistentScaleFactor, // Constrain capture width
+        });
+  
+        // Convert to image data
+        const questionImgData = questionCanvas.toDataURL("image/png");
+  
+        // Calculate scaled dimensions
+        const qScaledWidth = questionCanvas.width * consistentScaleFactor;
+        const qScaledHeight = questionCanvas.height * consistentScaleFactor;
+  
+        // Check if question fits on current page vertically
+        if (currentY + qScaledHeight > pdfHeight - footerHeight - margin) {
+          // Add new page
+          pdf.addPage();
+          currentPage++;
+          currentY = headerHeight; // Reset Y position after header
+          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+        }
+  
+        // Add this question to the PDF
+        pdf.addImage(questionImgData, "PNG", margin, currentY, qScaledWidth, qScaledHeight);
+  
+        // Move Y position for next question
+        currentY += qScaledHeight + 10; // Add spacing between questions
+  
+        // Clean up
+        document.body.removeChild(tempContainer);
+  
+        // Add header to first page (or current page if it's the first iteration)
+        if (i === 0) {
+          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+        }
+  
+        // Add page number
         pdf.setFontSize(10);
         pdf.setTextColor(150);
-        pdf.text(`Page ${pageNumber}`, pdfWidth - 20, pdfHeight - 10);
-
-        previousBreak = pageBreak;
-        pageNumber++;
-
-        if (pageBreak >= scaledHeight) break;
+        pdf.text(`Page ${currentPage}`, pdfWidth - margin, pdfHeight - 5);
       }
-
+  
+      // Helper function to add header to page
+      function addHeaderToPage(pdf, logoUrl, title, width) {
+        pdf.addImage(logoUrl, "JPEG", margin, 10, 50, 15);
+  
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        // pdf.text(title, margin + 35, 18); // Uncomment if title is needed
+  
+        pdf.setDrawColor(0);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, 28, width - margin, 28);
+      }
+  
       pdf.save(`${selectedSet.replace(/\s+/g, "_")}_questions.pdf`);
       toast.success("✅ PDF successfully exported");
     } catch (err) {
