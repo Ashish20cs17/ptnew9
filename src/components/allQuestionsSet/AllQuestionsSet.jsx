@@ -7,7 +7,8 @@ import "react-toastify/dist/ReactToastify.css";
 import "./AllQuestionsSet.css";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import parse from 'html-react-parser';
+import parse from "html-react-parser";
+import practiceTime from "../../assets/practiceTime.jpg";
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
@@ -25,7 +26,7 @@ const AllQuestionsSet = () => {
   const pdfContentRef = useRef(null);
 
   const formatEmail = (username) => {
-    if (username.includes('@')) return username;
+    if (username.includes("@")) return username;
     return `${username}@gmail.com`;
   };
 
@@ -84,16 +85,18 @@ const AllQuestionsSet = () => {
     setError(null);
 
     try {
-      const questionsWithOrder = Object.entries(setQuestionsData).map(([key, value]) => {
-        if (typeof value === 'string') {
-          return { id: value, order: 0 };
-        } else {
-          return {
-            id: value.id || key,
-            order: value.order || 0
-          };
+      const questionsWithOrder = Object.entries(setQuestionsData).map(
+        ([key, value]) => {
+          if (typeof value === "string") {
+            return { id: value, order: 0 };
+          } else {
+            return {
+              id: value.id || key,
+              order: value.order || 0,
+            };
+          }
         }
-      });
+      );
 
       questionsWithOrder.sort((a, b) => a.order - b.order);
 
@@ -145,7 +148,9 @@ const AllQuestionsSet = () => {
   };
 
   const deleteQuestionFromSet = async (questionId) => {
-    if (!window.confirm("Are you sure you want to remove this question from the set?")) {
+    if (
+      !window.confirm("Are you sure you want to remove this question from the set?")
+    ) {
       return;
     }
 
@@ -162,8 +167,10 @@ const AllQuestionsSet = () => {
       const setData = snapshot.val();
       let keyToRemove = null;
       for (const [key, value] of Object.entries(setData)) {
-        if ((typeof value === 'string' && value === questionId) ||
-          (typeof value === 'object' && value.id === questionId)) {
+        if (
+          (typeof value === "string" && value === questionId) ||
+          (typeof value === "object" && value.id === questionId)
+        ) {
           keyToRemove = key;
           break;
         }
@@ -174,14 +181,17 @@ const AllQuestionsSet = () => {
         return;
       }
 
-      const questionRef = ref(database, `attachedQuestionSets/${selectedSet}/${keyToRemove}`);
+      const questionRef = ref(
+        database,
+        `attachedQuestionSets/${selectedSet}/${keyToRemove}`
+      );
       await remove(questionRef);
 
       const remainingQuestions = { ...setData };
       delete remainingQuestions[keyToRemove];
 
       const hasOrderProperty = Object.values(remainingQuestions).some(
-        v => typeof v === 'object' && v.order !== undefined
+        (v) => typeof v === "object" && v.order !== undefined
       );
 
       if (hasOrderProperty) {
@@ -189,13 +199,16 @@ const AllQuestionsSet = () => {
           .map(([key, value]) => ({
             key,
             data: value,
-            order: typeof value === 'object' ? (value.order || 0) : 0
+            order: typeof value === "object" ? value.order || 0 : 0,
           }))
           .sort((a, b) => a.order - b.order);
 
         const orderUpdatePromises = orderedQuestions.map((item, index) => {
-          if (typeof item.data === 'object') {
-            const updatedRef = ref(database, `attachedQuestionSets/${selectedSet}/${item.key}`);
+          if (typeof item.data === "object") {
+            const updatedRef = ref(
+              database,
+              `attachedQuestionSets/${selectedSet}/${item.key}`
+            );
             return set(updatedRef, { ...item.data, order: index });
           }
           return Promise.resolve();
@@ -204,7 +217,9 @@ const AllQuestionsSet = () => {
         await Promise.all(orderUpdatePromises);
       }
 
-      setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
+      setQuestions((prevQuestions) =>
+        prevQuestions.filter((q) => q.id !== questionId)
+      );
       toast.success("✅ Question removed from set");
     } catch (err) {
       console.error("❌ Error removing question:", err);
@@ -250,14 +265,17 @@ const AllQuestionsSet = () => {
         await set(newUserRef, {
           email: formattedEmail,
           createdAt: new Date().toISOString(),
-          role: "user"
+          role: "user",
         });
         userKey = userCredential.user.uid;
         toast.success(`✅ New user created with email: ${formattedEmail}`);
       }
 
-      const orderedQuestionIds = questions.map(q => q.id);
-      const userSetsRef = ref(database, `users/${userKey}/assignedSets/${selectedSet}`);
+      const orderedQuestionIds = questions.map((q) => q.id);
+      const userSetsRef = ref(
+        database,
+        `users/${userKey}/assignedSets/${selectedSet}`
+      );
       await set(userSetsRef, orderedQuestionIds);
       toast.success(`✅ Set "${selectedSet}" attached to ${formattedEmail}`);
       setUserEmail("");
@@ -278,132 +296,148 @@ const AllQuestionsSet = () => {
       toast.error("❌ No question set selected or set is empty");
       return;
     }
-    
+  
     setExportLoading(true);
-    
+  
     try {
-      const content = pdfContentRef.current;
-      
-      // First, we need to identify the positions of all questions
-      let questionPositions = [];
-      
-      const canvas = await html2canvas(content, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        onclone: (doc) => {
-          const clonedContent = doc.getElementById('pdf-content');
-          if (clonedContent) {
-            // Basic styling for PDF
-            clonedContent.style.padding = '20px';
-            clonedContent.style.background = 'white';
-            
-            // Hide delete buttons only
-            clonedContent.querySelectorAll('.deleteQuestionButton').forEach(btn => {
-              btn.style.display = 'none';
-            });
-            
-            // Format answer section with space for writing
-            clonedContent.querySelectorAll('.answerText').forEach(answer => {
-              answer.style.display = 'block';
-              answer.innerHTML = '<h5>Answer:</h5><div style="min-height: 60px; margin-bottom: 20px;"></div>';
-            });
-            
-            // Calculate positions of each question element
-            const questionElements = clonedContent.querySelectorAll('.questionsItem');
-            questionPositions = Array.from(questionElements).map(el => {
-              const rect = el.getBoundingClientRect();
-              return {
-                top: rect.top,
-                bottom: rect.bottom,
-                height: rect.height
-              };
-            });
-            
-            clonedContent.style.height = 'auto';
-            clonedContent.style.overflow = 'visible';
-          }
-        }
+      // Convert logo to data URL
+      const img = new Image();
+      img.src = practiceTime;
+  
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
       });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+  
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = img.width;
+      tempCanvas.height = img.height;
+      const ctx = tempCanvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const logoDataUrl = tempCanvas.toDataURL("image/jpeg");
+  
+      // Initialize PDF
+      const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = pdfWidth / imgWidth;
-      const scaledWidth = imgWidth * ratio;
-      const scaledHeight = imgHeight * ratio;
-      
-      // Convert question positions to PDF units (mm)
-      const questionPositionsMM = questionPositions.map(pos => ({
-        top: pos.top * ratio,
-        bottom: pos.bottom * ratio,
-        height: pos.height * ratio
-      }));
-      
-      // Calculate page breaks that don't split questions
-      const pageBreaks = [];
-      let currentHeight = 0;
-      
-      while (currentHeight < scaledHeight) {
-        const nextPageBreak = currentHeight + pdfHeight;
-        
-        // Find any question that would be split by this page break
-        const splitQuestionIndex = questionPositionsMM.findIndex(q => 
-          q.top < nextPageBreak && q.bottom > nextPageBreak
-        );
-        
-        if (splitQuestionIndex !== -1) {
-          // Question would be split, so break at its top instead
-          pageBreaks.push(questionPositionsMM[splitQuestionIndex].top);
-          currentHeight = questionPositionsMM[splitQuestionIndex].top;
-        } else {
-          // No split, use regular page break
-          pageBreaks.push(nextPageBreak);
-          currentHeight = nextPageBreak;
+      const margin = 10; // Left and right margin
+      const maxContentWidth = pdfWidth - 2 * margin; // Usable width
+      const headerHeight = 35; // Space for header
+      const footerHeight = 15; // Space for footer (page number)
+  
+      // Get each question element separately
+      const questionItems = pdfContentRef.current.querySelectorAll(".questionsItem");
+  
+      let currentPage = 1;
+      let currentY = headerHeight; // Start after header
+  
+      // Calculate a consistent scale factor based on the widest question
+      let maxWidth = 0;
+      for (let i = 0; i < questionItems.length; i++) {
+        const rect = questionItems[i].getBoundingClientRect();
+        if (rect.width > maxWidth) {
+          maxWidth = rect.width;
         }
       }
-      
-      // Generate the PDF with our smart page breaks
-      let pageNumber = 1;
-      let previousBreak = 0;
-      
-      for (const pageBreak of pageBreaks) {
-        if (pageNumber > 1) {
-          pdf.addPage();
+      const consistentScaleFactor = maxContentWidth / maxWidth; // Scale to fit within margins
+  
+      for (let i = 0; i < questionItems.length; i++) {
+        const questionItem = questionItems[i];
+  
+        // Create a clone of the question for capture
+        const questionClone = questionItem.cloneNode(true);
+  
+        // Remove delete buttons and apply styling
+        const deleteBtn = questionClone.querySelector(".deleteQuestionButton");
+        if (deleteBtn) {
+          deleteBtn.style.display = "none";
         }
-        
-        // Calculate position adjustment to show the right portion of the image
-        const position = previousBreak;
-        
-        pdf.addImage(
-          imgData,
-          'PNG',
-          0,
-          -position,
-          scaledWidth,
-          scaledHeight
-        );
-        
+  
+        // Apply styles to ensure text wraps and fits within PDF width
+        questionClone.style.background = "white";
+        questionClone.style.padding = "10px";
+        questionClone.style.margin = "0";
+        questionClone.style.border = "none";
+        questionClone.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Set width before scaling
+        questionClone.style.boxSizing = "border-box";
+        questionClone.style.wordWrap = "break-word"; // Ensure text wraps
+        questionClone.style.overflowWrap = "break-word"; // Modern equivalent of word-wrap
+        questionClone.style.whiteSpace = "normal"; // Allow text to wrap naturally
+  
+        // Ensure all child elements respect the width
+        const allElements = questionClone.querySelectorAll("*");
+        allElements.forEach((el) => {
+          el.style.maxWidth = "100%"; // Prevent child elements from overflowing
+          el.style.wordWrap = "break-word";
+          el.style.overflowWrap = "break-word";
+        });
+  
+        // Append to a temporary container for capture
+        const tempContainer = document.createElement("div");
+        tempContainer.style.position = "absolute";
+        tempContainer.style.left = "-9999px";
+        tempContainer.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Match clone width
+        tempContainer.appendChild(questionClone);
+        document.body.appendChild(tempContainer);
+  
+        // Capture this single question
+        const questionCanvas = await html2canvas(questionClone, {
+          scale: 2, // High resolution for clarity
+          useCORS: true,
+          logging: false,
+          width: maxContentWidth / consistentScaleFactor, // Constrain capture width
+        });
+  
+        // Convert to image data
+        const questionImgData = questionCanvas.toDataURL("image/png");
+  
+        // Calculate scaled dimensions
+        const qScaledWidth = questionCanvas.width * consistentScaleFactor;
+        const qScaledHeight = questionCanvas.height * consistentScaleFactor;
+  
+        // Check if question fits on current page vertically
+        if (currentY + qScaledHeight > pdfHeight - footerHeight - margin) {
+          // Add new page
+          pdf.addPage();
+          currentPage++;
+          currentY = headerHeight; // Reset Y position after header
+          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+        }
+  
+        // Add this question to the PDF
+        pdf.addImage(questionImgData, "PNG", margin, currentY, qScaledWidth, qScaledHeight);
+  
+        // Move Y position for next question
+        currentY += qScaledHeight + 10; // Add spacing between questions
+  
+        // Clean up
+        document.body.removeChild(tempContainer);
+  
+        // Add header to first page (or current page if it's the first iteration)
+        if (i === 0) {
+          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+        }
+  
         // Add page number
         pdf.setFontSize(10);
         pdf.setTextColor(150);
-        pdf.text(
-          `Page ${pageNumber}`,
-          pdfWidth - 20,
-          pdfHeight - 10
-        );
-        
-        previousBreak = pageBreak;
-        pageNumber++;
-        
-        // If we've processed all content, break
-        if (pageBreak >= scaledHeight) break;
+        pdf.text(`Page ${currentPage}`, pdfWidth - margin, pdfHeight - 5);
       }
-      
-      pdf.save(`${selectedSet.replace(/\s+/g, '_')}_questions.pdf`);
+  
+      // Helper function to add header to page
+      function addHeaderToPage(pdf, logoUrl, title, width) {
+        pdf.addImage(logoUrl, "JPEG", margin, 10, 50, 15);
+  
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        // pdf.text(title, margin + 35, 18); // Uncomment if title is needed
+  
+        pdf.setDrawColor(0);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, 28, width - margin, 28);
+      }
+  
+      pdf.save(`${selectedSet.replace(/\s+/g, "_")}_questions.pdf`);
       toast.success("✅ PDF successfully exported");
     } catch (err) {
       console.error("❌ Error exporting PDF:", err);
@@ -435,13 +469,13 @@ const AllQuestionsSet = () => {
             {attachLoading ? "Attaching..." : "Attach Set"}
           </button>
           <div className="hintText">
-            {selectedSet ?
-              `Selected set: "${selectedSet}"` :
-              "Select a question set from below"
-            }
+            {selectedSet
+              ? `Selected set: "${selectedSet}"`
+              : "Select a question set from below"}
           </div>
           <div className="noteText">
-            Note: If user does not exist, a new account will be created with default password "123456"
+            Note: If user does not exist, a new account will be created with default
+            password "123456"
           </div>
         </div>
       </div>
@@ -486,12 +520,13 @@ const AllQuestionsSet = () => {
               ))}
             </ul>
           ) : (
-            !loading &&
-            <p>
-              {searchTerm
-                ? "No matching sets found. Try a different search term."
-                : "No sets available."}
-            </p>
+            !loading && (
+              <p>
+                {searchTerm
+                  ? "No matching sets found. Try a different search term."
+                  : "No sets available."}
+              </p>
+            )
           )}
         </div>
       ) : (
@@ -512,20 +547,18 @@ const AllQuestionsSet = () => {
 
           {loading ? <p>Loading questions...</p> : null}
 
-          <div
-            id="pdf-content"
-            ref={pdfContentRef}
-            className="pdfContent"
-          >
+          <div id="pdf-content" ref={pdfContentRef} className="pdfContent">
             {questions.length > 0 ? (
               <ul className="questionsList">
                 {questions.map((q, index) => (
-                  <li key={q.id} className="questionsItem">
+                  <li
+                    key={q.id}
+                    className="questionsItem"
+                    data-question-type={q.type || "default"}
+                  >
                     <div className="questionContent">
                       <div className="questionHeader">
                         <span className="questionNumber">Question {index + 1}</span>
-                        
-                        
                       </div>
 
                       <div className="questionText">
@@ -534,12 +567,8 @@ const AllQuestionsSet = () => {
 
                       {q.questionImage && (
                         <div className="questionImage">
-                          <img
-                            src={q.questionImage}
-                            alt="Question Attachment"
-                          />
+                          <img src={q.questionImage} alt="Question Attachment" />
                         </div>
-                        
                       )}
 
                       {q.options && (
@@ -549,9 +578,12 @@ const AllQuestionsSet = () => {
                           ))}
                         </ol>
                       )}
-                      <div className="answerText">
-                        <h5>Answer:</h5>
-                      </div>
+
+                      {q.type !== "TRIVIA" && (
+                        <div className="answerText">
+                          <h5>Answer:</h5>
+                        </div>
+                      )}
                     </div>
                     <button
                       className="deleteQuestionButton"
