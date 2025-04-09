@@ -426,7 +426,7 @@ const AllQuestionsSet = () => {
   
       // Helper function to add header to page
       function addHeaderToPage(pdf, logoUrl, title, width) {
-        pdf.addImage(logoUrl, "JPEG", margin, 10, 50, 15);
+        pdf.addImage(logoUrl, "JPEG", margin, 10, 70, 15);
   
         pdf.setFontSize(16);
         pdf.setTextColor(0, 0, 0);
