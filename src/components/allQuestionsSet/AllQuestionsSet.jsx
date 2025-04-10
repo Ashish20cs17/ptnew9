@@ -331,15 +331,11 @@ const AllQuestionsSet = () => {
       let currentPage = 1;
       let currentY = headerHeight; // Start after header
   
-      // Calculate a consistent scale factor based on the widest question
-      let maxWidth = 0;
-      for (let i = 0; i < questionItems.length; i++) {
-        const rect = questionItems[i].getBoundingClientRect();
-        if (rect.width > maxWidth) {
-          maxWidth = rect.width;
-        }
-      }
-      const consistentScaleFactor = maxContentWidth / maxWidth; // Scale to fit within margins
+      // Calculate a consistent scale factor based on reasonable width
+      // Instead of using the widest question, use a fixed percentage of the max content width
+      // This helps with text wrapping behavior
+      const contentWidthPx = 600; // Reasonable base width in pixels
+      const consistentScaleFactor = maxContentWidth / contentWidthPx;
   
       for (let i = 0; i < questionItems.length; i++) {
         const questionItem = questionItems[i];
@@ -353,49 +349,78 @@ const AllQuestionsSet = () => {
           deleteBtn.style.display = "none";
         }
   
-        // Apply styles to ensure text wraps and fits within PDF width
+        // Create a temporary container with fixed width to enforce wrapping
+        const tempContainer = document.createElement("div");
+        tempContainer.style.position = "absolute";
+        tempContainer.style.left = "-9999px";
+        tempContainer.style.width = `${contentWidthPx}px`;
+        document.body.appendChild(tempContainer);
+  
+        // Apply enhanced styles to ensure proper text wrapping
         questionClone.style.background = "white";
         questionClone.style.padding = "10px";
         questionClone.style.margin = "0";
         questionClone.style.border = "none";
-        questionClone.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Set width before scaling
+        questionClone.style.width = "100%"; // Take full width of container
         questionClone.style.boxSizing = "border-box";
-        questionClone.style.wordWrap = "break-word"; // Ensure text wraps
-        questionClone.style.overflowWrap = "break-word"; // Modern equivalent of word-wrap
-        questionClone.style.whiteSpace = "normal"; // Allow text to wrap naturally
+        questionClone.style.wordWrap = "break-word";
+        questionClone.style.overflowWrap = "break-word";
+        questionClone.style.whiteSpace = "normal";
+        questionClone.style.position = "relative";
+        questionClone.style.display = "block";
   
-        // Ensure all child elements respect the width
+        // Ensure all child elements respect width and have proper text wrapping
         const allElements = questionClone.querySelectorAll("*");
         allElements.forEach((el) => {
-          el.style.maxWidth = "100%"; // Prevent child elements from overflowing
+          el.style.maxWidth = "100%";
           el.style.wordWrap = "break-word";
           el.style.overflowWrap = "break-word";
+          el.style.whiteSpace = "normal";
+          
+          // Force paragraphs and text elements to wrap
+          if (el.tagName === 'P' || el.tagName === 'DIV' || el.tagName === 'SPAN' || 
+              el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || 
+              el.tagName === 'H4' || el.tagName === 'H5' || el.tagName === 'H6') {
+            el.style.width = "100%";
+            el.style.display = "block";
+          }
         });
   
-        // Append to a temporary container for capture
-        const tempContainer = document.createElement("div");
-        tempContainer.style.position = "absolute";
-        tempContainer.style.left = "-9999px";
-        tempContainer.style.width = `${maxContentWidth / consistentScaleFactor}px`; // Match clone width
+        // Append to the temporary container
         tempContainer.appendChild(questionClone);
-        document.body.appendChild(tempContainer);
   
-        // Capture this single question
+        // Capture this single question with fixed width to enforce wrapping
         const questionCanvas = await html2canvas(questionClone, {
-          scale: 2, // High resolution for clarity
+          scale: 2, // High resolution
           useCORS: true,
           logging: false,
-          width: maxContentWidth / consistentScaleFactor, // Constrain capture width
+          width: contentWidthPx, // Fixed capture width
+          onclone: (clonedDoc) => {
+            // Additional opportunity to style the clone before capture
+            const clone = clonedDoc.body.querySelector(questionClone.tagName);
+            if (clone) {
+              // Force line breaks on long text
+              const textNodes = Array.from(clone.querySelectorAll('*'))
+                .filter(node => node.childNodes.length > 0 && 
+                      (node.textContent || '').length > 50);
+              
+              textNodes.forEach(node => {
+                node.style.width = "100%";
+                node.style.wordBreak = "break-word"; // Added for extra wrapping control
+              });
+            }
+          }
         });
   
         // Convert to image data
         const questionImgData = questionCanvas.toDataURL("image/png");
   
-        // Calculate scaled dimensions
-        const qScaledWidth = questionCanvas.width * consistentScaleFactor;
-        const qScaledHeight = questionCanvas.height * consistentScaleFactor;
+        // Calculate scaled dimensions for PDF
+        const qScaledWidth = maxContentWidth;
+        const aspectRatio = questionCanvas.height / questionCanvas.width;
+        const qScaledHeight = qScaledWidth * aspectRatio;
   
-        // Check if question fits on current page vertically
+        // Check if question fits on current page
         if (currentY + qScaledHeight > pdfHeight - footerHeight - margin) {
           // Add new page
           pdf.addPage();
@@ -426,7 +451,7 @@ const AllQuestionsSet = () => {
   
       // Helper function to add header to page
       function addHeaderToPage(pdf, logoUrl, title, width) {
-        pdf.addImage(logoUrl, "JPEG", margin, 10, 70, 15);
+        pdf.addImage(logoUrl, "JPEG", margin, 5, 70, 10);
   
         pdf.setFontSize(16);
         pdf.setTextColor(0, 0, 0);
@@ -445,6 +470,17 @@ const AllQuestionsSet = () => {
     } finally {
       setExportLoading(false);
     }
+  };
+
+  // Function to get question number, only counting non-trivia questions
+  const getQuestionNumber = (questions, currentIndex) => {
+    if (!questions || currentIndex < 0) return 0;
+    
+    // Count non-trivia questions up to currentIndex
+    return questions
+      .slice(0, currentIndex + 1)
+      .filter(q => q.type !== "TRIVIA")
+      .length;
   };
 
   return (
@@ -550,50 +586,59 @@ const AllQuestionsSet = () => {
           <div id="pdf-content" ref={pdfContentRef} className="pdfContent">
             {questions.length > 0 ? (
               <ul className="questionsList">
-                {questions.map((q, index) => (
-                  <li
-                    key={q.id}
-                    className="questionsItem"
-                    data-question-type={q.type || "default"}
-                  >
-                    <div className="questionContent">
-                      <div className="questionHeader">
-                        <span className="questionNumber">Question {index + 1}</span>
-                      </div>
-
-                      <div className="questionText">
-                        {isHTML(q.question) ? parse(q.question) : q.question}
-                      </div>
-
-                      {q.questionImage && (
-                        <div className="questionImage">
-                          <img src={q.questionImage} alt="Question Attachment" />
-                        </div>
-                      )}
-
-                      {q.options && (
-                        <ol className="mcqOptions">
-                          {q.options.map((option, idx) => (
-                            <li key={idx}>{option.text}</li>
-                          ))}
-                        </ol>
-                      )}
-
-                      {q.type !== "TRIVIA" && (
-                        <div className="answerText">
-                          <h5>Answer:</h5>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      className="deleteQuestionButton"
-                      onClick={() => deleteQuestionFromSet(q.id)}
-                      disabled={deleteLoading}
+                {questions.map((q, index) => {
+                  const isTrivia = q.type === "TRIVIA";
+                  const questionNumber = !isTrivia ? getQuestionNumber(questions, index) : null;
+                  
+                  return (
+                    <li
+                      key={q.id}
+                      className={`questionsItem ${isTrivia ? 'triviaItem' : 'questionItem'}`}
+                      data-question-type={q.type || "default"}
                     >
-                      Remove
-                    </button>
-                  </li>
-                ))}
+                      <div className="questionContent">
+                        <div className="questionHeader">
+                          {isTrivia ? (
+                            <span className="triviaLabel"></span>
+                          ) : (
+                            <span className="questionNumber">Question {questionNumber}</span>
+                          )}
+                        </div>
+
+                        <div className="questionText">
+                          {isHTML(q.question) ? parse(q.question) : q.question}
+                        </div>
+
+                        {q.questionImage && (
+                          <div className="questionImage">
+                            <img src={q.questionImage} alt="Question Attachment" />
+                          </div>
+                        )}
+
+                        {q.options && (
+                          <ol className="mcqOptions">
+                            {q.options.map((option, idx) => (
+                              <li key={idx}>{option.text}</li>
+                            ))}
+                          </ol>
+                        )}
+
+                        {!isTrivia && (
+                          <div className="answerText">
+                            <h5>Answer:</h5>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className="deleteQuestionButton"
+                        onClick={() => deleteQuestionFromSet(q.id)}
+                        disabled={deleteLoading}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               !loading && <p>No questions found in this set.</p>
