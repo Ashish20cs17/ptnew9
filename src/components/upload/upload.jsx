@@ -267,37 +267,9 @@ const Upload = () => {
       console.error("uploadQuestion: Error:", error);
     }
   };
-
   return (
     <div className="uploadContainer">
-      <div className="formGroup">
-        <label>Question Type:</label>
-        <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
-          <option value="MCQ">MCQ</option>
-          <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
-          <option value="TRIVIA">Trivia</option>
-        </select>
-      </div>
-
-      <div className="formGroup">
-        <label>Question:</label>
-        <JoditEditor
-          ref={editor}
-          value={question}
-          config={config}
-          onBlur={handleTextChange}
-        />
-      </div>
-
-      <div className="formGroup">
-        <div className="imageUpload">
-          <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
-          {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
-        </div>
-      </div>
-
-      {error && <p className="errorMessage">{error}</p>}
-
+      {/* Grade, Topic Selector */}
       {questionType !== "TRIVIA" && (
         <>
           <DynamicMathSelector
@@ -308,7 +280,8 @@ const Upload = () => {
             topicList={topicList}
             setTopicList={setTopicList}
           />
-
+  
+          {/* Difficulty Level */}
           <div className="formGroup">
             <label>Difficulty Level:</label>
             <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
@@ -319,7 +292,8 @@ const Upload = () => {
               <option value="Br">Br</option>
             </select>
           </div>
-
+  
+          {/* Question ID */}
           <div className="formGroup">
             <label>Question ID:</label>
             <input
@@ -330,7 +304,67 @@ const Upload = () => {
           </div>
         </>
       )}
+  <div className="formGroup">
+  <label>Question Type:</label>
+  <div className="circleRadioGroup horizontalRadioGroup">
+    <label className="circleRadio">
+      <input
+        type="radio"
+        value="MCQ"
+        checked={questionType === "MCQ"}
+        onChange={(e) => setQuestionType(e.target.value)}
+      />
+      <span className="customCircle"></span>
+      MCQ
+    </label>
 
+    <label className="circleRadio">
+      <input
+        type="radio"
+        value="FILL_IN_THE_BLANKS"
+        checked={questionType === "FILL_IN_THE_BLANKS"}
+        onChange={(e) => setQuestionType(e.target.value)}
+      />
+      <span className="customCircle"></span>
+      Fill in the Blanks
+    </label>
+
+    <label className="circleRadio">
+      <input
+        type="radio"
+        value="TRIVIA"
+        checked={questionType === "TRIVIA"}
+        onChange={(e) => setQuestionType(e.target.value)}
+      />
+      <span className="customCircle"></span>
+      Trivia
+    </label>
+  </div>
+</div>
+
+  
+      {/* Question Text */}
+      <div className="formGroup">
+        <label>Question:</label>
+        <JoditEditor
+          ref={editor}
+          value={question}
+          config={config}
+          onBlur={handleTextChange}
+        />
+      </div>
+  
+      {/* Question Image Upload */}
+      <div className="formGroup">
+        <div className="imageUpload">
+          <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
+          {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
+        </div>
+      </div>
+  
+      {error && <p className="errorMessage">{error}</p>}
+  
+      {/* MCQ Options */}
       {questionType === "MCQ" && (
         <div className="optionsSection">
           {options.map((option, index) => (
@@ -353,7 +387,8 @@ const Upload = () => {
           ))}
         </div>
       )}
-
+  
+      {/* Answer Section */}
       {questionType !== "TRIVIA" && (
         <div className="answerSection">
           {questionType === "MCQ" ? (
@@ -385,7 +420,8 @@ const Upload = () => {
           )}
         </div>
       )}
-
+  
+      {/* Upload Button */}
       <button
         className="uploadButton"
         onClick={uploadQuestion}
@@ -393,10 +429,9 @@ const Upload = () => {
       >
         {loading ? "Uploading..." : "Upload Question"}
       </button>
-
+  
       <ToastContainer />
     </div>
   );
 };
-
 export default Upload;

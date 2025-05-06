@@ -13,11 +13,72 @@
   padding: 30px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+.circleRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.horizontalRadioGroup {
+  flex-direction: row;       /* make items horizontal */
+  gap: 30px;                 /* space between buttons */
+}
+
+.circleRadio {
+  position: relative;
+  padding-left: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+}
+
+.circleRadio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.customCircle {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+}
+
+.circleRadio input:checked ~ .customCircle {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.customCircle::after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.circleRadio input:checked ~ .customCircle::after {
+  display: block;
+}
+
+.circleRadio .customCircle::after {
+  top: 5px;
+  left: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+}
 
 /* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
+@media (max-width: 300px) {
   .uploadContainer {
-    max-width: 90%;
+    max-width: 100%;
     margin: 0 15px;
     padding: 20px;
     gap: 15px;
