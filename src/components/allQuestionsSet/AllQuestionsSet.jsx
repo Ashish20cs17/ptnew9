@@ -316,161 +316,61 @@ const AllQuestionsSet = () => {
       ctx.drawImage(img, 0, 0);
       const logoDataUrl = tempCanvas.toDataURL("image/jpeg");
   
-      // Initialize PDF
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10; // Left and right margin
-      const maxContentWidth = pdfWidth - 2 * margin; // Usable width
-      const headerHeight = 35; // Space for header
-      const footerHeight = 15; // Space for footer (page number)
+      const margin = 10;
+      const headerHeight = 35;
+      const footerHeight = 15;
+      const usableHeight = pdfHeight - headerHeight - footerHeight;
   
-      // Get each question element separately
       const questionItems = pdfContentRef.current.querySelectorAll(".questionsItem");
   
+      let currentY = headerHeight;
       let currentPage = 1;
-      let currentY = headerHeight; // Start after header
   
-      // Calculate a consistent scale factor based on reasonable width
-      // Instead of using the widest question, use a fixed percentage of the max content width
-      // This helps with text wrapping behavior
-      const contentWidthPx = 600; // Reasonable base width in pixels
-      const consistentScaleFactor = maxContentWidth / contentWidthPx;
-  
-      for (let i = 0; i < questionItems.length; i++) {
-        const questionItem = questionItems[i];
-  
-        // Create a clone of the question for capture
-        const questionClone = questionItem.cloneNode(true);
-  
-        // Remove delete buttons and apply styling
-        const deleteBtn = questionClone.querySelector(".deleteQuestionButton");
-        if (deleteBtn) {
-          deleteBtn.style.display = "none";
-        }
-  
-        // Create a temporary container with fixed width to enforce wrapping
-        const tempContainer = document.createElement("div");
-        tempContainer.style.position = "absolute";
-        tempContainer.style.left = "-9999px";
-        tempContainer.style.width = `${contentWidthPx}px`;
-        document.body.appendChild(tempContainer);
-  
-        // Apply enhanced styles to ensure proper text wrapping
-        questionClone.style.background = "white";
-        questionClone.style.padding = "10px";
-        questionClone.style.margin = "0";
-        questionClone.style.border = "none";
-        questionClone.style.width = "100%"; // Take full width of container
-        questionClone.style.boxSizing = "border-box";
-        questionClone.style.wordWrap = "break-word";
-        questionClone.style.overflowWrap = "break-word";
-        questionClone.style.whiteSpace = "normal";
-        questionClone.style.position = "relative";
-        questionClone.style.display = "block";
-  
-        // Ensure all child elements respect width and have proper text wrapping
-        const allElements = questionClone.querySelectorAll("*");
-        allElements.forEach((el) => {
-          el.style.maxWidth = "100%";
-          el.style.wordWrap = "break-word";
-          el.style.overflowWrap = "break-word";
-          el.style.whiteSpace = "normal";
-          
-          // Force paragraphs and text elements to wrap
-          if (el.tagName === 'P' || el.tagName === 'DIV' || el.tagName === 'SPAN' || 
-              el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || 
-              el.tagName === 'H4' || el.tagName === 'H5' || el.tagName === 'H6') {
-            el.style.width = "100%";
-            el.style.display = "block";
-          }
-        });
-  
-        // Append to the temporary container
-        tempContainer.appendChild(questionClone);
-  
-        // Capture this single question with fixed width to enforce wrapping
-        const questionCanvas = await html2canvas(questionClone, {
-          scale: 2, // High resolution
+      for (const item of questionItems) {
+        // Step 1: Render the item to canvas
+        const canvas = await html2canvas(item, {
+          scale: 1.2,
           useCORS: true,
-          logging: false,
-          width: contentWidthPx, // Fixed capture width
-          onclone: (clonedDoc) => {
-            // Additional opportunity to style the clone before capture
-            const clone = clonedDoc.body.querySelector(questionClone.tagName);
-            if (clone) {
-              // Force line breaks on long text
-              const textNodes = Array.from(clone.querySelectorAll('*'))
-                .filter(node => node.childNodes.length > 0 && 
-                      (node.textContent || '').length > 50);
-              
-              textNodes.forEach(node => {
-                node.style.width = "100%";
-                node.style.wordBreak = "break-word"; // Added for extra wrapping control
-              });
-            }
-          }
+          allowTaint: false
         });
-  
-        // Convert to image data
-        const questionImgData = questionCanvas.toDataURL("image/png");
-  
-        // Calculate scaled dimensions for PDF
-        const qScaledWidth = maxContentWidth;
-        const aspectRatio = questionCanvas.height / questionCanvas.width;
-        const qScaledHeight = qScaledWidth * aspectRatio;
-  
-        // Check if question fits on current page
-        if (currentY + qScaledHeight > pdfHeight - footerHeight - margin) {
-          // Add new page
+      
+        // Step 2: Convert canvas to compressed JPEG image
+        const imgData = canvas.toDataURL("image/jpeg", 0.5); // 60% quality to reduce size
+      
+        // Step 3: Get image properties and size
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgWidth = pdfWidth - 2 * margin;
+        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+      
+        // Step 4: Handle page breaking
+        if (currentY + imgHeight > usableHeight + headerHeight) {
           pdf.addPage();
           currentPage++;
-          currentY = headerHeight; // Reset Y position after header
-          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+          currentY = headerHeight;
         }
-  
-        // Add this question to the PDF
-        pdf.addImage(questionImgData, "PNG", margin, currentY, qScaledWidth, qScaledHeight);
-  
-        // Move Y position for next question
-        currentY += qScaledHeight + 10; // Add spacing between questions
-  
-        // Clean up
-        document.body.removeChild(tempContainer);
-  
-        // Add header to first page (or current page if it's the first iteration)
-        if (i === 0) {
-          addHeaderToPage(pdf, logoDataUrl, selectedSet, pdfWidth);
+      
+        // Step 5: Add logo to the first page only
+        if (currentY === headerHeight && currentPage === 1) {
+          pdf.addImage(logoDataUrl, "JPEG", margin, 10, 50, 20);
         }
-  
-        // Add page number
-        pdf.setFontSize(10);
-        pdf.setTextColor(150);
-        pdf.text(`Page ${currentPage}`, pdfWidth - margin, pdfHeight - 5);
+      
+        // Step 6: Add question image
+        pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 10;
       }
-  
-      // Helper function to add header to page
-      function addHeaderToPage(pdf, logoUrl, title, width) {
-        pdf.addImage(logoUrl, "JPEG", margin, 5, 70, 10);
-  
-        pdf.setFontSize(16);
-        pdf.setTextColor(0, 0, 0);
-        // pdf.text(title, margin + 35, 18); // Uncomment if title is needed
-  
-        pdf.setDrawColor(0);
-        pdf.setLineWidth(0.5);
-        pdf.line(margin, 28, width - margin, 28);
-      }
-  
-      pdf.save(`${selectedSet.replace(/\s+/g, "_")}_questions.pdf`);
-      toast.success("✅ PDF successfully exported");
-    } catch (err) {
-      console.error("❌ Error exporting PDF:", err);
+      
+      pdf.save(`${selectedSet}.pdf`);
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
       toast.error("❌ Failed to export PDF");
     } finally {
       setExportLoading(false);
     }
   };
+  
 
   // Function to get question number, only counting non-trivia questions
   const getQuestionNumber = (questions, currentIndex) => {
