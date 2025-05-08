@@ -11,6 +11,10 @@
   overflow-y: auto; /* Enable vertical scrolling */
   max-height: 100vh; /* Adjust height to allow scrolling */
 }
+body, .pdfExportMode {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+}
+
 .logoImage {
   max-width: 200px;
   height: auto;
@@ -66,10 +70,25 @@
 .pdfExportMode .answerText {
   font-size: 17px !important;
 }
-
+/* Style for PDF export mode */
 .pdfExportMode .questionsItem {
-  margin-bottom: 5px !important; /* Reduce spacing */
+  max-width: 100% !important;
+  width: 100% !important;
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+  padding: 10px;
+  box-sizing: border-box;
 }
+
+.pdfExportMode .questionContent {
+  font-size: 18px !important;
+}
+
+.pdfExportMode {
+  width: 800px; /* matches A4 width ratio */
+  margin: 0 auto;
+}
+
 
 .questionContent p {
   font-size: 16px;
