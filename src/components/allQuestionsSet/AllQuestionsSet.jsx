@@ -290,7 +290,6 @@ const AllQuestionsSet = () => {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
-
   const exportToPDF = async () => {
     if (!selectedSet || !questions.length || !pdfContentRef.current) {
       toast.error("❌ No question set selected or set is empty");
@@ -300,6 +299,9 @@ const AllQuestionsSet = () => {
     setExportLoading(true);
   
     try {
+      // ✅ Add export mode class before rendering
+      pdfContentRef.current.classList.add("pdfExportMode");
+  
       const img = new Image();
       img.src = practiceTime;
   
@@ -318,7 +320,7 @@ const AllQuestionsSet = () => {
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 5; // Reduced margin
+      const margin = 5;
       const headerHeight = 35;
       const footerHeight = 15;
       const usableHeight = pdfHeight - headerHeight - footerHeight;
@@ -329,7 +331,6 @@ const AllQuestionsSet = () => {
       let currentPage = 1;
   
       for (const item of questionItems) {
-        // Hide delete buttons temporarily
         const deleteButtons = item.querySelectorAll(".deleteQuestionButton");
         deleteButtons.forEach((btn) => (btn.style.display = "none"));
   
@@ -339,12 +340,11 @@ const AllQuestionsSet = () => {
           allowTaint: false,
         });
   
-        // Restore delete buttons
         deleteButtons.forEach((btn) => (btn.style.display = ""));
   
         const imgData = canvas.toDataURL("image/jpeg", 0.5);
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth - 2 * margin; // margin on both sides
+        const imgWidth = pdfWidth - 2 * margin;
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
   
         if (currentY + imgHeight > usableHeight + headerHeight) {
@@ -354,15 +354,14 @@ const AllQuestionsSet = () => {
         }
   
         if (currentY === headerHeight && currentPage === 1) {
-          // Logo dimensions
-          const logoDisplayWidth = 50; // mm
+          const logoDisplayWidth = 50;
           const logoAspectRatio = img.width / img.height;
           const logoDisplayHeight = logoDisplayWidth / logoAspectRatio;
           pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
         }
   
         pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight + 3; // Tighter spacing between items
+        currentY += imgHeight + 3;
       }
   
       pdf.save(`${selectedSet}.pdf`);
@@ -370,6 +369,8 @@ const AllQuestionsSet = () => {
       console.error("Error exporting to PDF:", error);
       toast.error("❌ Failed to export PDF");
     } finally {
+      // ✅ Remove the class after export is done
+      pdfContentRef.current.classList.remove("pdfExportMode");
       setExportLoading(false);
     }
   };
