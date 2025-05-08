@@ -300,7 +300,6 @@ const AllQuestionsSet = () => {
     setExportLoading(true);
   
     try {
-      // Convert logo to data URL
       const img = new Image();
       img.src = practiceTime;
   
@@ -319,7 +318,7 @@ const AllQuestionsSet = () => {
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 5; // Reduced margin
       const headerHeight = 35;
       const footerHeight = 15;
       const usableHeight = pdfHeight - headerHeight - footerHeight;
@@ -330,38 +329,42 @@ const AllQuestionsSet = () => {
       let currentPage = 1;
   
       for (const item of questionItems) {
-        // Step 1: Render the item to canvas
+        // Hide delete buttons temporarily
+        const deleteButtons = item.querySelectorAll(".deleteQuestionButton");
+        deleteButtons.forEach((btn) => (btn.style.display = "none"));
+  
         const canvas = await html2canvas(item, {
-          scale: 1.2,
+          scale: 4,
           useCORS: true,
-          allowTaint: false
+          allowTaint: false,
         });
-      
-        // Step 2: Convert canvas to compressed JPEG image
-        const imgData = canvas.toDataURL("image/jpeg", 0.5); // 60% quality to reduce size
-      
-        // Step 3: Get image properties and size
+  
+        // Restore delete buttons
+        deleteButtons.forEach((btn) => (btn.style.display = ""));
+  
+        const imgData = canvas.toDataURL("image/jpeg", 0.5);
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth - 2 * margin;
+        const imgWidth = pdfWidth - 2 * margin; // margin on both sides
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-      
-        // Step 4: Handle page breaking
+  
         if (currentY + imgHeight > usableHeight + headerHeight) {
           pdf.addPage();
           currentPage++;
           currentY = headerHeight;
         }
-      
-        // Step 5: Add logo to the first page only
+  
         if (currentY === headerHeight && currentPage === 1) {
-          pdf.addImage(logoDataUrl, "JPEG", margin, 10, 50, 20);
+          // Logo dimensions
+          const logoDisplayWidth = 50; // mm
+          const logoAspectRatio = img.width / img.height;
+          const logoDisplayHeight = logoDisplayWidth / logoAspectRatio;
+          pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
         }
-      
-        // Step 6: Add question image
+  
         pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight + 10;
+        currentY += imgHeight + 3; // Tighter spacing between items
       }
-      
+  
       pdf.save(`${selectedSet}.pdf`);
     } catch (error) {
       console.error("Error exporting to PDF:", error);
@@ -370,6 +373,8 @@ const AllQuestionsSet = () => {
       setExportLoading(false);
     }
   };
+  
+  
   
 
   // Function to get question number, only counting non-trivia questions
