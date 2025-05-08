@@ -394,7 +394,7 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
           pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
         
           // Barcode on top-right
-          const barcodeWidth = 25; // mm
+           const barcodeWidth = 50; // mm
           const barcodeHeight = 15; // mm
           pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
         }
