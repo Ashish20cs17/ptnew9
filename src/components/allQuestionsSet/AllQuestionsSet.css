@@ -71,22 +71,27 @@ body, .pdfExportMode {
   font-size: 17px !important;
 }
 /* Style for PDF export mode */
-.pdfExportMode .questionsItem {
-  max-width: 100% !important;
-  width: 100% !important;
-  font-size: 18px !important;
-  line-height: 1.6 !important;
-  padding: 10px;
-  box-sizing: border-box;
-}
+
 
 .pdfExportMode .questionContent {
   font-size: 18px !important;
 }
 
+/* Add this to your CSS */
 .pdfExportMode {
-  width: 800px; /* matches A4 width ratio */
+  width: 800px;
   margin: 0 auto;
+  padding: 0;
+}
+
+.pdfExportMode .questionsItem {
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
 }
 
 
