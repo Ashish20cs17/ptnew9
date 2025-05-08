@@ -9,6 +9,20 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import parse from "html-react-parser";
 import practiceTime from "../../assets/practiceTime.jpg";
+import JsBarcode from "jsbarcode";
+
+const generateBarcodeDataUrl = (text) => {
+  const canvas = document.createElement("canvas");
+  JsBarcode(canvas, text, {
+    format: "CODE128",
+    displayValue: false,
+    width: 2,
+    height: 40,
+    margin: 0,
+  });
+  return canvas.toDataURL("image/png");
+};
+
 
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
@@ -290,6 +304,22 @@ const AllQuestionsSet = () => {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
+
+// generate barcode
+
+  const generateBarcodeDataUrl = (text) => {
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, text, {
+      format: "CODE128",
+      displayValue: false,
+      width: 2,
+      height: 40,
+      margin: 0,
+    });
+    return canvas.toDataURL("image/png");
+  };
+  
+
   const exportToPDF = async () => {
     if (!selectedSet || !questions.length || !pdfContentRef.current) {
       toast.error("❌ No question set selected or set is empty");
@@ -301,7 +331,9 @@ const AllQuestionsSet = () => {
     try {
       // ✅ Add export mode class before rendering
       pdfContentRef.current.classList.add("pdfExportMode");
-  
+  // ✅ Generate barcode image
+const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
+
       const img = new Image();
       img.src = practiceTime;
   
@@ -354,11 +386,18 @@ const AllQuestionsSet = () => {
         }
   
         if (currentY === headerHeight && currentPage === 1) {
-          const logoDisplayWidth = 50;
+          // Logo on top-left
+          const logoDisplayWidth = 50; // mm
           const logoAspectRatio = img.width / img.height;
           const logoDisplayHeight = logoDisplayWidth / logoAspectRatio;
           pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
+        
+          // Barcode on top-right
+          const barcodeWidth = 50; // mm
+          const barcodeHeight = 15; // mm
+          pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
         }
+        
   
         pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
         currentY += imgHeight + 3;
