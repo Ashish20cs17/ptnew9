@@ -15,11 +15,13 @@ body, .pdfExportMode {
   font-family: 'Arial', 'Helvetica', sans-serif;
 }
 
+
 .logoImage {
   max-width: 200px;
   height: auto;
   object-fit: contain;
 }
+
 
 .allQuestionsContainer h2 {
   color: #333;
