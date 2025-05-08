@@ -387,13 +387,14 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
   
         if (currentY === headerHeight && currentPage === 1) {
           // Logo on top-left
-          const logoDisplayWidth = 90; // mm
+          
+            const logoDisplayWidth = 90; // mm
           const logoAspectRatio = img.width / img.height;
           const logoDisplayHeight = logoDisplayWidth / logoAspectRatio;
           pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
         
           // Barcode on top-right
-          const barcodeWidth = 50; // mm
+          const barcodeWidth = 25; // mm
           const barcodeHeight = 15; // mm
           pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
         }
