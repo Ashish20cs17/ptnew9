@@ -11,6 +11,11 @@
   overflow-y: auto; /* Enable vertical scrolling */
   max-height: 100vh; /* Adjust height to allow scrolling */
 }
+.logoImage {
+  max-width: 200px;
+  height: auto;
+  object-fit: contain;
+}
 
 .allQuestionsContainer h2 {
   color: #333;
@@ -23,6 +28,20 @@
   margin: 15px 0;
   width: 100%;
 }
+.pdfExportContainer {
+  background: white;
+  color: black;
+  padding: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: auto;
+}
+.pdfExportContainer img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
 
 .errorMessage {
   color: #d32f2f;
@@ -30,6 +49,57 @@
   padding: 10px;
   border-radius: 4px;
   margin-bottom: 15px;
+}
+.questionsItem {
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.pdfExportMode .questionContent {
+  font-size: 18px !important;
+  line-height: 1.6;
+}
+
+.pdfExportMode .answerText {
+  font-size: 17px !important;
+}
+
+.pdfExportMode .questionsItem {
+  margin-bottom: 5px !important; /* Reduce spacing */
+}
+
+.questionContent p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.answerText {
+  background-color: #f0f4f8;
+  padding: 12px 16px;
+  border-left: 4px solid #007bff;
+  font-size: 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  color: #444;
+}
+
+.mcqOptions {
+  margin-left: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.questionImage img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 /* Attach to User Section */
@@ -114,10 +184,76 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-family: 'Arial', sans-serif;
+    color: #000;
+    background: #fff;
+  }
+
+  .allQuestionsContainer {
+    padding: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .questionsItem {
+    page-break-inside: avoid;
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fdfdfd !important;
+  }
+
+  .questionHeader,
+  .questionText,
+  .answerText,
+  .mcqOptions {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .questionImage img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .questionNumber {
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  .answerText h5 {
+    margin: 0;
+    color: #2e7d32;
+  }
+
+  .pdfContent {
+    margin-top: 20px;
+  }
+
+  .exportButton,
+  .backButton,
+  .searchContainer,
+  .attachToUserSection,
+  .setHeader,
+  .setsList,
+  .setsItem,
+  .Toastify__toast-container {
+    display: none !important;
+  }
+}
 
 .setItem:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+.logoImage {
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
 }
 
 .setName {
@@ -133,6 +269,13 @@
 
 .setName:hover {
   text-decoration: underline;
+}
+@media print {
+  .logoImage {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+  }
 }
 
 .deleteButton {
@@ -331,3 +474,9 @@
   margin-left: 15px;
   
 }
+@media print {
+  .deleteQuestionButton {
+    display: none !important;
+  }
+}
+
