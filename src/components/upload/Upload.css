@@ -32,6 +32,19 @@
   font-size: 16px;
   user-select: none;
 }
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.errorMessage {
+  color: red;
+  font-weight: bold;
+}
+
+.imagePreview {
+  color: green;
+  font-size: 14px;
+}
 
 .circleRadio input[type="radio"] {
   position: absolute;
@@ -144,6 +157,7 @@
   }
 }
 
+
 /* Hover effect for file input label */
 .file-input-container label:hover {
   background-color: #3e8e41;
@@ -232,6 +246,7 @@
   flex-direction: column;
   gap: 12px;
 }
+
 
 .formGroup input,
 .formGroup textarea,
