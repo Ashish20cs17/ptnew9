@@ -287,6 +287,7 @@ const AllQuestions = () => {
               {q.correctAnswer && (
                 <p><strong>Correct Answer:</strong> {q.correctAnswer.text} {q.correctAnswer.image && (<img src={q.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />)}</p>
               )}
+              
               <button className="editButton" onClick={() => handleEdit(q)}>Edit</button>
               <button className="deleteButton" onClick={() => handleDelete(q)}>Delete</button>
             </li>
