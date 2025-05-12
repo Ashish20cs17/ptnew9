@@ -6,6 +6,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import JoditEditor from 'jodit-react';
 import "./Upload.css";
 import DynamicMathSelector from '../DynamicMathSelector';
+// Add this to your imports
+import * as XLSX from 'xlsx';
+
+
 
 const Upload = () => {
   const [questionType, setQuestionType] = useState("MCQ");
@@ -29,6 +33,10 @@ const Upload = () => {
   const [topic, setTopic] = useState("");
   const [topicList, setTopicList] = useState("");
   const [difficultyLevel, setDifficultyLevel] = useState("");
+  // Add this state to your component
+const [bulkLoading, setBulkLoading] = useState(false);
+const [bulkError, setBulkError] = useState(null);
+const [uploadProgress, setUploadProgress] = useState(0);
 
   const config = {
     readonly: false,
@@ -95,6 +103,89 @@ const Upload = () => {
     setAnswerImage(file);
     setAnswerImageUrl(url);
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+  
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+  
+        for (const row of jsonData) {
+          const newQuestion = {
+            question: row.Question || "",
+            questionImageUrl: row.QuestionImage || "",
+            options: row.Options ? JSON.parse(row.Options) : [],
+            correctAnswer: {
+              text: row.CorrectAnswer || "",
+              image: row.CorrectAnswerImage || "",
+            },
+            grade: row.Grade || "",
+            topic: row.Topic || "",
+            topicList: [],
+            difficultyLevel: row.Difficulty || "",
+            questionType: row.Type || "MCQ",
+            timestamp: serverTimestamp(),
+            date: new Date().toISOString().split("T")[0],
+          };
+  
+          const newRef = push(ref(database, "questions"));
+          await set(newRef, newQuestion);
+        }
+  
+        toast.success("Questions uploaded from Excel successfully");
+      };
+  
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error("Excel Upload Error:", err);
+      toast.error("Failed to upload Excel file");
+    }
+  };
+  
+
+
+
+
+
+
+
+
+
+
+
+
 
   const getNextQuestionID = async (grade, topic, topicList) => {
     if (!grade || !topic || !topicList) {
@@ -343,6 +434,29 @@ const Upload = () => {
 </div>
 
   
+
+
+
+
+
+
+
+
+<div>
+  <label>Upload Excel File (for bulk questions):</label>
+  <input type="file" accept=".xlsx, .xls" onChange={handleExcelUpload} />
+</div>
+
+
+
+
+
+
+
+
+
+
+
       {/* Question Text */}
       <div className="formGroup">
         <label>Question:</label>
@@ -387,7 +501,10 @@ const Upload = () => {
           ))}
         </div>
       )}
-  
+
+
+
+
       {/* Answer Section */}
       {questionType !== "TRIVIA" && (
         <div className="answerSection">
