@@ -106,27 +106,6 @@ const [uploadProgress, setUploadProgress] = useState(0);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const handleExcelUpload = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -170,16 +149,6 @@ const handleExcelUpload = async (e) => {
     toast.error("Failed to upload Excel file");
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -431,28 +400,10 @@ const handleExcelUpload = async (e) => {
 </div>
 
   
-
-
-
-
-
-
-
-
 <div>
   <label>Upload Excel File (for bulk questions):</label>
   <input type="file" accept=".xlsx, .xls" onChange={handleExcelUpload} />
 </div>
-
-
-
-
-
-
-
-
-
-
 
       {/* Question Text */}
       <div className="formGroup">

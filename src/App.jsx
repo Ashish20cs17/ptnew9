@@ -1,19 +1,20 @@
-import { useState } from 'react'
-import React from 'react'
-import Login from './components/login/login'
-import { BrowserRouter as Router, Routes, Route, createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Home from './components/home/Home'
+import React from 'react';
+import Login from './components/login/login';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Home from './components/home/Home';
 import ProtectedRoute from './components/route/ProtectedRoute';
 import Navbar from './components/navbar/Navbar';
-import "./App.css"
+import "./App.css";
 import AllQuestions from './components/questions/AllQuestions';
 import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
-
 import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
-import Upload from '../src/components/upload/upload';
-import AllUsers from '../src/components/allUsers/AllUsers';
+import Upload from './components/upload/upload';
+import AllUsers from './components/allUsers/AllUsers';
 import Syllabus from './components/syllabus/Syllabus';
-import OfflineUsers from '../src/components/offlineUsers/OfflineUsers';
+import OfflineUsers from './components/offlineUsers/OfflineUsers';
+
+// Import the new AdminStats component
+import AdminStats from './components/AdminStats';
 
 const App = () => {
   const router = createBrowserRouter([
@@ -23,47 +24,93 @@ const App = () => {
     },
     {
       path: "/home",
-      element: <><Navbar /><ProtectedRoute> <Home /></ProtectedRoute></>
-    }, {
-
-      path: "/all-questions", // ✅ Add new route
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        </>
+      )
+    },
+    {
+      path: "/all-questions",
       element: (
         <>
           <Navbar />
           <AllQuestions />
         </>
-      ),
+      )
     },
     {
-      path: "/attached-questions", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <AttachedQuestion /></ProtectedRoute></>
+      path: "/attached-questions",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <AttachedQuestion />
+          </ProtectedRoute>
+        </>
+      )
     },
     {
-      path: "/all-questions-set", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <AllQuestionsSet /></ProtectedRoute></>
+      path: "/all-questions-set",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <AllQuestionsSet />
+          </ProtectedRoute>
+        </>
+      )
     },
     {
-      path: "/upload", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <Upload /></ProtectedRoute></>
+      path: "/upload",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <Upload />
+          </ProtectedRoute>
+        </>
+      )
+    },
+    {
+      path: "/allUsers",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <AllUsers />
+          </ProtectedRoute>
+        </>
+      )
+    },
+    {
+      path: "/offlineUsers",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <OfflineUsers />
+          </ProtectedRoute>
+        </>
+      )
+    },
+    {
+      path: "/admin-stats",
+      element: (
+        <>
+          <Navbar />
+          <ProtectedRoute>
+            <AdminStats />
+          </ProtectedRoute>
+        </>
+      )
     }
-    ,
-    {
-      path: "/allUsers", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <AllUsers/></ProtectedRoute></>
-    },
-    {
-      path: "/offlineUsers", // ✅ Add new route
-      element: <><Navbar /><ProtectedRoute> <OfflineUsers/></ProtectedRoute></>
-    }
+  ]);
 
-  ])
-  return (
+  return <RouterProvider router={router} />;
+};
 
-    <>
-
-      <RouterProvider router={router} />
-    </>
-  )
-}
-
-export default App
+export default App;
