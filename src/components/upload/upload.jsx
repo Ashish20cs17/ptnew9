@@ -1,502 +1,302 @@
+
+import React, { useEffect, useState, useRef } from "react";
 import { database } from "../firebase/FirebaseSetup";
-import { ref, push, set, serverTimestamp, get, runTransaction } from "firebase/database";
+import { ref, get, remove, update, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
-import React, { useState, useRef, useEffect } from 'react';
-import JoditEditor from 'jodit-react';
-import "./Upload.css";
-import DynamicMathSelector from '../DynamicMathSelector';
-// Add this to your imports
-import * as XLSX from 'xlsx';
+import parse from "html-react-parser";
+import JoditEditor from "jodit-react";
+import DynamicMathSelector from "../DynamicMathSelector";
+import "./AllQuestions.css";
+import "../upload/Upload.css";
 
-
-
-const Upload = () => {
-  const [questionType, setQuestionType] = useState("MCQ");
-  const [question, setQuestion] = useState("");
-  const editor = useRef(null);
-  const [questionImage, setQuestionImage] = useState(null);
-  const [questionImageUrl, setQuestionImageUrl] = useState(null);
-  const [options, setOptions] = useState(["", "", "", ""]);
-  const [optionImages, setOptionImages] = useState([null, null, null, null]);
-  const [optionImageUrls, setOptionImageUrls] = useState([null, null, null, null]);
-  const [mcqAnswer, setMcqAnswer] = useState("");
-  const [mcqAnswerImage, setMcqAnswerImage] = useState(null);
-  const [mcqAnswerImageUrl, setMcqAnswerImageUrl] = useState(null);
-  const [answer, setAnswer] = useState("");
-  const [answerImage, setAnswerImage] = useState(null);
-  const [answerImageUrl, setAnswerImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+const AllQuestions = () => {
+  const [questions, setQuestions] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [error, setError] = useState(null);
-  const [questionID, setQuestionID] = useState("");
-  const [grade, setGrade] = useState("");
-  const [topic, setTopic] = useState("");
-  const [topicList, setTopicList] = useState("");
-  const [difficultyLevel, setDifficultyLevel] = useState("");
-  // Add this state to your component
-const [bulkLoading, setBulkLoading] = useState(false);
-const [bulkError, setBulkError] = useState(null);
-const [uploadProgress, setUploadProgress] = useState(0);
-
-  const config = {
-    readonly: false,
-    toolbar: true,
-    placeholder: "Enter your question here...",
-    enter: "BR",
-    removeButtons: "source",
-    fullpage: false,
-    cleanHTML: true,
-    sanitize: true,
-    askBeforePasteHTML: false,
-  };
-
-  const handleTextChange = (content) => {
-    setQuestion(content);
-  };
-
-  const uploadImageToSupabase = async (file) => {
-    if (!file) return null;
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const { data, error } = await supabase.storage.from("questions").upload(fileName, file);
-    return error ? null : supabase.storage.from("questions").getPublicUrl(fileName).data.publicUrl;
-  };
-
-  const deleteImageFromSupabase = async (imageUrl) => {
-    if (!imageUrl) return;
-    const fileName = imageUrl.split("/").pop();
-    await supabase.storage.from("questions").remove([fileName]);
-  };
-
-  const handleQuestionImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (questionImageUrl) await deleteImageFromSupabase(questionImageUrl);
-    const url = await uploadImageToSupabase(file);
-    setQuestionImage(file);
-    setQuestionImageUrl(url);
-  };
-
-  const handleOptionImageChange = async (e, index) => {
-    const file = e.target.files[0];
-    if (optionImageUrls[index]) await deleteImageFromSupabase(optionImageUrls[index]);
-    const url = await uploadImageToSupabase(file);
-    const newOptionImages = [...optionImages];
-    const newOptionImageUrls = [...optionImageUrls];
-    newOptionImages[index] = file;
-    newOptionImageUrls[index] = url;
-    setOptionImages(newOptionImages);
-    setOptionImageUrls(newOptionImageUrls);
-  };
-
-  const handleMcqAnswerImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (mcqAnswerImageUrl) await deleteImageFromSupabase(mcqAnswerImageUrl);
-    const url = await uploadImageToSupabase(file);
-    setMcqAnswerImage(file);
-    setMcqAnswerImageUrl(url);
-  };
-
-  const handleAnswerImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (answerImageUrl) await deleteImageFromSupabase(answerImageUrl);
-    const url = await uploadImageToSupabase(file);
-    setAnswerImage(file);
-    setAnswerImageUrl(url);
-  };
-
-
-
-const handleExcelUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  try {
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      for (const row of jsonData) {
-        const newQuestion = {
-          question: row.Question || "",
-          options: row.Options ? JSON.parse(row.Options) : [],
-          correctAnswer: {
-            text: row.CorrectAnswer || ""
-          },
-          grade: row.Grade || "",
-          topic: row.Topic || "",
-          topicList: [],  // Update if needed
-          difficultyLevel: row.Difficulty || "",
-          questionType: row.Type || "MCQ",
-          timestamp: serverTimestamp(),
-          date: new Date().toISOString().split("T")[0],
-        };
-
-        const newRef = push(ref(database, "questions"));
-        await set(newRef, newQuestion);
-      }
-
-      toast.success("Questions uploaded from Excel successfully");
-    };
-
-    reader.readAsArrayBuffer(file);
-  } catch (err) {
-    console.error("Excel Upload Error:", err);
-    toast.error("Failed to upload Excel file");
-  }
-};
-
-
-
-
-  const getNextQuestionID = async (grade, topic, topicList) => {
-    if (!grade || !topic || !topicList) {
-      console.log("getNextQuestionID: Missing grade, topic, or topicList");
-      return "";
-    }
-  
-    const topicLetter = topic.split(grade)[1];
-    const subtopicNum = topicList.split('.')[1];
-    const baseID = `${grade}${topicLetter}_${subtopicNum}`; // e.g., "G1A_2"
-    const questionIDsRef = ref(database, "questionIDs");
-  
-    try {
-      const snapshot = await get(questionIDsRef);
-      let sequence = 1;
-      let newQuestionID = `${baseID}_${sequence}`; // e.g., "G1A_2_1"
-  
-      if (snapshot.exists()) {
-        const existingIDs = snapshot.val();
-        while (existingIDs[newQuestionID]) {
-          sequence++;
-          newQuestionID = `${baseID}_${sequence}`;
-        }
-      }
-  
-      return newQuestionID;
-    } catch (err) {
-      console.error("getNextQuestionID: Error:", err);
-      setError("Failed to generate question ID: " + err.message);
-      return "";
-    }
-  };
-
-  const reserveQuestionID = async (questionID, firebaseKey) => {
-    const questionIDRef = ref(database, `questionIDs/${questionID}`);
-    console.log("reserveQuestionID: Attempting to reserve:", questionID, "with key:", firebaseKey);
-
-    try {
-      const { committed, snapshot } = await runTransaction(questionIDRef, (currentValue) => {
-        console.log("reserveQuestionID: Current value at", questionID, ":", currentValue);
-        if (currentValue === null) {
-          console.log("reserveQuestionID: Value is null, setting to", firebaseKey);
-          return firebaseKey;
-        }
-        console.log("reserveQuestionID: Value exists, aborting transaction");
-        return undefined; // Abort transaction by returning undefined
-      });
-
-      console.log("reserveQuestionID: Transaction committed:", committed, "Snapshot:", snapshot?.val());
-
-      if (!committed) {
-        throw new Error("Question ID reservation failed - already taken");
-      }
-      return true;
-    } catch (err) {
-      console.error("reserveQuestionID: Error:", err);
-      throw err;
-    }
-  };
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [grade, setGrade] = useState("all");
+  const [topic, setTopic] = useState("all");
+  const [topicList, setTopicList] = useState("all");
+  const [difficultyLevel, setDifficultyLevel] = useState("all");
+  const [questionType, setQuestionType] = useState("all");
 
   useEffect(() => {
-    const updateQuestionID = async () => {
-      console.log("useEffect: Updating questionID with grade:", grade, "topic:", topic, "topicList:", topicList);
-      if (grade && topic && topicList) {
-        const newID = await getNextQuestionID(grade, topic, topicList);
-        setQuestionID(newID);
-      } else {
-        setQuestionID("");
+    const fetchAllQuestions = async () => {
+      try {
+        const questionsRef = ref(database, "questions");
+        const snapshot = await get(questionsRef);
+        if (!snapshot.exists()) {
+          setError("No questions found!");
+          return;
+        }
+        const data = snapshot.val();
+        const allFetchedQuestions = Object.entries(data).map(([id, question]) => ({ id, ...question })).reverse();
+        setQuestions(allFetchedQuestions);
+        setFilteredQuestions(allFetchedQuestions);
+      } catch (err) {
+        console.error("Error fetching questions:", err);
+        setError("Failed to fetch questions");
       }
     };
-    updateQuestionID();
-  }, [grade, topic, topicList]);
+    fetchAllQuestions();
+  }, []);
 
-  const uploadQuestion = async () => {
-    console.log("uploadQuestion: Starting upload process");
+  useEffect(() => {
+    const filtered = questions.filter((q) => (
+      (grade === "all" || q.grade === grade) &&
+      (topic === "all" || q.topic === topic) &&
+      (topicList === "all" || q.topicList === topicList) &&
+      (difficultyLevel === "all" || q.difficultyLevel === difficultyLevel) &&
+      (questionType === "all" || q.type === questionType)
+    ));
+    setFilteredQuestions(filtered);
+  }, [questions, grade, topic, topicList, difficultyLevel, questionType]);
 
-    if (!question && !questionImageUrl) {
-      setError("Please enter a question or upload an image");
-      console.log("uploadQuestion: Validation failed - no question or image");
-      return;
-    }
-    
-    // Only validate these fields if not a trivia question
-    if (questionType !== "TRIVIA" && (!grade || !topic || !topicList || !difficultyLevel)) {
-      setError("Please select grade, topic, subtopic, and difficulty");
-      console.log("uploadQuestion: Validation failed - missing selections");
-      return;
-    }
-    
-    // Only validate questionID for non-trivia questions
-    if (questionType !== "TRIVIA" && !questionID) {
-      setError("Question ID not generated");
-      console.log("uploadQuestion: Validation failed - no questionID");
-      return;
-    }
+  const handleEdit = (question) => setEditingQuestion(question);
 
-    setError(null);
-    setLoading(true);
-    console.log("uploadQuestion: Validation passed, proceeding with upload");
+  const handleDelete = async (question) => {
+    const { id, questionImage, options, correctAnswer } = question;
+    await Promise.all([
+      deleteImageFromSupabase(questionImage),
+      ...(options?.map((opt) => deleteImageFromSupabase(opt.image)) || []),
+      deleteImageFromSupabase(correctAnswer?.image),
+    ]);
 
     try {
-      // Push the question to get a Firebase key
-      const questionsRef = ref(database, "questions");
-      const newQuestionRef = push(questionsRef);
-      const firebaseKey = newQuestionRef.key;
-      console.log("uploadQuestion: Generated Firebase key:", firebaseKey);
-
-      // Only reserve question ID if not a trivia question
-      if (questionType !== "TRIVIA") {
-        console.log("uploadQuestion: Using questionID:", questionID);
-        await reserveQuestionID(questionID, firebaseKey);
-        console.log("uploadQuestion: Question ID reserved successfully");
-      }
-
-      // Prepare question data
-      const today = new Date().toISOString().split("T")[0];
-      let questionData = {
-        question,
-        questionImage: questionImageUrl,
-        type: questionType,
-        timestamp: serverTimestamp(),
-        date: today,
-      };
-
-      if (questionType !== "TRIVIA") {
-        questionData = {
-          ...questionData,
-          questionID,
-          topic,
-          topicList,
-          difficultyLevel,
-          grade,
-          options: questionType === "MCQ" ? options.map((opt, i) => ({ text: opt, image: optionImageUrls[i] })) : [],
-          correctAnswer: questionType === "MCQ"
-            ? { text: mcqAnswer, image: mcqAnswerImageUrl }
-            : { text: answer, image: answerImageUrl },
-        };
-      }
-
-      // Save the question
-      console.log("uploadQuestion: Saving question data:", questionData);
-      await set(newQuestionRef, questionData);
-      console.log("uploadQuestion: Question saved successfully");
-
-      // Reset form
-      setQuestion("");
-      setQuestionImage(null);
-      setQuestionImageUrl(null);
-      setOptions(["", "", "", ""]);
-      setOptionImages([null, null, null, null]);
-      setOptionImageUrls([null, null, null, null]);
-      setMcqAnswer("");
-      setMcqAnswerImage(null);
-      setMcqAnswerImageUrl(null);
-      setAnswer("");
-      setAnswerImage(null);
-      setAnswerImageUrl(null);
-      setQuestionID("");
-      setGrade("");
-      setTopic("");
-      setTopicList("");
-      setDifficultyLevel("");
-
-      setLoading(false);
-      toast("Question uploaded successfully");
-      console.log("uploadQuestion: Upload complete, form reset");
-    } catch (error) {
-      setError("Failed to upload question: " + error.message);
-      setLoading(false);
-      console.error("uploadQuestion: Error:", error);
+      await remove(ref(database, `questions/${id}`));
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+      setFilteredQuestions((prev) => prev.filter((q) => q.id !== id));
+      toast.success("Question deleted successfully");
+    } catch (err) {
+      console.error("Error deleting question:", err);
+      setError("Failed to delete question");
     }
   };
-  return (
-    <div className="uploadContainer">
-      {/* Grade, Topic Selector */}
-      {questionType !== "TRIVIA" && (
-        <>
-          <DynamicMathSelector
-            grade={grade}
-            setGrade={setGrade}
-            topic={topic}
-            setTopic={setTopic}
-            topicList={topicList}
-            setTopicList={setTopicList}
-          />
-  
-          {/* Difficulty Level */}
-          <div className="formGroup">
-            <label>Difficulty Level:</label>
-            <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
+
+  const deleteImageFromSupabase = async (url) => {
+    if (!url) return;
+    const filePath = url.split("public/questions/")[1];
+    try {
+      const { error } = await supabase.storage.from("questions").remove([filePath]);
+      if (error) throw error;
+    } catch (err) {
+      console.error("Failed to delete image from Supabase:", err);
+    }
+  };
+
+  const isHTML = (str) => /<[^>]+>/.test(str);
+
+  const UploadComponent = ({ questionData, onSave, onCancel }) => {
+    const [formData, setFormData] = useState({
+      questionType: questionData?.type || "MCQ",
+      question: questionData?.question || "",
+      questionImageUrl: questionData?.questionImage || null,
+      options: questionData?.options?.map((opt) => ({ text: opt.text || "", image: opt.image || null })) || Array(4).fill({ text: "", image: null }),
+      correctAnswer: questionData?.correctAnswer || { text: "", image: null },
+      grade: questionData?.grade || "",
+      topic: questionData?.topic || "",
+      topicList: questionData?.topicList || "",
+      difficultyLevel: questionData?.difficultyLevel || "",
+    });
+    const [loading, setLoading] = useState(false);
+    const editor = useRef(null);
+
+    const config = {
+      readonly: false,
+      toolbar: true,
+      placeholder: "Enter your question here...",
+      enter: "BR",
+      removeButtons: "source",
+      fullpage: false,
+      cleanHTML: true,
+      sanitize: true,
+      autofocus: true,
+      askBeforePasteHTML: false,
+    };
+
+    const uploadImageToSupabase = async (file) => {
+      if (!file) return null;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { data, error } = await supabase.storage.from("questions").upload(fileName, file);
+      return error ? null : supabase.storage.from("questions").getPublicUrl(fileName).data.publicUrl;
+    };
+
+    const handleImageChange = async (e, field, index) => {
+      const file = e.target.files[0];
+      const url = await uploadImageToSupabase(file);
+      if (!url) return;
+      setFormData((prev) => {
+        if (field === "questionImageUrl") return { ...prev, [field]: url };
+        if (field === "options") {
+          const newOptions = [...prev.options];
+          newOptions[index].image = url;
+          return { ...prev, options: newOptions };
+        }
+        return { ...prev, correctAnswer: { ...prev.correctAnswer, image: url } };
+      });
+    };
+
+    const handleSave = async () => {
+      if (!formData.question && !formData.questionImageUrl) {
+        toast.error("Please enter a question or upload an image");
+        return;
+      }
+      if (!questionData?.id) {
+        toast.error("Invalid question ID. Cannot update.");
+        return;
+      }
+      setLoading(true);
+      try {
+        const questionRef = ref(database, `questions/${questionData.id}`);
+        const updatedData = {
+          ...formData,
+          timestamp: serverTimestamp(),
+          date: new Date().toISOString().split("T")[0],
+          type: formData.questionType,
+        };
+        await update(questionRef, updatedData);
+        setQuestions((prev) => prev.map((q) => (q.id === questionData.id ? { ...q, ...updatedData } : q)));
+        setFilteredQuestions((prev) => prev.map((q) => (q.id === questionData.id ? { ...q, ...updatedData } : q)));
+        toast.success("Question updated successfully");
+        onSave();
+      } catch (err) {
+        console.error("Error updating question:", err);
+        toast.error("Failed to update question");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="uploadContainer editMode">
+        <h3>Edit Question</h3>
+        <select value={formData.questionType} onChange={(e) => setFormData({ ...formData, questionType: e.target.value })}>
+          <option value="MCQ">MCQ</option>
+          <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+          <option value="TRIVIA">Trivia</option>
+        </select>
+        <JoditEditor ref={editor} value={formData.question} config={config} onBlur={(content) => setFormData({ ...formData, question: content })} />
+        <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "questionImageUrl")} />
+        {formData.questionImageUrl && <img src={formData.questionImageUrl} alt="Question" style={{ maxWidth: "100px" }} />}
+
+        {formData.questionType !== "TRIVIA" && (
+          <>
+            <DynamicMathSelector
+              grade={formData.grade}
+              setGrade={(val) => setFormData({ ...formData, grade: val })}
+              topic={formData.topic}
+              setTopic={(val) => setFormData({ ...formData, topic: val })}
+              topicList={formData.topicList}
+              setTopicList={(val) => setFormData({ ...formData, topicList: val })}
+            />
+            <select value={formData.difficultyLevel} onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}>
               <option value="">Select Difficulty</option>
-              <option value="L1">L1</option>
-              <option value="L2">L2</option>
-              <option value="L3">L3</option>
-              <option value="Br">Br</option>
+              {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
+          </>
+        )}
+
+        {formData.questionType === "MCQ" && (
+          <div className="optionsSection">
+            {formData.options.map((option, index) => (
+              <div key={index}>
+                <input type="text" value={option.text} onChange={(e) => {
+                  const newOptions = [...formData.options];
+                  newOptions[index].text = e.target.value;
+                  setFormData({ ...formData, options: newOptions });
+                }} />
+                <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "options", index)} />
+                {option.image && <img src={option.image} alt={`Option ${index + 1}`} style={{ maxWidth: "100px" }} />}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {formData.questionType !== "TRIVIA" && (
+          <div>
+            <input type="text" value={formData.correctAnswer.text} onChange={(e) => setFormData({ ...formData, correctAnswer: { ...formData.correctAnswer, text: e.target.value } })} />
+            <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "correctAnswer")} />
+            {formData.correctAnswer.image && <img src={formData.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />}
+          </div>
+        )}
+
+        <button onClick={handleSave} disabled={loading}>{loading ? "Saving..." : "Save Changes"}</button>
+        <button onClick={onCancel} disabled={loading}>Cancel</button>
+        <ToastContainer />
+      </div>
+    );
+  };
+
+  return (
+    <div className="allQuestionContainer">
+      <h2>All Questions</h2>
+      <hr />
+      <div className="filterControls">
+        {/* Using the horizontal-filters class to override DynamicMathSelector vertical styles */}
+        <div className="horizontal-filters">
+          <DynamicMathSelector grade={grade} setGrade={setGrade} topic={topic} setTopic={setTopic} topicList={topicList} setTopicList={setTopicList} />
+          
+          <div className="formGroup">
+            <label htmlFor="questionTypeFilter">Question Type:</label>
+            <select 
+              id="questionTypeFilter"
+              value={questionType} 
+              onChange={(e) => setQuestionType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              <option value="MCQ">MCQ</option>
+              <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+              <option value="TRIVIA">Trivia</option>
             </select>
           </div>
-  
-          {/* Question ID */}
+          
           <div className="formGroup">
-            <label>Question ID:</label>
-            <input
-              type="text"
-              value={questionID || "Select grade, topic, and subtopic to generate ID"}
-              disabled
-            />
+            <label htmlFor="difficultyFilter">Difficulty Level:</label>
+            <select 
+              id="difficultyFilter"
+              value={difficultyLevel} 
+              onChange={(e) => setDifficultyLevel(e.target.value)}
+            >
+              <option value="all">All Difficulty Levels</option>
+              {["L1", "L2", "L3", "Br"].map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
           </div>
-        </>
-      )}
-  <div className="formGroup">
-  <label>Question Type:</label>
-  <div className="circleRadioGroup horizontalRadioGroup">
-    <label className="circleRadio">
-      <input
-        type="radio"
-        value="MCQ"
-        checked={questionType === "MCQ"}
-        onChange={(e) => setQuestionType(e.target.value)}
-      />
-      <span className="customCircle"></span>
-      MCQ
-    </label>
-
-    <label className="circleRadio">
-      <input
-        type="radio"
-        value="FILL_IN_THE_BLANKS"
-        checked={questionType === "FILL_IN_THE_BLANKS"}
-        onChange={(e) => setQuestionType(e.target.value)}
-      />
-      <span className="customCircle"></span>
-      Fill in the Blanks
-    </label>
-
-    <label className="circleRadio">
-      <input
-        type="radio"
-        value="TRIVIA"
-        checked={questionType === "TRIVIA"}
-        onChange={(e) => setQuestionType(e.target.value)}
-      />
-      <span className="customCircle"></span>
-      Trivia
-    </label>
-  </div>
-</div>
-
-  
-<div>
-  <label>Upload Excel File (for bulk questions):</label>
-  <input type="file" accept=".xlsx, .xls" onChange={handleExcelUpload} />
-</div>
-
-      {/* Question Text */}
-      <div className="formGroup">
-        <label>Question:</label>
-        <JoditEditor
-          ref={editor}
-          value={question}
-          config={config}
-          onBlur={handleTextChange}
-        />
-      </div>
-  
-      {/* Question Image Upload */}
-      <div className="formGroup">
-        <div className="imageUpload">
-          <input type="file" accept="image/*" onChange={handleQuestionImageChange} />
-          {questionImageUrl && <div className="imagePreview">Image uploaded</div>}
         </div>
       </div>
-  
-      {error && <p className="errorMessage">{error}</p>}
-  
-      {/* MCQ Options */}
-      {questionType === "MCQ" && (
-        <div className="optionsSection">
-          {options.map((option, index) => (
-            <div key={index} className="optionContainer">
-              <input
-                type="text"
-                placeholder={`Option ${index + 1}`}
-                value={option}
-                onChange={(e) => {
-                  const updatedOptions = [...options];
-                  updatedOptions[index] = e.target.value;
-                  setOptions(updatedOptions);
-                }}
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={(e) => handleOptionImageChange(e, index)} />
-                {optionImageUrls[index] && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
+
+      {editingQuestion && <UploadComponent questionData={editingQuestion} onSave={() => setEditingQuestion(null)} onCancel={() => setEditingQuestion(null)} />}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {filteredQuestions.length === 0 && !error && <p>No questions found!</p>}
+      <p>Showing {filteredQuestions.length} of {questions.length} questions</p>
+
+      <div className="questionList">
+        <ol>
+          {filteredQuestions.map((q) => (
+            <li key={q.id} className="questionItem">
+              <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
+              <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
+              <div>{q.questionImage && (<img src={q.questionImage} alt="Question" style={{ maxWidth: "300px" }} />)}</div>
+              {q.type === "MCQ" && Array.isArray(q.options) && (
+                <ul>
+                  {q.options.map((opt, idx) => (
+                    <li key={idx}>{opt.text} {opt.image && (<img src={opt.image} alt={`Option ${idx + 1}`} style={{ maxWidth: "100px" }} />)}</li>
+                  ))}
+                </ul>
+              )}
+              {q.correctAnswer && (
+                <p><strong>Correct Answer:</strong> {q.correctAnswer.text} {q.correctAnswer.image && (<img src={q.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />)}</p>
+              )}
+              
+              <button className="editButton" onClick={() => handleEdit(q)}>Edit</button>
+              <button className="deleteButton" onClick={() => handleDelete(q)}>Delete</button>
+            </li>
           ))}
-        </div>
-      )}
-
-
-
-
-      {/* Answer Section */}
-      {questionType !== "TRIVIA" && (
-        <div className="answerSection">
-          {questionType === "MCQ" ? (
-            <div className="answerContainer">
-              <input
-                type="text"
-                placeholder="Correct Answer"
-                value={mcqAnswer}
-                onChange={(e) => setMcqAnswer(e.target.value)}
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={handleMcqAnswerImageChange} />
-                {mcqAnswerImageUrl && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
-          ) : (
-            <div className="answerContainer">
-              <input
-                type="text"
-                placeholder="Correct Answer"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-              />
-              <div className="imageUpload">
-                <input type="file" accept="image/*" onChange={handleAnswerImageChange} />
-                {answerImageUrl && <div className="imagePreview">Image uploaded</div>}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-  
-      {/* Upload Button */}
-      <button
-        className="uploadButton"
-        onClick={uploadQuestion}
-        disabled={loading}
-      >
-        {loading ? "Uploading..." : "Upload Question"}
-      </button>
-  
-      <ToastContainer />
+        </ol>
+      </div>
     </div>
   );
 };
-export default Upload;
+
+export default AllQuestions;
