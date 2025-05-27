@@ -14,12 +14,13 @@
 body, .pdfExportMode {
   font-family: 'Arial', 'Helvetica', sans-serif;
 }
-.pdfExportMode .questionNumber {
-  background-color: #fce4ec;
-  color: #c2185b;
-  font-size: 20px;
-  border-left: 4px solid #c2185b;
+
+.pdfExportMode .questionNumber  {
+  font-weight: bold;
+  color: #000000; /* Black */
+  font-size: 16px;
 }
+
 
 
 .logoImage {
