@@ -572,8 +572,7 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
                    {!isTrivia && (
   <>
     <div className="answerText">&nbsp;</div>
-    <div className="answerText">&nbsp;</div>
-    <div className="answerText">&nbsp;</div>
+  
   </>
 )}
 
