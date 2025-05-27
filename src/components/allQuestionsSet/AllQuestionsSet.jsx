@@ -569,18 +569,11 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
                           </ol>
                         )}
 
-
-{/* //answer text */}
-
-
-{!isTrivia && (
-  <>
-    <div className="answerText">&nbsp;</div>
-    <div className="answerText">&nbsp;</div>
-    <div className="answerText">&nbsp;</div>
-  </>
-)}
-
+                        {!isTrivia && (
+                          <div className="answerText">
+                            <h5>Answer:</h5>
+                          </div>
+                        )}
                       </div>
                       <button
                         className="deleteQuestionButton"
