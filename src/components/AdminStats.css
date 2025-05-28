@@ -25,6 +25,25 @@
   width: fit-content;
   border-radius: 8px;
 }
+.close-button {
+  padding: 8px 16px;
+  background-color: #4f46e5; /* Indigo */
+  color: white;
+  border: 1px solid black; /* Black border */
+  border-radius: 20px;
+  font-size: 14px; /* Slightly smaller text */
+  cursor: pointer;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #27b627; /* Green on hover */
+  transform: translateY(-1px);
+}
+
+
 
 table {
   width: 100%;
