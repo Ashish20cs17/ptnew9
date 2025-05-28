@@ -3,40 +3,54 @@ import { ref, get } from "firebase/database";
 import { database } from "./firebase/FirebaseSetup";
 import "./AdminStats.css";
 
-const FilteredQuestions = ({ filter, questions, onClose }) => (
-  <div className="filtered-questions-container" style={{ marginTop: "20px", padding: "15px", background: "#f0f0f0", borderRadius: "8px" }}>
-    <h2>
-      Showing Questions — {filter.type.toUpperCase()}:{" "}
-      {filter.type === "topic"
-        ? filter.value.split("__").join(" / ")
-        : filter.value}
-    </h2>
-    <button onClick={onClose} style={{ marginBottom: "10px" }}>Close</button>
-    {questions.length === 0 ? (
-      <p>No questions found.</p>
-    ) : (
-      <ul>
-        {questions.map((q, idx) => (
-          <li
-            key={idx}
-            style={{
-              marginBottom: "20px",
-              borderBottom: "1px solid #ccc",
-              paddingBottom: "10px",
-            }}
-          >
-            <strong>Q:</strong> {q.question || "No question text provided"} <br />
-            <strong>Grade:</strong> {q.grade || "N/A"} <br />
-            <strong>Topic:</strong> {q.topic || "N/A"} <br />
-            <strong>Subtopic:</strong> {q.subtopic || "N/A"} <br />
-            <strong>Difficulty:</strong> {q.difficultyLevel || "Unknown"} <br />
-            <strong>Type:</strong> {q.type || "Unknown"}
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-);
+const FilteredQuestions = ({ filter, questions, onClose }) => {
+  const stripHtml = (html) => {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    return div.textContent || div.innerText || "";
+  };
+
+  return (
+    <div
+      className="filtered-questions-container"
+      style={{ marginTop: "20px", padding: "15px", background: "#f0f0f0", borderRadius: "8px" }}
+    >
+      <h2>
+        Showing Questions — {filter.type.toUpperCase()}:{" "}
+        {filter.type === "topic" ? filter.value.split("__").join(" / ") : filter.value}
+      </h2>
+      <button onClick={onClose} className="close-button">
+        Close
+      </button>
+
+      {questions.length === 0 ? (
+        <p>No questions found.</p>
+      ) : (
+        <ul>
+          {questions.map((q, idx) => (
+            <li
+              key={idx}
+              style={{
+                marginBottom: "20px",
+                borderBottom: "1px solid #ccc",
+                paddingBottom: "10px",
+              }}
+            >
+              <strong>Q:</strong> {stripHtml(q.question) || "No question text provided"} <br />
+
+              <strong>Grade:</strong> {q.grade || "N/A"} <br />
+              <strong>Topic:</strong> {q.topic || "N/A"} <br />
+              <strong>Subtopic:</strong> {q.subtopic || "N/A"} <br />
+              <strong>Difficulty:</strong> {q.difficultyLevel || "Unknown"} <br />
+              <strong>Type:</strong> {q.type || "Unknown"}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 
 const AdminStats = () => {
   const [stats, setStats] = useState({
@@ -64,31 +78,37 @@ const AdminStats = () => {
       const topicStats = [];
 
       const normalizeDifficulty = (diff) => {
-        if (!diff) return "Unknown";
+        if (!diff) return "UNKNOWN";
+;
         const val = diff.toString().trim().toUpperCase();
         if (["L1", "LEVEL 1"].includes(val)) return "L1";
         if (["L2", "LEVEL 2"].includes(val)) return "L2";
         if (["L3", "LEVEL 3"].includes(val)) return "L3";
         if (["BR", "BRAIN", "BRAIN ROUND"].includes(val)) return "BR";
-        return "Unknown";
+        return "UNKNOWN";
+
       };
 
       const normalizeType = (type) => {
-        if (!type) return "Unknown";
+        if (!type) return "UNKNOWN";
+
         const val = type.toString().trim().toUpperCase();
         if (val.includes("MCQ")) return "MCQ";
         if (val.includes("FILL")) return "FILL_IN_THE_BLANKS";
         if (val.includes("TRIVIA")) return "TRIVIA";
-        return "Unknown";
+        return "UNKNOWN";
+
       };
 
       const normalizeGrade = (grade) => {
-        if (!grade) return "Unknown";
+        if (!grade) return "UNKNOWN";
+
         const g = grade.toString().trim().toUpperCase();
         if (g.match(/^G\d+$/)) return g;
         if (g.match(/^GRADE\s*(\d)$/)) return `G${g.split(" ")[1]}`;
         if (g.match(/^\d$/)) return `G${g}`;
-        return "Unknown";
+        return "UNKNOWN";
+
       };
 
       Object.values(data).forEach((question) => {
