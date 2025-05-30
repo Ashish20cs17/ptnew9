@@ -429,174 +429,227 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
       .length;
   };
 
-  return (
-    <div className="allQuestionsContainer">
-      <h2>All Question Sets</h2>
-      <hr />
+ return (
+  <div className="allQuestionsContainer">
+    <h2>All Question Sets</h2>
+    <hr />
 
-      <div className="attachToUserSection">
-        <h3>Attach Question Set to User</h3>
-        <div className="attachForm">
-          <input
-            type="text"
-            placeholder="Enter username or email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-          />
-          <button
-            onClick={handleAttachToUser}
-            disabled={attachLoading || !selectedSet}
-            className="attachButton"
-          >
-            {attachLoading ? "Attaching..." : "Attach Set"}
-          </button>
-          <div className="hintText">
-            {selectedSet
-              ? `Selected set: "${selectedSet}"`
-              : "Select a question set from below"}
-          </div>
-          <div className="noteText">
-            Note: If user does not exist, a new account will be created with default
-            password "123456"
-          </div>
+    <div className="attachToUserSection">
+      <h3>Attach Question Set to User</h3>
+      <div className="attachForm">
+        <input
+          type="text"
+          placeholder="Enter username or email"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+        />
+        <button
+          onClick={handleAttachToUser}
+          disabled={attachLoading || !selectedSet}
+          className="attachButton"
+        >
+          {attachLoading ? "Attaching..." : "Attach Set"}
+        </button>
+        <div className="hintText">
+          {selectedSet ? `Selected set: "${selectedSet}"` : "Select a question set from below"}
+        </div>
+        <div className="noteText">
+          Note: If user does not exist, a new account will be created with default password "123456"
         </div>
       </div>
+    </div>
 
-      <hr />
+    <hr />
 
-      {error && <p className="errorMessage">{error}</p>}
+    {error && <p className="errorMessage">{error}</p>}
 
-      {!selectedSet ? (
-        <div className="questionSetsList">
-          <h3>Available Question Sets</h3>
-          <div className="searchContainer">
-            <input
-              type="text"
-              placeholder="Search question sets..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="searchInput"
-            />
-          </div>
+    {!selectedSet ? (
+      <div className="questionSetsList">
+        <h3>Available Question Sets</h3>
+        <div className="searchContainer">
+          <input
+            type="text"
+            placeholder="Search question sets..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="searchInput"
+          />
+        </div>
 
-          {loading ? <p>Loading sets...</p> : null}
+        {loading ? <p>Loading sets...</p> : null}
 
-          {filteredSets.length > 0 ? (
-            <ul className="setsList">
-              {filteredSets.map(([setName, setQuestionsData]) => (
-                <li key={setName} className="setItem">
-                  <div
-                    className="setName"
-                    onClick={() => handleSetClick(setName, setQuestionsData)}
+        {filteredSets.length > 0 ? (
+          <ul className="setsList">
+            {filteredSets.map(([setName, setQuestionsData]) => (
+              <li key={setName} className="setItem">
+                <div
+                  className="setName"
+                  onClick={() => handleSetClick(setName, setQuestionsData)}
+                >
+                  {setName} ({Object.keys(setQuestionsData).length} questions)
+                </div>
+                <button
+                  className="deleteButton"
+                  onClick={(e) => deleteQuestionSet(setName, e)}
+                  disabled={deleteLoading}
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          !loading && (
+            <p>
+              {searchTerm
+                ? "No matching sets found. Try a different search term."
+                : "No sets available."}
+            </p>
+          )
+        )}
+      </div>
+    ) : (
+      <div className="selectedSetView">
+        <div className="setHeader">
+          <button onClick={() => setSelectedSet(null)} className="backButton">
+            🔙 Back to Sets
+          </button>
+          <h3>Questions in "{selectedSet}"</h3>
+          <button
+            onClick={exportToPDF}
+            disabled={exportLoading || !questions.length}
+            className="exportButton"
+          >
+            {exportLoading ? "Exporting..." : "📄 Export to PDF"}
+          </button>
+        </div>
+
+        {loading ? <p>Loading questions...</p> : null}
+<div
+  id="pdf-content"
+  ref={pdfContentRef}
+  className="pdfContent"
+  style={{
+    backgroundColor: 'white',
+    backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
+    backgroundSize: '10px 10px',
+    padding: '50px',
+    fontFamily: "'Georgia', 'Times New Roman', serif",
+    color: '#1a1a1a',
+    lineHeight: 1.6,
+  }}
+>
+
+
+
+          {questions.length > 0 ? (
+            <ul className="questionsList" style={{ padding: 0, listStyleType: 'none' }}>
+              {questions.map((q, index) => {
+                const isTrivia = q.type === "TRIVIA";
+                const questionNumber = !isTrivia ? getQuestionNumber(questions, index) : null;
+
+                return (
+                  <li
+                    key={q.id}
+                    className={`questionsItem ${isTrivia ? 'triviaItem' : 'questionItem'}`}
+                    data-question-type={q.type || "default"}
+                    style={{
+                      border: '2px solid orange',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '20px',
+                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                      boxShadow: '0 4px 8px rgba(255, 165, 0, 0.2)',
+                    }}
                   >
-                    {setName} ({Object.keys(setQuestionsData).length} questions)
-                  </div>
-                  <button
-                    className="deleteButton"
-                    onClick={(e) => deleteQuestionSet(setName, e)}
-                    disabled={deleteLoading}
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
+                    <div className="questionContent">
+                      <div className="questionHeader" style={{ marginBottom: '12px' }}>
+                        {!isTrivia && (
+                          <span
+                            className="questionNumber"
+                            style={{
+                              fontWeight: '700',
+                              fontSize: '18px',
+                              color: '#d35400',
+                              letterSpacing: '1.2px',
+                            }}
+                          >
+                            QUESTION NO: {questionNumber}
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        className="questionText"
+                        style={{
+                          fontSize: '16px',
+                          color: '#333',
+                          marginBottom: '12px',
+                          lineHeight: '1.5',
+                          fontStyle: 'normal',
+                        }}
+                      >
+                        {isHTML(q.question) ? parse(q.question) : q.question}
+                      </div>
+
+                      {q.questionImage && (
+                        <div className="questionImage" style={{ marginBottom: '15px' }}>
+                          <img
+                            src={q.questionImage}
+                            alt="Question Attachment"
+                            style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
+                          />
+                        </div>
+                      )}
+
+                      {q.options && (
+                        <ol
+                          className="mcqOptions"
+                          style={{
+                            marginLeft: '20px',
+                            color: '#555',
+                            fontSize: '15px',
+                            marginBottom: '15px',
+                          }}
+                        >
+                          {q.options.map((option, idx) => (
+                            <li key={idx} style={{ marginBottom: '8px' }}>
+                              {option.text}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+
+                      {!isTrivia && (
+                        <div
+                          className="answerText"
+                          style={{
+                            backgroundColor: '#fff3e0',
+                            padding: '10px 15px',
+                            borderRadius: '10px',
+                            color: '#d35400',
+                            fontWeight: '600',
+                            fontSize: '15px',
+                            boxShadow: '0 2px 4px rgba(255, 165, 0, 0.2)',
+                          }}
+                        >
+                          {/* Optional answer content here */}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Removed delete button from PDF view */}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
-            !loading && (
-              <p>
-                {searchTerm
-                  ? "No matching sets found. Try a different search term."
-                  : "No sets available."}
-              </p>
-            )
+            !loading && <p>No questions found in this set.</p>
           )}
         </div>
-      ) : (
-        <div className="selectedSetView">
-          <div className="setHeader">
-            <button onClick={() => setSelectedSet(null)} className="backButton">
-              🔙 Back to Sets
-            </button>
-            <h3>Questions in "{selectedSet}"</h3>
-            <button
-              onClick={exportToPDF}
-              disabled={exportLoading || !questions.length}
-              className="exportButton"
-            >
-              {exportLoading ? "Exporting..." : "📄 Export to PDF"}
-            </button>
-          </div>
-
-          {loading ? <p>Loading questions...</p> : null}
-
-          <div id="pdf-content" ref={pdfContentRef} className="pdfContent">
-            {questions.length > 0 ? (
-              <ul className="questionsList">
-                {questions.map((q, index) => {
-                  const isTrivia = q.type === "TRIVIA";
-                  const questionNumber = !isTrivia ? getQuestionNumber(questions, index) : null;
-                  
-                  return (
-                    <li
-                      key={q.id}
-                      className={`questionsItem ${isTrivia ? 'triviaItem' : 'questionItem'}`}
-                      data-question-type={q.type || "default"}
-                    >
-                      <div className="questionContent">
-                        <div className="questionHeader">
-                          {isTrivia ? (
-                            <span className="triviaLabel"></span>
-                          ) : (
-                            <span className="questionNumber">Question {questionNumber}</span>
-                          )}
-                        </div>
-
-                        <div className="questionText">
-                          {isHTML(q.question) ? parse(q.question) : q.question}
-                        </div>
-
-                        {q.questionImage && (
-                          <div className="questionImage">
-                            <img src={q.questionImage} alt="Question Attachment" />
-                          </div>
-                        )}
-
-                        {q.options && (
-                          <ol className="mcqOptions">
-                            {q.options.map((option, idx) => (
-                              <li key={idx}>{option.text}</li>
-                            ))}
-                          </ol>
-                        )}
-
-                   {!isTrivia && (
-  <>
-    <div className="answerText">&nbsp;</div>
-  
-  </>
-)}
-
-                      </div>
-                      <button
-                        className="deleteQuestionButton"
-                        onClick={() => deleteQuestionFromSet(q.id)}
-                        disabled={deleteLoading}
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              !loading && <p>No questions found in this set.</p>
-            )}
-          </div>
-        </div>
-      )}
-      <ToastContainer />
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 };
-
 export default AllQuestionsSet;

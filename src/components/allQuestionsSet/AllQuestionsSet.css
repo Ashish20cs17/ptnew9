@@ -1,3 +1,86 @@
+/* PDF Export Container */
+.pdfExportContainer {
+  background: white;
+  color: #333;  /* Dark text for readability */
+  padding: 20px;
+  font-family: 'Georgia', serif;  /* Elegant serif font */
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Each question container in PDF */
+.pdfExportContainer .questionsItem {
+  border: 3px solid orange; /* Orange border */
+  border-radius: 15px;      /* Rounded corners */
+  padding: 20px;
+  margin-bottom: 25px;      /* Equal spacing between questions */
+  background-color: #fff8f0; /* Light warm background */
+  box-shadow: 0 4px 8px rgba(255, 165, 0, 0.15); /* subtle shadow */
+  page-break-inside: avoid;  /* Avoid splitting question on page break */
+}
+
+/* Question number style */
+.pdfExportContainer .questionNumber {
+  font-weight: 700;
+  font-size: 20px;
+  color: orange;
+  margin-bottom: 15px;
+  font-family: 'Trebuchet MS', sans-serif;
+  letter-spacing: 1.2px;
+}
+
+/* Question text */
+.pdfExportContainer .questionContent {
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 15px;
+}
+
+/* Answer text */
+.pdfExportContainer .answerText {
+  background-color: #fff3e0; /* softer warm background */
+  border-left: 8px solid orange;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #555;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+/* Optional: MCQ options styling */
+.pdfExportContainer .mcqOptions {
+  margin-left: 25px;
+  font-size: 16px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Images inside questions */
+.pdfExportContainer .questionImage img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-top: 15px;
+  border: 3px solid #ffb74d; /* lighter orange border */
+}
+
+/* Responsive PDF export container width */
+@media print, screen and (max-width: 900px) {
+  .pdfExportContainer {
+    max-width: 100%;
+    padding: 15px;
+    font-size: 16px;
+  }
+}
+
+
+
+
+
 .allQuestionsContainer {
   display: flex;
   flex-direction: column;
@@ -41,15 +124,7 @@ body, .pdfExportMode {
   margin: 15px 0;
   width: 100%;
 }
-.pdfExportContainer {
-  background: white;
-  color: black;
-  padding: 20px;
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 800px;
-  margin: auto;
-}
+
 .pdfExportContainer img {
   max-width: 100%;
   height: auto;
@@ -114,7 +189,7 @@ body, .pdfExportMode {
 .answerText {
   background-color: #f0f4f8;
   padding: 1rem; /* Responsive padding */
-  border-left: 9px solid #b4e384;
+  border-left: 9px solid #4064c5;
   font-size: 1rem; /* Responsive text size */
   border-radius: 5px;
   margin-top: 10px;
