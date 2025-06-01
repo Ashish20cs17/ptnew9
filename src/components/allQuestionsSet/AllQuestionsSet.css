@@ -1,15 +1,70 @@
 /* PDF Export Container */
-.pdfExportContainer {
-  background: white;
-  color: #333;  /* Dark text for readability */
-  padding: 20px;
-  font-family: 'Georgia', serif;  /* Elegant serif font */
-  font-size: 18px;
+
+.pdfExportMode {
+  background-color: white !important;
+  background-image: url('./dotted-pattern.jpg') !important;
+  background-repeat: repeat !important;
+  background-size: 10px 10px !important;
+}
+.questionText {
+  font-size: 16px;
+  color: #1a1a1a;
+  margin-bottom: 12px;
   line-height: 1.6;
-  max-width: 800px;
-  margin: auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
+
+
+/* Question number badge outside container */
+.pdfExportMode .questionNumberBadge {
+  display: inline-block;
+  border: 2px solid orange;
+  border-radius: 25px;
+  padding: 6px 14px;
+  font-weight: bold;
+  color: orange;
+  position: relative;
+  left: -30px; /* Moves badge outside container on left */
+  background: #fff;
+  margin-bottom: 10px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+
+/* Main question container with rounded corners */
+.pdfExportMode .questionContainer {
+  border: 1.5px solid #f0f1f1; /* blue border */
+  border-radius: 12px;
+  padding: 15px 20px 10px 20px;
+  background-color: #dee2e6; /* very light blue */
+  margin-left: 20px; /* space to the right of badge */
+  position: relative;
+}
+
+/* Answer container inside question container */
+.pdfExportMode .answerText {
+  background-color: #d9eaff; /* light blue */
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 1rem;
+  color: #333;
+  min-height: 100px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+/* Horizontal line separator between questions */
+.pdfExportMode hr.questionSeparator {
+  border: none;
+  border-top: 1.5px solid #ccc;
+  margin: 25px 0;
+}
 /* Each question container in PDF */
 .pdfExportContainer .questionsItem {
   border: 3px solid orange; /* Orange border */
@@ -141,7 +196,7 @@ body, .pdfExportMode {
 .questionsItem {
   padding: 20px;
   margin-bottom: 20px;
-  background-color: #fff;
+  background-color: #eeeded;
   border: 1px solid #ddd;
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -187,9 +242,9 @@ body, .pdfExportMode {
 }
 
 .answerText {
-  background-color: #f0f4f8;
+  background-color: #9cbee0;
   padding: 1rem; /* Responsive padding */
-  border-left: 9px solid #4064c5;
+  border-left: 9px solid #8ca4e5;
   font-size: 1rem; /* Responsive text size */
   border-radius: 5px;
   margin-top: 10px;

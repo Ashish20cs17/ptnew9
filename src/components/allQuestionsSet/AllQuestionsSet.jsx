@@ -11,15 +11,27 @@ import parse from "html-react-parser";
 import practiceTime from "../../assets/practiceTime.jpg";
 import JsBarcode from "jsbarcode";
 
+
+
+/**
+ * Generates a barcode image (as a data URL) from the given text.
+ *
+ * @param {string} text - The text to encode in the barcode.
+ * @returns {string} - The generated barcode as a data URL.
+ */
 const generateBarcodeDataUrl = (text) => {
   const canvas = document.createElement("canvas");
+
   JsBarcode(canvas, text, {
-    format: "CODE128",
-    displayValue: false,
-    width: 2,
-    height: 40,
-    margin: 0,
+    format: "CODE128",       // Common barcode format
+    displayValue: false,     // Hide text below the barcode
+    width: 1,                // Bar width
+    height: 20,              // Bar height
+    margin: 0,               // No margin
+    background: "#ffffff",   // Optional: white background for better contrast
+    lineColor: "#000000",    // Black bars
   });
+
   return canvas.toDataURL("image/png");
 };
 
@@ -320,102 +332,107 @@ const AllQuestionsSet = () => {
   };
   
 
-  const exportToPDF = async () => {
-    if (!selectedSet || !questions.length || !pdfContentRef.current) {
-      toast.error("❌ No question set selected or set is empty");
-      return;
-    }
-  
-    setExportLoading(true);
-  
-    try {
-      // ✅ Add export mode class before rendering
-      pdfContentRef.current.classList.add("pdfExportMode");
-  // ✅ Generate barcode image
-const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
+const exportToPDF = async () => {
+  if (!selectedSet || !questions.length || !pdfContentRef.current) {
+    toast.error("❌ No question set selected or set is empty");
+    return;
+  }
 
-      const img = new Image();
-      img.src = practiceTime;
-  
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
+  setExportLoading(true);
+  pdfContentRef.current.classList.add("pdfExportMode");
+
+  try {
+    const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
+
+    const img = new Image();
+    img.src = practiceTime;
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
+    const ctx = tempCanvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    const logoDataUrl = tempCanvas.toDataURL("image/jpeg");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const headerHeight = 50;
+    const footerHeight = 15;
+
+    const questionItems = pdfContentRef.current.querySelectorAll(".questionWrapperContainer");
+
+    let currentY = headerHeight;
+    let currentPage = 1;
+
+    const addHeader = () => {
+      // Smaller Logo
+      const logoWidth = 50;
+      const logoHeight = logoWidth / (img.width / img.height);
+      pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoWidth, logoHeight);
+
+      // Barcode smaller
+      const barcodeWidth = 35;
+      const barcodeHeight = 10;
+      pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
+
+      // Add horizontal line after logo/barcode
+      pdf.setDrawColor(200); // light grey line
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, headerHeight - 5, pdfWidth - margin, headerHeight - 5);
+
+      // Add a little space after the line
+      currentY = headerHeight + 5;
+    };
+
+    // Add header on first page
+    addHeader();
+
+    for (let item of questionItems) {
+      // Hide buttons for export
+      const deleteButtons = item.querySelectorAll(".deleteQuestionButton");
+      deleteButtons.forEach((btn) => (btn.style.display = "none"));
+
+      const canvas = await html2canvas(item, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: "#ffffff", // Force white background
       });
-  
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = img.width;
-      tempCanvas.height = img.height;
-      const ctx = tempCanvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      const logoDataUrl = tempCanvas.toDataURL("image/jpeg");
-  
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 5;
-      const headerHeight = 35;
-      const footerHeight = 15;
-      const usableHeight = pdfHeight - headerHeight - footerHeight;
-  
-      const questionItems = pdfContentRef.current.querySelectorAll(".questionsItem");
-  
-      let currentY = headerHeight;
-      let currentPage = 1;
-  
-      for (const item of questionItems) {
-        const deleteButtons = item.querySelectorAll(".deleteQuestionButton");
-        deleteButtons.forEach((btn) => (btn.style.display = "none"));
-  
-        const canvas = await html2canvas(item, {
-          scale: 4,
-          useCORS: true,
-          allowTaint: false,
-        });
-  
-        deleteButtons.forEach((btn) => (btn.style.display = ""));
-  
-        const imgData = canvas.toDataURL("image/jpeg", 0.5);
-        const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth - 2 * margin;
-        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-  
-        if (currentY + imgHeight > usableHeight + headerHeight) {
-          pdf.addPage();
-          currentPage++;
-          currentY = headerHeight;
-        }
-  
-        if (currentY === headerHeight && currentPage === 1) {
-          // Logo on top-left
-          
-            const logoDisplayWidth = 90; // mm
-          const logoAspectRatio = img.width / img.height;
-          const logoDisplayHeight = logoDisplayWidth / logoAspectRatio;
-          pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoDisplayWidth, logoDisplayHeight);
-        
-          // Barcode on top-right
-           const barcodeWidth = 50; // mm
-          const barcodeHeight = 15; // mm
-          pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
-        }
-        
-  
-        pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight + 3;
+
+      deleteButtons.forEach((btn) => (btn.style.display = ""));
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.9);
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgWidth = pdfWidth - 2 * margin;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+      // Check if next question fits in remaining page space, else add new page & header
+      if (currentY + imgHeight > pdfHeight - footerHeight) {
+        pdf.addPage();
+        currentPage++;
+        addHeader(); // Add header on new page
       }
-  
-      pdf.save(`${selectedSet}.pdf`);
-    } catch (error) {
-      console.error("Error exporting to PDF:", error);
-      toast.error("❌ Failed to export PDF");
-    } finally {
-      // ✅ Remove the class after export is done
-      pdfContentRef.current.classList.remove("pdfExportMode");
-      setExportLoading(false);
+
+      pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
+      currentY += imgHeight + 5;
     }
-  };
-  
-  
+
+    pdf.save(`${selectedSet}.pdf`);
+  } catch (error) {
+    console.error("PDF Export Error:", error);
+    toast.error("❌ Failed to export PDF");
+  } finally {
+    pdfContentRef.current.classList.remove("pdfExportMode");
+    setExportLoading(false);
+  }
+};
+
   
 
   // Function to get question number, only counting non-trivia questions
@@ -539,114 +556,137 @@ const barcodeDataUrl = generateBarcodeDataUrl(selectedSet);
     lineHeight: 1.6,
   }}
 >
+  <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
+    {questions.map((q, index) => {
+      const questionNumber = index + 1;
+      const isTrivia = q.type === 'trivia';
 
+      return (
+        <div
+          key={q.id || index}
+          className="questionWrapperContainer"
+          style={{
+            position: 'relative',
+            marginBottom: '60px',
+          }}
+        >
+          {/* Top-left Badge */}
+          <div
+            style={{
+              marginBottom: '10px',
+              display: 'inline-block',
+              fontWeight: 'bold',
+              fontSize: '14px',
+                  color:' #191816',
+              
+              border: '2px solid orange',
+              padding: '6px 14px',
+              borderRadius: '25px',
+              backgroundColor: '#fff',
+            }}
+          >
+            QUESTION NO: {questionNumber}
+          </div>
 
+          {/* Question Container */}
+          <li
+            className="questionWrapper"
+            style={{
+              border: '3px solidrgb(40, 40, 41)',
+              borderRadius: '12px',
+              padding: '20px',
+           backgroundColor: '#ffffff', 
+              
+              listStyleType: 'none',
+              marginTop: '10px',
+              boxShadow: 'none',
+            }}
+          >
+            <div className="questionContent">
+              {/* Question text */}
+             <div
+  className="questionText"
+  style={{
+    fontSize: '16px',
+    color: '#1a1a1a',        // Dark but soft black
+    marginBottom: '12px',
+    lineHeight: '1.6',        // A bit more line spacing for readability
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    fontStyle: 'normal',
+    fontWeight: '400',
+    letterSpacing: '0.02em',
+  }}
+>
 
-          {questions.length > 0 ? (
-            <ul className="questionsList" style={{ padding: 0, listStyleType: 'none' }}>
-              {questions.map((q, index) => {
-                const isTrivia = q.type === "TRIVIA";
-                const questionNumber = !isTrivia ? getQuestionNumber(questions, index) : null;
+  {isHTML(q.question)
+    ? parse(q.question)
+    : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
+</div>
 
-                return (
-                  <li
-                    key={q.id}
-                    className={`questionsItem ${isTrivia ? 'triviaItem' : 'questionItem'}`}
-                    data-question-type={q.type || "default"}
-                    style={{
-                      border: '2px solid orange',
-                      borderRadius: '12px',
-                      padding: '20px',
-                      marginBottom: '20px',
-                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                      boxShadow: '0 4px 8px rgba(255, 165, 0, 0.2)',
-                    }}
-                  >
-                    <div className="questionContent">
-                      <div className="questionHeader" style={{ marginBottom: '12px' }}>
-                        {!isTrivia && (
-                          <span
-                            className="questionNumber"
-                            style={{
-                              fontWeight: '700',
-                              fontSize: '18px',
-                              color: '#d35400',
-                              letterSpacing: '1.2px',
-                            }}
-                          >
-                            QUESTION NO: {questionNumber}
-                          </span>
-                        )}
-                      </div>
+              {/* Question image */}
+              {q.questionImage && (
+                <div className="questionImage" style={{ marginBottom: '15px' }}>
+                  <img
+                    src={q.questionImage}
+                    alt="Question Attachment"
+                    style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
+                  />
+                </div>
+              )}
 
-                      <div
-                        className="questionText"
-                        style={{
-                          fontSize: '16px',
-                          color: '#333',
-                          marginBottom: '12px',
-                          lineHeight: '1.5',
-                          fontStyle: 'normal',
-                        }}
-                      >
-                        {isHTML(q.question) ? parse(q.question) : q.question}
-                      </div>
+              {/* Options */}
+              {q.options && (
+                <ol
+                  className="mcqOptions"
+                  style={{
+                    marginLeft: '20px',
+                    color: '#555',
+                    fontSize: '15px',
+                    marginBottom: '15px',
+                  }}
+                >
+                  {q.options.map((option, idx) => (
+                    <li key={idx} style={{ marginBottom: '8px' }}>
+                      {option.text}
+                    </li>
+                  ))}
+                </ol>
+              )}
 
-                      {q.questionImage && (
-                        <div className="questionImage" style={{ marginBottom: '15px' }}>
-                          <img
-                            src={q.questionImage}
-                            alt="Question Attachment"
-                            style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
-                          />
-                        </div>
-                      )}
+              {/* Answer */}
+              {!isTrivia && (
+                <div
+                  className="answerText"
+                  style={{
+                    backgroundColor: '#d9eaff',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    marginTop: '12px',
+                    fontSize: '15px',
+                    color: '#333',
+                    fontWeight: '600',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  {q.answer || ''}
+                </div>
+              )}
+            </div>
 
-                      {q.options && (
-                        <ol
-                          className="mcqOptions"
-                          style={{
-                            marginLeft: '20px',
-                            color: '#555',
-                            fontSize: '15px',
-                            marginBottom: '15px',
-                          }}
-                        >
-                          {q.options.map((option, idx) => (
-                            <li key={idx} style={{ marginBottom: '8px' }}>
-                              {option.text}
-                            </li>
-                          ))}
-                        </ol>
-                      )}
-
-                      {!isTrivia && (
-                        <div
-                          className="answerText"
-                          style={{
-                            backgroundColor: '#fff3e0',
-                            padding: '10px 15px',
-                            borderRadius: '10px',
-                            color: '#d35400',
-                            fontWeight: '600',
-                            fontSize: '15px',
-                            boxShadow: '0 2px 4px rgba(255, 165, 0, 0.2)',
-                          }}
-                        >
-                          {/* Optional answer content here */}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Removed delete button from PDF view */}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            !loading && <p>No questions found in this set.</p>
-          )}
+            {/* Separator line */}
+            {index !== questions.length - 1 && (
+              <hr
+                className="questionSeparator"
+                style={{ border: 'none', borderTop: '1.5px solid #ccc', margin: '25px 0 0 0' }}
+              />
+            )}
+          </li>
         </div>
+      );
+    })}
+  </ul>
+</div>
+
       </div>
     )}
   </div>
