@@ -401,7 +401,7 @@ const footerHeight = 10;      // Smaller footer
       deleteButtons.forEach((btn) => (btn.style.display = "none"));
 
       const canvas = await html2canvas(item, {
-        scale: 2.5,
+        scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff", // Force white background
       });
@@ -552,7 +552,7 @@ const footerHeight = 10;      // Smaller footer
     backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
     backgroundSize: '10px 10px',
     padding: '30px',
-    fontFamily: "'Georgia', 'Times New Roman', serif",
+     fontFamily: "'Geologica', sans-serif",
     color: '#1a1a1a',
     lineHeight: 1.4,
   }}
@@ -658,20 +658,21 @@ const footerHeight = 10;      // Smaller footer
               {/* Answer */}
               {!isTrivia && (
                 <div
-                  className="answerText"
-                  style={{
-                    backgroundColor: '#d9eaff',
-                    padding: '8px 12px',
-                    borderRadius: '16px',
-                    marginTop: '6px',
-                    fontSize: '14px',
-                    color: '#333',
-                    fontWeight: '400',
-                    lineHeight: '1',
-                  }}
-                >
-                  {q.answer || ''}
-                </div>
+  className="answerText"
+  style={{
+    backgroundColor: '#d9eaff',
+    padding: '8px 12px',
+    borderRadius: '0px 10px 10px 0px', // top-left, top-right, bottom-right, bottom-left
+    marginTop: '6px',
+    fontSize: '14px',
+    color: '#333',
+    fontWeight: '400',
+    lineHeight: '1',
+  }}
+>
+  {q.answer || ''}
+</div>
+
               )}
             </div>
 
