@@ -362,9 +362,10 @@ const exportToPDF = async () => {
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const headerHeight = 50;
-    const footerHeight = 15;
+const margin = 8;             // Tighter margin
+const headerHeight = 40;      // Slightly smaller header
+const footerHeight = 10;      // Smaller footer
+
 
     const questionItems = pdfContentRef.current.querySelectorAll(".questionWrapperContainer");
 
@@ -400,7 +401,7 @@ const exportToPDF = async () => {
       deleteButtons.forEach((btn) => (btn.style.display = "none"));
 
       const canvas = await html2canvas(item, {
-        scale: 3,
+        scale: 2.5,
         useCORS: true,
         backgroundColor: "#ffffff", // Force white background
       });
@@ -550,10 +551,10 @@ const exportToPDF = async () => {
     backgroundColor: 'white',
     backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
     backgroundSize: '10px 10px',
-    padding: '50px',
+    padding: '30px',
     fontFamily: "'Georgia', 'Times New Roman', serif",
     color: '#1a1a1a',
-    lineHeight: 1.6,
+    lineHeight: 1.4,
   }}
 >
   <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
@@ -562,25 +563,26 @@ const exportToPDF = async () => {
       const isTrivia = q.type === 'trivia';
 
       return (
+        
         <div
           key={q.id || index}
           className="questionWrapperContainer"
           style={{
             position: 'relative',
-            marginBottom: '60px',
+            marginBottom: '20px',
           }}
         >
           {/* Top-left Badge */}
           <div
             style={{
-              marginBottom: '10px',
+              marginBottom: '6px',
               display: 'inline-block',
               fontWeight: 'bold',
               fontSize: '14px',
                   color:' #191816',
               
               border: '2px solid orange',
-              padding: '6px 14px',
+              padding: '4px 10px',
               borderRadius: '25px',
               backgroundColor: '#fff',
             }}
@@ -594,11 +596,11 @@ const exportToPDF = async () => {
             style={{
               border: '3px solidrgb(40, 40, 41)',
               borderRadius: '12px',
-              padding: '20px',
+              padding: '12px',
            backgroundColor: '#ffffff', 
               
               listStyleType: 'none',
-              marginTop: '10px',
+              marginTop: '4px',
               boxShadow: 'none',
             }}
           >
@@ -609,11 +611,11 @@ const exportToPDF = async () => {
   style={{
     fontSize: '16px',
     color: '#1a1a1a',        // Dark but soft black
-    marginBottom: '12px',
-    lineHeight: '1.6',        // A bit more line spacing for readability
-    fontFamily: "Georgia, 'Times New Roman', serif",
+    marginBottom: '6px',
+    lineHeight: '1.5',        // A bit more line spacing for readability
+      fontFamily: "'Geologica', sans-serif",
     fontStyle: 'normal',
-    fontWeight: '400',
+     fontWeight: 700,
     letterSpacing: '0.02em',
   }}
 >
@@ -642,11 +644,11 @@ const exportToPDF = async () => {
                     marginLeft: '20px',
                     color: '#555',
                     fontSize: '15px',
-                    marginBottom: '15px',
+                    marginBottom: '8px',
                   }}
                 >
                   {q.options.map((option, idx) => (
-                    <li key={idx} style={{ marginBottom: '8px' }}>
+                    <li key={idx} style={{ marginBottom: '4px' }}>
                       {option.text}
                     </li>
                   ))}
@@ -659,13 +661,13 @@ const exportToPDF = async () => {
                   className="answerText"
                   style={{
                     backgroundColor: '#d9eaff',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    marginTop: '12px',
-                    fontSize: '15px',
+                    padding: '8px 12px',
+                    borderRadius: '16px',
+                    marginTop: '6px',
+                    fontSize: '14px',
                     color: '#333',
-                    fontWeight: '600',
-                    lineHeight: '1.4',
+                    fontWeight: '400',
+                    lineHeight: '1',
                   }}
                 >
                   {q.answer || ''}
@@ -677,7 +679,7 @@ const exportToPDF = async () => {
             {index !== questions.length - 1 && (
               <hr
                 className="questionSeparator"
-                style={{ border: 'none', borderTop: '1.5px solid #ccc', margin: '25px 0 0 0' }}
+                style={{ border: 'none', borderTop: '1px solid #ccc', margin: '15px 0 0 0' }}
               />
             )}
           </li>
