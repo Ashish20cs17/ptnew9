@@ -61,7 +61,7 @@
 
 /* Answer container inside question container */
 .pdfExportMode .answerText {
-  background-color:rgb(235, 238, 241);/* light blue */
+  background-color:#edf3f9;/* light blue */
   padding: 12px 16px;
   border-radius: 12px;
   margin-top: 12px;
@@ -109,7 +109,7 @@
 
 /* Answer text */
 .pdfExportContainer .answerText {
-  background-color:rgb(232, 236, 241); /* softer warm background */
+  background-color:#edf3f9; /* softer warm background */
   border-left: 8px solid orange;
   padding: 12px 15px;
   border-radius: 8px;
@@ -255,7 +255,7 @@ body, .pdfExportMode {
 }
 
 .answerText {
-  background-color: #ccdbeb;
+  background-color: #edf3f9;
   padding: 1rem; /* Responsive padding */
   border-left: 5px solid #7c8cb8;
   font-size: 1rem; /* Responsive text size */
@@ -552,7 +552,7 @@ body, .pdfExportMode {
 }
 
 .answerText {
-  background-color: #e4edee;
+  background-color: #edf3f9;
   padding: 8px 12px;
   border-radius: 4px;
   margin-top: 10px;

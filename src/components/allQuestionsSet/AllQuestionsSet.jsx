@@ -660,7 +660,7 @@ const footerHeight = 10;      // Smaller footer
                 <div
   className="answerText"
   style={{
-    backgroundColor: '#d9eaff',
+    backgroundColor: '#edf3f9',
     padding: '8px 12px',
     borderRadius: '0px 10px 10px 0px', // top-left, top-right, bottom-right, bottom-left
     marginTop: '6px',
