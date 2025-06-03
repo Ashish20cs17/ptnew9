@@ -552,160 +552,145 @@ const footerHeight = 10;      // Smaller footer
     backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
     backgroundSize: '10px 10px',
     padding: '30px',
-     fontFamily: "'Geologica', sans-serif",
+    fontFamily: "'Geologica', sans-serif",
     color: '#1a1a1a',
     lineHeight: 1.4,
   }}
 >
-  <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
-{questions.map((q, index) => {
-  const questionNumber = index + 1;
-  const isTrivia = q.type?.toLowerCase() === 'trivia';
+  {/* Precompute question numbers, skipping trivia */}
+  {(() => {
+    let nonTriviaCount = 0;
+    return (
+      <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
+        {questions.map((q, index) => {
+          if (q.type?.toLowerCase() !== 'trivia') {
+            nonTriviaCount++;
+          }
+          const questionNumber = q.type?.toLowerCase() !== 'trivia' ? nonTriviaCount : null;
+          const isTrivia = q.type?.toLowerCase() === 'trivia';
 
-  console.log("Q TYPE:", q.type, "ANSWER:", q.answer);
-console.log(`Q ${index + 1}:`, {
-  type: q.type,
-  answer: q.answer,
-});
-
-
-
-
-
-
-      return (
-        
-        <div
-          key={q.id || index}
-          className="questionWrapperContainer"
-          style={{
-            position: 'relative',
-            marginBottom: '20px',
-          }}
-        >
-          {/* Top-left Badge */}
-          <div
-            style={{
-              marginBottom: '6px',
-              display: 'inline-block',
-              fontWeight: 'bold',
-              fontSize: '14px',
-                  color:' #191816',
-              
-              border: '2px solid orange',
-              padding: '4px 10px',
-              borderRadius: '25px',
-              backgroundColor: '#fff',
-            }}
-          >
-            QUESTION NO: {questionNumber}
-          </div>
-
-          {/* Question Container */}
-          <li
-            className="questionWrapper"
-            style={{
-              border: '3px solidrgb(40, 40, 41)',
-              borderRadius: '12px',
-              padding: '12px',
-           backgroundColor: '#ffffff', 
-              
-              listStyleType: 'none',
-              marginTop: '4px',
-              boxShadow: 'none',
-            }}
-          >
-            <div className="questionContent">
-              {/* Question text */}
-             <div
-  className="questionText"
-  style={{
-    fontSize: '16px',
-    color: '#1a1a1a',        // Dark but soft black
-    marginBottom: '6px',
-    lineHeight: '1.5',        // A bit more line spacing for readability
-      fontFamily: "'Geologica', sans-serif",
-    fontStyle: 'normal',
-     fontWeight: 700,
-    letterSpacing: '0.02em',
-  }}
->
-
-  {isHTML(q.question)
-    ? parse(q.question)
-    : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
-</div>
-
-              {/* Question image */}
-              {q.questionImage && (
-                <div className="questionImage" style={{ marginBottom: '15px' }}>
-                  <img
-                    src={q.questionImage}
-                    alt="Question Attachment"
-                    style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
-                  />
-                </div>
-              )}
-
-              {/* Options */}
-              {q.options && (
-                <ol
-                  className="mcqOptions"
+          return (
+            <div
+              key={q.id || index}
+              className="questionWrapperContainer"
+              style={{ position: 'relative', marginBottom: '20px' }}
+            >
+              {/* Top-left Badge */}
+              {!isTrivia ? (
+                <div
                   style={{
-                    marginLeft: '20px',
-                    color: '#555',
-                    fontSize: '15px',
-                    marginBottom: '8px',
+                    marginBottom: '6px',
+                    display: 'inline-block',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    color: '#191816',
+                    border: '2px solid orange',
+                    padding: '4px 10px',
+                    borderRadius: '25px',
+                    backgroundColor: '#fff',
                   }}
                 >
-                  {q.options.map((option, idx) => (
-                    <li key={idx} style={{ marginBottom: '4px' }}>
-                      {option.text}
-                    </li>
-                  ))}
-                </ol>
+                  QUESTION NO: {questionNumber}
+                </div>
+              ) : (
+                <div style={{ marginBottom: '6px', height: '30px' }}></div>
               )}
-{q.type?.toLowerCase() !== 'trivia' ? (
-  <div
-    className="answerText"
-    style={{
-      backgroundColor: '#d9eaff',
-      padding: '12px 16px',
-      borderRadius: '8px',
-      marginTop: '12px',
-      fontSize: '15px',
-      color: '#333',
-      fontWeight: '600',
-      lineHeight: '1.4',
-    }}
-  >
-    {q.answer || ''}
-  </div>
-) : (
-  <div style={{ color: 'gray', fontSize: '13px' }}>
-    
-  </div>
-)}
 
+              {/* Question Container */}
+              <li
+                className="questionWrapper"
+                style={{
+                  borderRadius: '12px',
+                  padding: '12px',
+                  backgroundColor: '#ffffff',
+                  listStyleType: 'none',
+                  marginTop: '4px',
+                  boxShadow: 'none',
+                }}
+              >
+                <div className="questionContent">
+                  {/* Question text */}
+                  <div
+                    className="questionText"
+                    style={{
+                      fontSize: '16px',
+                      color: '#1a1a1a',
+                      marginBottom: '6px',
+                      lineHeight: '1.5',
+                      fontFamily: "'Geologica', sans-serif",
+                      fontStyle: 'normal',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    {isHTML(q.question)
+                      ? parse(q.question)
+                      : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
+                  </div>
 
+                  {/* Question image */}
+                  {q.questionImage && (
+                    <div className="questionImage" style={{ marginBottom: '15px' }}>
+                      <img
+                        src={q.questionImage}
+                        alt="Question Attachment"
+                        style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
+                      />
+                    </div>
+                  )}
 
+                  {/* Options */}
+                  {q.options && (
+                    <ol
+                      className="mcqOptions"
+                      style={{ marginLeft: '20px', color: '#555', fontSize: '15px', marginBottom: '8px' }}
+                    >
+                      {q.options.map((option, idx) => (
+                        <li key={idx} style={{ marginBottom: '4px' }}>
+                          {option.text}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
 
-              
+                  {/* Answer */}
+                  {!isTrivia ? (
+                    <div
+                      className="answerText"
+                      style={{
+                        backgroundColor: '#d9eaff',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        marginTop: '12px',
+                        fontSize: '15px',
+                        color: '#333',
+                        fontWeight: '600',
+                        lineHeight: '1.4',
+                      }}
+                    >
+                      {q.answer || ''}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'gray', fontSize: '13px' }}></div>
+                  )}
+                </div>
+
+                {/* Separator line */}
+                {index !== questions.length - 1 && (
+                  <hr
+                    className="questionSeparator"
+                    style={{ border: 'none', borderTop: '1px solid #ccc', margin: '15px 0 0 0' }}
+                  />
+                )}
+              </li>
             </div>
-
-            {/* Separator line */}
-            {index !== questions.length - 1 && (
-              <hr
-                className="questionSeparator"
-                style={{ border: 'none', borderTop: '1px solid #ccc', margin: '15px 0 0 0' }}
-              />
-            )}
-          </li>
-        </div>
-      );
-    })}
-  </ul>
+          );
+        })}
+      </ul>
+    );
+  })()}
 </div>
+
 
       </div>
     )}
