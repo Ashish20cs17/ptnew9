@@ -593,7 +593,7 @@ const footerHeight = 10;      // Smaller footer
                   QUESTION NO: {questionNumber}
                 </div>
               ) : (
-                <div style={{ marginBottom: '6px', height: '30px' }}></div>
+                <div style={{ marginBottom: '4px', height: '1px' }}></div>
               )}
 
               {/* Question Container */}
