@@ -1,6 +1,31 @@
 /* PDF Export Container */
 @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@100&display=swap');
 
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+}
+
+.delete-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 50px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 10;
+}
+
+.delete-button:hover {
+  background-color: #d9363e;
+}
+
 .questionText {
   font-family: 'Geologica', sans-serif;
   font-size: 16px;

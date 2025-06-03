@@ -362,10 +362,9 @@ const exportToPDF = async () => {
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-const margin = 8;             // Tighter margin
-const headerHeight = 40;      // Slightly smaller header
-const footerHeight = 10;      // Smaller footer
-
+    const margin = 8;
+    const headerHeight = 40;
+    const footerHeight = 10;
 
     const questionItems = pdfContentRef.current.querySelectorAll(".questionWrapperContainer");
 
@@ -373,51 +372,48 @@ const footerHeight = 10;      // Smaller footer
     let currentPage = 1;
 
     const addHeader = () => {
-      // Smaller Logo
       const logoWidth = 50;
       const logoHeight = logoWidth / (img.width / img.height);
       pdf.addImage(logoDataUrl, "JPEG", margin, 10, logoWidth, logoHeight);
 
-      // Barcode smaller
       const barcodeWidth = 35;
       const barcodeHeight = 10;
       pdf.addImage(barcodeDataUrl, "PNG", pdfWidth - margin - barcodeWidth, 10, barcodeWidth, barcodeHeight);
 
-      // Add horizontal line after logo/barcode
-      pdf.setDrawColor(200); // light grey line
+      pdf.setDrawColor(200);
       pdf.setLineWidth(0.5);
       pdf.line(margin, headerHeight - 5, pdfWidth - margin, headerHeight - 5);
 
-      // Add a little space after the line
       currentY = headerHeight + 5;
     };
 
-    // Add header on first page
     addHeader();
 
-    for (let item of questionItems) {
-      // Hide buttons for export
-      const deleteButtons = item.querySelectorAll(".deleteQuestionButton");
-      deleteButtons.forEach((btn) => (btn.style.display = "none"));
+for (let item of questionItems) {
+  // 🔒 Hide elements marked as noPrint (like delete buttons)
+  const noPrintElements = item.querySelectorAll(".noPrint");
+  noPrintElements.forEach(el => (el.style.display = "none"));
 
-      const canvas = await html2canvas(item, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff", // Force white background
-      });
+  const canvas = await html2canvas(item, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+  });
 
-      deleteButtons.forEach((btn) => (btn.style.display = ""));
+  // ✅ Restore them after snapshot
+  noPrintElements.forEach(el => (el.style.display = ""));
+
+   
 
       const imgData = canvas.toDataURL("image/jpeg", 0.9);
       const imgProps = pdf.getImageProperties(imgData);
       const imgWidth = pdfWidth - 2 * margin;
       const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-      // Check if next question fits in remaining page space, else add new page & header
       if (currentY + imgHeight > pdfHeight - footerHeight) {
         pdf.addPage();
         currentPage++;
-        addHeader(); // Add header on new page
+        addHeader();
       }
 
       pdf.addImage(imgData, "JPEG", margin, currentY, imgWidth, imgHeight);
@@ -434,7 +430,12 @@ const footerHeight = 10;      // Smaller footer
   }
 };
 
-  
+  const handleDeleteQuestion = (indexToDelete) => {
+  const updatedQuestions = [...questions];
+  updatedQuestions.splice(indexToDelete, 1);
+  setQuestions(updatedQuestions); // make sure you're using useState for questions
+};
+
 
   // Function to get question number, only counting non-trivia questions
   const getQuestionNumber = (questions, currentIndex) => {
@@ -556,6 +557,7 @@ const footerHeight = 10;      // Smaller footer
     color: '#1a1a1a',
     lineHeight: 1.4,
   }}
+  
 >
   {/* Precompute question numbers, skipping trivia */}
   {(() => {
@@ -570,11 +572,19 @@ const footerHeight = 10;      // Smaller footer
           const isTrivia = q.type?.toLowerCase() === 'trivia';
 
           return (
-            <div
-              key={q.id || index}
-              className="questionWrapperContainer"
-              style={{ position: 'relative', marginBottom: '20px' }}
-            >
+         <div
+  key={q.id || index}
+  className="questionWrapperContainer"
+  style={{ position: 'relative', marginBottom: '20px' }}
+>
+  {/* Delete Button - will not appear in PDF */}
+<div className="noPrint" style={{ position: 'absolute', top: '0', right: '0', zIndex: 10 }}>
+  <button className="delete-button" onClick={() => handleDeleteQuestion(index)}>
+    Delete
+  </button>
+</div>
+
+
               {/* Top-left Badge */}
               {!isTrivia ? (
                 <div
