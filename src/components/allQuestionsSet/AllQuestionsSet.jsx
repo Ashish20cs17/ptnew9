@@ -558,9 +558,20 @@ const footerHeight = 10;      // Smaller footer
   }}
 >
   <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
-    {questions.map((q, index) => {
-      const questionNumber = index + 1;
-      const isTrivia = q.type === 'trivia';
+{questions.map((q, index) => {
+  const questionNumber = index + 1;
+  const isTrivia = q.type?.toLowerCase() === 'trivia';
+
+  console.log("Q TYPE:", q.type, "ANSWER:", q.answer);
+console.log(`Q ${index + 1}:`, {
+  type: q.type,
+  answer: q.answer,
+});
+
+
+
+
+
 
       return (
         
@@ -654,26 +665,32 @@ const footerHeight = 10;      // Smaller footer
                   ))}
                 </ol>
               )}
+{q.type?.toLowerCase() !== 'trivia' ? (
+  <div
+    className="answerText"
+    style={{
+      backgroundColor: '#d9eaff',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      marginTop: '12px',
+      fontSize: '15px',
+      color: '#333',
+      fontWeight: '600',
+      lineHeight: '1.4',
+    }}
+  >
+    {q.answer || ''}
+  </div>
+) : (
+  <div style={{ color: 'gray', fontSize: '13px' }}>
+    
+  </div>
+)}
 
-              {/* Answer */}
-              {!isTrivia && (
-                <div
-  className="answerText"
-  style={{
-    backgroundColor: '#edf3f9',
-    padding: '8px 12px',
-    borderRadius: '0px 10px 10px 0px', // top-left, top-right, bottom-right, bottom-left
-    marginTop: '6px',
-    fontSize: '14px',
-    color: '#333',
-    fontWeight: '400',
-    lineHeight: '1',
-  }}
->
-  {q.answer || ''}
-</div>
 
-              )}
+
+
+              
             </div>
 
             {/* Separator line */}
