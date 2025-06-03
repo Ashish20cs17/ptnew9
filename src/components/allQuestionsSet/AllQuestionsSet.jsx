@@ -611,22 +611,23 @@ const footerHeight = 10;      // Smaller footer
                 <div className="questionContent">
                   {/* Question text */}
                   <div
-                    className="questionText"
-                    style={{
-                      fontSize: '16px',
-                      color: '#1a1a1a',
-                      marginBottom: '6px',
-                      lineHeight: '1.5',
-                      fontFamily: "'Geologica', sans-serif",
-                      fontStyle: 'normal',
-                      fontWeight: 700,
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    {isHTML(q.question)
-                      ? parse(q.question)
-                      : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
-                  </div>
+  className="questionText"
+  style={{
+    fontSize: '16px',
+    color: '#1a1a1a',
+    marginBottom: '6px',
+    lineHeight: '1.5',
+    fontFamily: "'Geologica', sans-serif",
+    fontStyle: 'normal',
+      fontWeight: 'normal', // 
+    letterSpacing: '0.02em',
+  }}
+>
+  {isHTML(q.question)
+    ? parse(q.question)  // ✅ This will render bold/italic tags as intended
+    : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
+</div>
+
 
                   {/* Question image */}
                   {q.questionImage && (
