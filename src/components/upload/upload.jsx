@@ -10,7 +10,6 @@ import DynamicMathSelector from '../DynamicMathSelector';
 import * as XLSX from 'xlsx';
 
 
-
 const Upload = () => {
   const [questionType, setQuestionType] = useState("MCQ");
   const [question, setQuestion] = useState("");
@@ -150,20 +149,6 @@ const handleExcelUpload = async (e) => {
     toast.error("Failed to upload Excel file");
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const getNextQuestionID = async (grade, topic, topicList) => {
     if (!grade || !topic || !topicList) {
       console.log("getNextQuestionID: Missing grade, topic, or topicList");
@@ -410,29 +395,10 @@ const handleExcelUpload = async (e) => {
   </div>
 </div>
 
-  
-
-
-
-
-
-
-
-
 <div>
   <label>Upload Excel File (for bulk questions):</label>
   <input type="file" accept=".xlsx, .xls" onChange={handleExcelUpload} />
 </div>
-
-
-
-
-
-
-
-
-
-
 
       {/* Question Text */}
       <div className="formGroup">
@@ -478,9 +444,6 @@ const handleExcelUpload = async (e) => {
           ))}
         </div>
       )}
-
-
-
 
       {/* Answer Section */}
       {questionType !== "TRIVIA" && (

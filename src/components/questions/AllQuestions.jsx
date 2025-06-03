@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState, useRef } from "react";
 import { database } from "../firebase/FirebaseSetup";
 import { ref, get, remove, update, serverTimestamp } from "firebase/database";
@@ -113,7 +110,7 @@ const AllQuestions = () => {
       fullpage: false,
       cleanHTML: true,
       sanitize: true,
-      autofocus: true,
+      autofocus: false,
       askBeforePasteHTML: false,
     };
 
@@ -179,7 +176,13 @@ const AllQuestions = () => {
           <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
           <option value="TRIVIA">Trivia</option>
         </select>
-        <JoditEditor ref={editor} value={formData.question} config={config} onBlur={(content) => setFormData({ ...formData, question: content })} />
+    <JoditEditor
+  ref={editor}
+  value={formData.question}
+  config={config}
+  onBlur={(content) => setFormData({ ...formData, question: content })}
+/>
+
         <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, "questionImageUrl")} />
         {formData.questionImageUrl && <img src={formData.questionImageUrl} alt="Question" style={{ maxWidth: "100px" }} />}
 
