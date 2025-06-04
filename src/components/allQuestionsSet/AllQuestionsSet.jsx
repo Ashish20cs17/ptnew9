@@ -653,16 +653,20 @@ for (let item of questionItems) {
  {/* fill in blank remove space for mcq */}
             {q.type?.toLowerCase() !== 'fill_in_the_blanks' &&
   q.options?.some(opt => opt.text?.trim() !== '') && (
-    <ol
-      className="mcqOptions"
-      style={{ marginLeft: '20px', color: '#555', fontSize: '15px', marginBottom: '8px' }}
-    >
-      {q.options.map((option, idx) => (
-        <li key={idx} style={{ marginBottom: '4px' }}>
-          {option.text}
-        </li>
-      ))}
-    </ol>
+ <ol
+  className="mcqOptions"
+  style={{ marginLeft: '20px', color: '#555', fontSize: '15px', marginBottom: '8px', listStyleType: 'none' }}
+>
+  {q.options.map((option, idx) => {
+    const label = String.fromCharCode(65 + idx); // A=65, B=66, etc.
+    return (
+      <li key={idx} style={{ marginBottom: '4px' }}>
+        <strong>{label}.</strong> {option.text}
+      </li>
+    );
+  })}
+</ol>
+
   )}
 
 
