@@ -383,17 +383,16 @@ const MATH_DATA = {
 };
 
 const DynamicMathSelector = ({ grade, setGrade, topic, setTopic, topicList, setTopicList }) => {
-  const handleGradeChange = (e) => {
-    setGrade(e.target.value);
-    setTopic("");
-    setTopicList("");
-  };
+const handleGradeChange = (e) => {
+  setGrade(e.target.value);
+  setTopic("all");
+  setTopicList("all");
+};
 
-  const handleTopicChange = (e) => {
-    setTopic(e.target.value);
-    setTopicList("");
-  };
-
+const handleTopicChange = (e) => {
+  setTopic(e.target.value);
+  setTopicList("all");
+};
   const filteredTopics = MATH_DATA.topics.filter((t) => t.grade === grade);
 
   // Debugging logs
@@ -406,7 +405,7 @@ const DynamicMathSelector = ({ grade, setGrade, topic, setTopic, topicList, setT
       <div className="formGroup">
         <label>Grade:</label>
         <select value={grade} onChange={handleGradeChange}>
-          <option value="">Select Grade</option>
+          <option value="all">Select Grade</option>
           {MATH_DATA.grades.map((g) => (
             <option key={g.code} value={g.code}>
               {g.text}
@@ -419,7 +418,7 @@ const DynamicMathSelector = ({ grade, setGrade, topic, setTopic, topicList, setT
         <div className="formGroup">
           <label>Topic:</label>
           <select value={topic} onChange={handleTopicChange}>
-            <option value="">Select Topic</option>
+            <option value="all">Select Topic</option>
             {filteredTopics.map((t) => (
               <option key={t.code} value={t.code}>
                 {t.text}
@@ -433,7 +432,7 @@ const DynamicMathSelector = ({ grade, setGrade, topic, setTopic, topicList, setT
         <div className="formGroup">
           <label>Subtopic:</label>
           <select value={topicList} onChange={(e) => setTopicList(e.target.value)}>
-            <option value="">Select Subtopic</option>
+            <option value="all">Select Subtopic</option>
             {MATH_DATA.subtopics[topic][grade].map((st) => (
               <option key={st.code} value={st.code}>
                 {st.text}

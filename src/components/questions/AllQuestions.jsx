@@ -41,16 +41,31 @@ const AllQuestions = () => {
     fetchAllQuestions();
   }, []);
 
-  useEffect(() => {
-    const filtered = questions.filter((q) => (
-      (grade === "all" || q.grade === grade) &&
-      (topic === "all" || q.topic === topic) &&
-      (topicList === "all" || q.topicList === topicList) &&
-      (difficultyLevel === "all" || q.difficultyLevel === difficultyLevel) &&
-      (questionType === "all" || q.type === questionType)
-    ));
-    setFilteredQuestions(filtered);
-  }, [questions, grade, topic, topicList, difficultyLevel, questionType]);
+useEffect(() => {
+  if (!questions || questions.length === 0) {
+    setFilteredQuestions([]);
+    return;
+  }
+
+  // Normalize filter values so empty strings or null are treated as "all"
+  const safeGrade = grade && grade !== "" ? grade : "all";
+  const safeTopic = topic && topic !== "" ? topic : "all";
+  const safeTopicList = topicList && topicList !== "" ? topicList : "all";
+  const safeDifficulty = difficultyLevel && difficultyLevel !== "" ? difficultyLevel : "all";
+  const safeQuestionType = questionType && questionType !== "" ? questionType : "all";
+
+  const filtered = questions.filter((q) => {
+    return (
+      (safeGrade === "all" || q.grade === safeGrade) &&
+      (safeTopic === "all" || q.topic === safeTopic) &&
+      (safeTopicList === "all" || q.topicList === safeTopicList) &&
+      (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty) &&
+      (safeQuestionType === "all" || q.type === safeQuestionType)
+    );
+  });
+
+  setFilteredQuestions(filtered);
+}, [questions, grade, topic, topicList, difficultyLevel, questionType]);
 
   const handleEdit = (question) => setEditingQuestion(question);
 
