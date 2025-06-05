@@ -284,7 +284,7 @@ const AllUsers = () => {
                                                     <li key={setId} className="assigned-set-item">
                                                         <span>{setId}</span>
                                                         <button
-                                                            className="delete-button"
+                                                            className="delete-button1"
                                                             onClick={() => handleDeleteAssignedSet(setId)}
                                                         >
                                                             Delete
