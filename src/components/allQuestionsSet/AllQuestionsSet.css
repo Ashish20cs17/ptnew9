@@ -6,6 +6,23 @@
     display: none !important;
   }
 }
+.edit-button {
+  position: absolute;
+  top: 4px;
+  right: 64px; /* 60px away from Delete for spacing */
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 50px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 10;
+}
+.edit-button:hover {
+  background-color: #bd59db;
+}
 
 .delete-button {
   position: absolute;
@@ -23,7 +40,7 @@
 }
 
 .delete-button:hover {
-  background-color: #d9363e;
+  background-color: #5abfd1;
 }
 
 .questionText {
