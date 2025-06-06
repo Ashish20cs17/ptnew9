@@ -275,25 +275,28 @@ const AllUsers = () => {
                                         </div>
                                     )}
 
-                                {selectedUser.assignedSets &&
-                                    Object.keys(selectedUser.assignedSets).length > 0 && (
-                                        <div className="detail-section">
-                                            <h3 className="subsection-title">Assigned Sets</h3>
-                                            <ul className="item-list">
-                                                {Object.keys(selectedUser.assignedSets).map((setId) => (
-                                                    <li key={setId} className="assigned-set-item">
-                                                        <span>{setId}</span>
-                                                        <button
-                                                            className="delete-button1"
-                                                            onClick={() => handleDeleteAssignedSet(setId)}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
+                              {selectedUser.assignedSets &&
+    Object.keys(selectedUser.assignedSets).length > 0 && (
+        <div className="detail-section">
+            <h3 className="subsection-title">Assigned Sets</h3>
+            <ul className="item-list">
+                {Object.keys(selectedUser.assignedSets)
+                    .sort((a, b) => a.localeCompare(b)) // or use numeric sort if needed
+                    .map((setId) => (
+                        <li key={setId} className="assigned-set-item">
+                            <span>{setId}</span>
+                            <button
+                                className="delete-button1"
+                                onClick={() => handleDeleteAssignedSet(setId)}
+                            >
+                                Delete
+                            </button>
+                        </li>
+                    ))}
+            </ul>
+        </div>
+    )}
+
                             </div>
                         ) : selectedQuiz && quizDetails ? (
                             <div className="quiz-details">
