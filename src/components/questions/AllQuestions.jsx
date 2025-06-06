@@ -7,6 +7,7 @@ import parse from "html-react-parser";
 import JoditEditor from "jodit-react";
 import DynamicMathSelector from "../DynamicMathSelector";
 import "./AllQuestions.css";
+
 import "../upload/Upload.css";
 
 const AllQuestions = () => {
@@ -183,6 +184,41 @@ useEffect(() => {
         setLoading(false);
       }
     };
+
+
+
+const assignSetToUser = async (userId, setId) => {
+    try {
+        await update(ref(database, `users/${userId}/assignedSets`), {
+            [setId]: {
+                attachedAt: new Date().toISOString(),
+            },
+        });
+
+        // Optional: update UI locally if needed
+        const updatedAssignedSets = {
+            ...selectedUser.assignedSets,
+            [setId]: { attachedAt: new Date().toISOString() }
+        };
+
+        const updatedUser = { ...selectedUser, assignedSets: updatedAssignedSets };
+        setSelectedUser(updatedUser);
+        setUsers(users.map((u) => (u.id === userId ? updatedUser : u)));
+        setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? updatedUser : u)));
+
+        alert(`Set ${setId} assigned to user ${userId}`);
+    } catch (error) {
+        console.error("Error assigning set:", error);
+        alert("Failed to assign set.");
+    }
+};
+
+
+
+
+
+
+
 
     return (
       <div className="uploadContainer editMode">

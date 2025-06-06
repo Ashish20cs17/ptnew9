@@ -144,13 +144,32 @@ const AllUsers = () => {
     };
 
     // Sort quiz results by completedAt date (latest first)
-    const sortedQuizResults = selectedUser?.quizResults
-        ? Object.keys(selectedUser.quizResults).sort((quizIdA, quizIdB) => {
-              const quizA = selectedUser.quizResults[quizIdA];
-              const quizB = selectedUser.quizResults[quizIdB];
-              return new Date(quizB.completedAt) - new Date(quizA.completedAt);
-          })
-        : [];
+  const sortedQuizResults = selectedUser?.quizResults
+    ? Object.keys(selectedUser.quizResults).sort((quizIdA, quizIdB) => {
+        const quizA = selectedUser.quizResults[quizIdA];
+        const quizB = selectedUser.quizResults[quizIdB];
+        return new Date(quizB.completedAt) - new Date(quizA.completedAt);
+      })
+    : [];
+
+  // <<< Add your assignedSets sorting here >>>
+  const sortedAssignedSetIds = Object.keys(selectedUser?.assignedSets || {}).sort((a, b) => {
+    const dateA = new Date(
+      a.substring(0, 4) + '-' + a.substring(4, 6) + '-' + a.substring(6, 8)
+    );
+    const dateB = new Date(
+      b.substring(0, 4) + '-' + b.substring(4, 6) + '-' + b.substring(6, 8)
+    );
+    return dateB - dateA;
+  });
+  function parseDateFromSetId(setId) {
+  if (!setId || setId.length < 8) return null;
+  const year = setId.substring(0, 4);
+  const month = setId.substring(4, 6);
+  const day = setId.substring(6, 8);
+  const dateObj = new Date(`${year}-${month}-${day}`);
+  return isNaN(dateObj) ? null : dateObj;
+}
 
     return (
         <div className="users-container">
@@ -274,28 +293,59 @@ const AllUsers = () => {
                                             </ul>
                                         </div>
                                     )}
+{selectedUser.assignedSets &&
+  Object.entries(selectedUser.assignedSets)
+    .sort(([, a], [, b]) => {
+      const dateA = a?.attachedAt ? new Date(a.attachedAt) : new Date(0);
+      const dateB = b?.attachedAt ? new Date(b.attachedAt) : new Date(0);
+      return dateB - dateA;
+    })
+    .map(([setId, data]) => {
+      // Use attachedAt if available
+      let date = data?.attachedAt ? new Date(data.attachedAt) : null;
 
-                              {selectedUser.assignedSets &&
-    Object.keys(selectedUser.assignedSets).length > 0 && (
-        <div className="detail-section">
-            <h3 className="subsection-title">Assigned Sets</h3>
-            <ul className="item-list">
-                {Object.keys(selectedUser.assignedSets)
-                    .sort((a, b) => a.localeCompare(b)) // or use numeric sort if needed
-                    .map((setId) => (
-                        <li key={setId} className="assigned-set-item">
-                            <span>{setId}</span>
-                            <button
-                                className="delete-button1"
-                                onClick={() => handleDeleteAssignedSet(setId)}
-                            >
-                                Delete
-                            </button>
-                        </li>
-                    ))}
-            </ul>
-        </div>
-    )}
+      // If no attachedAt, parse date from setId like "20250318_Grade4"
+      if (!date) {
+        const match = setId.match(/^(\d{4})(\d{2})(\d{2})/);
+        if (match) {
+          const [_, year, month, day] = match;
+          // Default time 09:00 AM (adjust if you want)
+          date = new Date(`${year}-${month}-${day}T09:00:00`);
+        }
+      }
+
+      const formattedDate = date
+        ? date.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          })
+        : 'No Date';
+
+      return (
+        <li key={setId} className="assigned-set-item">
+          <span>
+            {setId} {' - '}
+            <small style={{ color: '#666', fontSize: '0.8em' }}>
+              {formattedDate}
+            </small>
+          </span>
+          <button
+            className="delete-button1"
+            onClick={() => handleDeleteAssignedSet(setId)}
+          >
+            Delete
+          </button>
+        </li>
+      );
+    })}
+
+          
+
+
 
                             </div>
                         ) : selectedQuiz && quizDetails ? (

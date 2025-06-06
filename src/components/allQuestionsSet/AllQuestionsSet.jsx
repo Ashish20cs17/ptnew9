@@ -306,11 +306,21 @@ const [editingQuestion, setEditingQuestion] = React.useState(null);
       }
 
       const orderedQuestionIds = questions.map((q) => q.id);
-      const userSetsRef = ref(
-        database,
-        `users/${userKey}/assignedSets/${selectedSet}`
-      );
-      await set(userSetsRef, orderedQuestionIds);
+
+
+  const userSetsRef = ref(
+  database,
+  `users/${userKey}/assignedSets/${selectedSet}`
+);
+await set(userSetsRef, {
+  questions: orderedQuestionIds,
+  attachedAt: new Date().toISOString()
+});
+
+
+
+
+
       toast.success(`✅ Set "${selectedSet}" attached to ${formattedEmail}`);
       setUserEmail("");
     } catch (err) {
