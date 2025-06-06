@@ -10,6 +10,7 @@ import html2canvas from "html2canvas";
 import parse from "html-react-parser";
 import practiceTime from "../../assets/practiceTime.jpg";
 import JsBarcode from "jsbarcode";
+import JoditEditor from "jodit-react";
 
 
 
@@ -34,8 +35,6 @@ const generateBarcodeDataUrl = (text) => {
 
   return canvas.toDataURL("image/png");
 };
-
-
 const AllQuestionsSet = () => {
   const [questionSets, setQuestionSets] = useState([]);
   const [filteredSets, setFilteredSets] = useState([]);
@@ -44,6 +43,15 @@ const AllQuestionsSet = () => {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+const [editingIndex, setEditingIndex] = useState(null);
+const [editedQuestionText, setEditedQuestionText] = useState("");
+const editor = useRef(null);
+
+
+const [editingQuestionIndex, setEditingQuestionIndex] = React.useState(null);
+const [editingQuestion, setEditingQuestion] = React.useState(null);
+
   const [userEmail, setUserEmail] = useState("");
   const [attachLoading, setAttachLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -430,6 +438,25 @@ for (let item of questionItems) {
   }
 };
 
+
+const handleEditQuestion = (index) => {
+  setEditingIndex(index);
+  setEditedQuestionText(questions[index].question || "");
+};
+
+const handleSaveEdit = () => {
+  setQuestions((prevQuestions) => {
+    const newQuestions = [...prevQuestions];
+    newQuestions[editingIndex] = {
+      ...newQuestions[editingIndex],
+      question: editedQuestionText,
+    };
+    return newQuestions;
+  });
+  setEditingIndex(null);
+};
+
+
   const handleDeleteQuestion = (indexToDelete) => {
   const updatedQuestions = [...questions];
   updatedQuestions.splice(indexToDelete, 1);
@@ -448,10 +475,103 @@ for (let item of questionItems) {
       .length;
   };
 
- return (
-  <div className="allQuestionsContainer">
-    <h2>All Question Sets</h2>
-    <hr />
+return (
+  <>
+    {editingQuestion && (
+      <EditModal
+        question={editingQuestion}
+        onSave={handleSaveEditedQuestion}
+        onClose={() => setEditingQuestion(null)}
+      />
+    )}
+
+    <div className="allQuestionsContainer">
+      <h2>All Question Sets</h2>
+      <hr />
+{editingIndex !== null && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+    }}
+  >
+    <div
+      style={{
+        backgroundColor: "white",
+        padding: 20,
+        borderRadius: 8,
+        width: "600px",
+        maxHeight: "80vh",
+        overflowY: "auto",
+      }}
+    >
+      <h3>Edit Question</h3>
+      <JoditEditor
+        ref={editor}
+        value={editedQuestionText}
+        onChange={(newContent) => setEditedQuestionText(newContent)}
+        tabIndex={1} // tabIndex of textarea
+        style={{ height: "250px" }}
+      />
+     <div
+  style={{
+    marginTop: 20,
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 12,
+  }}
+>
+  <button
+    onClick={() => setEditingIndex(null)}
+    style={{
+      backgroundColor: "#f44336",
+      color: "white",
+      padding: "8px 16px",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "bold",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+    }}
+    onMouseOver={(e) => (e.target.style.backgroundColor = "#d32f2f")}
+    onMouseOut={(e) => (e.target.style.backgroundColor = "#f44336")}
+  >
+    Cancel
+  </button>
+
+  <button
+    onClick={handleSaveEdit}
+    style={{
+      backgroundColor: "#4CAF50",
+      color: "white",
+      padding: "8px 16px",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "bold",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+    }}
+    onMouseOver={(e) => (e.target.style.backgroundColor = "#388E3C")}
+    onMouseOut={(e) => (e.target.style.backgroundColor = "#4CAF50")}
+  >
+    Save
+  </button>
+</div>
+
+
+    </div>
+  </div>
+)}
+
 
     <div className="attachToUserSection">
       <h3>Attach Question Set to User</h3>
@@ -558,6 +678,8 @@ for (let item of questionItems) {
     lineHeight: 1.4,
   }}
   
+   
+  
 >
   {/* Precompute question numbers, skipping trivia */}
   {(() => {
@@ -578,11 +700,42 @@ for (let item of questionItems) {
   style={{ position: 'relative', marginBottom: '20px' }}
 >
   {/* Delete Button - will not appear in PDF */}
-<div className="noPrint" style={{ position: 'absolute', top: '0', right: '0', zIndex: 10 }}>
-  <button className="delete-button" onClick={() => handleDeleteQuestion(index)}>
+<div className="noPrint" style={{ position: 'absolute', top: '0', right: '0', zIndex: 10, display: 'flex', gap: '8px' }}>
+<button
+  className="edit-button"
+  onClick={() => handleEditQuestion(index)}
+  style={{
+    background: '#4CAF50',
+    color: 'white',
+    border: 'none',
+    padding: '6px 10px',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '12px',
+  }}
+>
+  Edit
+</button>
+
+    
+
+  <button
+    className="delete-button"
+    onClick={() => handleDeleteQuestion(index)}
+    style={{
+      background: '#ff5c5c',
+      color: 'white',
+      border: 'none',
+      padding: '6px 10px',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      fontSize: '12px',
+    }}
+  >
     Delete
   </button>
 </div>
+
 
 
               {/* Top-left Badge */}
@@ -669,7 +822,6 @@ for (let item of questionItems) {
 
   )}
 
-
                   {/* Answer */}
                   {!isTrivia ? (
                     <div
@@ -712,6 +864,7 @@ for (let item of questionItems) {
       </div>
     )}
   </div>
+    </>
 );
 };
 export default AllQuestionsSet;
