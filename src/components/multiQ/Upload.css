@@ -1,0 +1,203 @@
+/* UploadMultiQuestion.css */
+
+.uploadMultiContainer {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem 2.5rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.uploadMultiContainer h2 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.uploadMultiContainer label {
+  display: block;
+  font-weight: 600;
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.uploadMultiContainer select,
+.uploadMultiContainer input[type="text"],
+.uploadMultiContainer textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1.5px solid #ccc;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.uploadMultiContainer select:focus,
+.uploadMultiContainer input[type="text"]:focus,
+.uploadMultiContainer textarea:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+/* -------- Main Question Block -------- */
+.mainQuestionBlock {
+  background-color: #eef6ff;
+  border: 2px solid #b4d5f3;
+  padding: 1.8rem 2rem;
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.mainQuestionBlock h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  margin-bottom: 1.2rem;
+  color: #004085;
+}
+
+/* -------- Sub Question Block -------- */
+.subQuestionBlock {
+  background-color: #f8faff;
+  border: 1px solid #d0d9f5;
+  border-radius: 10px;
+  padding: 1.5rem 1.8rem;
+  margin-bottom: 1.8rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.subQuestionBlock label {
+  font-weight: 600;
+}
+
+.subQuestionBlock textarea {
+  resize: vertical;
+  min-height: 70px;
+  margin-bottom: 0.8rem;
+}
+
+.subQuestionBlock select {
+  margin-bottom: 1rem;
+}
+
+.subQuestionBlock input[type="text"] {
+  margin-bottom: 0.6rem;
+  border: 1px solid #bbb;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+}
+
+/* General Buttons */
+button {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 500;
+}
+
+/* Add Sub Question Button */
+button.addSubBtn {
+  background-color: #007bff;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+}
+
+button.addSubBtn:hover {
+  background-color: #0056b3;
+}
+
+/* Add Main Question Button */
+button.addMainBtn {
+  background-color: #6610f2;
+  color: white;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: block;
+  margin: 1.5rem auto 2rem auto;
+}
+
+button.addMainBtn:hover {
+  background-color: #520dc2;
+}
+
+/* Remove Button */
+button.removeBtn {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+button.removeBtn:hover {
+  background-color: #b02a37;
+}
+
+/* Disabled buttons */
+button[disabled] {
+  background-color: #aaa !important;
+  cursor: not-allowed;
+}
+
+/* Upload button style */
+button.uploadBtn {
+  background-color: #28a745;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button.uploadBtn:hover:not([disabled]) {
+  background-color: #1e7e34;
+}
+
+.errorMsg {
+  color: #cc0000;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .uploadMultiContainer {
+    padding: 1.5rem 1rem;
+  }
+
+  .mainQuestionBlock {
+    padding: 1rem;
+  }
+
+  .subQuestionBlock {
+    padding: 1rem;
+  }
+}
