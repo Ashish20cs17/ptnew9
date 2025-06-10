@@ -6,7 +6,6 @@ import { ref, push, set, serverTimestamp } from "firebase/database";
 import supabase from "../supabase/SupabaseConfig";
 import { ToastContainer, toast } from "react-toastify";
 import DynamicMathSelector from "../DynamicMathSelector";
-
 const UploadMultiQuestion = () => {
   const [grade, setGrade] = useState("");
   const [difficultyLevel, setDifficultyLevel] = useState("");
@@ -46,7 +45,12 @@ const UploadMultiQuestion = () => {
 
   const addSubQuestion = (mainIndex) => {
     const updated = [...mainQuestions];
-    updated[mainIndex].subQuestions.push({ question: "", options: ["", "", "", ""], correctAnswer: "", type: "MCQ" });
+    updated[mainIndex].subQuestions.push({
+      question: "",
+      options: ["", "", "", ""],
+      correctAnswer: "",
+      type: "MCQ",
+    });
     setMainQuestions(updated);
   };
 
@@ -57,81 +61,93 @@ const UploadMultiQuestion = () => {
   };
 
   const addMainQuestion = () => {
-    setMainQuestions([...mainQuestions, {
-      mainQuestion: "",
-      subQuestions: [
-        { question: "", options: ["", "", "", ""], correctAnswer: "", type: "MCQ" },
-      ],
-    }]);
+    setMainQuestions([
+      ...mainQuestions,
+      {
+        mainQuestion: "",
+        subQuestions: [
+          { question: "", options: ["", "", "", ""], correctAnswer: "", type: "MCQ" },
+        ],
+      },
+    ]);
   };
 
-  const uploadMultiQuestions = async () => {
-    setError("");
-    if (!grade || !difficultyLevel || !topic || !topicList) {
-      setError("Please select Grade, Difficulty, Topic, and Topic List.");
+ const uploadMultiQuestions = async () => {
+  setError("");
+  if (!grade || !difficultyLevel || !topic || !topicList) {
+    setError("Please select Grade, Difficulty, Topic, and Topic List.");
+    return;
+  }
+
+  for (let i = 0; i < mainQuestions.length; i++) {
+    const mainQ = mainQuestions[i];
+
+    if (!mainQ.mainQuestion.trim()) {
+      setError(`Main question #${i + 1} is empty.`);
       return;
     }
 
-    for (let i = 0; i < mainQuestions.length; i++) {
-      const mainQ = mainQuestions[i];
-      if (!mainQ.mainQuestion.trim()) {
-        setError(`Main question #${i + 1} is empty.`);
+    for (let j = 0; j < mainQ.subQuestions.length; j++) {
+      const sq = mainQ.subQuestions[j];
+      if (!sq.question.trim()) {
+        setError(`Sub-question #${j + 1} in main question #${i + 1} is empty.`);
         return;
       }
-      for (let j = 0; j < mainQ.subQuestions.length; j++) {
-        const sq = mainQ.subQuestions[j];
-        if (!sq.question.trim()) {
-          setError(`Sub-question #${j + 1} in main question #${i + 1} is empty.`);
+      if (sq.type === "MCQ") {
+        if (sq.options.every(opt => !opt.trim())) {
+          setError(`Sub-question #${j + 1} in main question #${i + 1}: Fill at least one option.`);
           return;
         }
-        if (sq.type === "MCQ") {
-          if (sq.options.every(opt => !opt.trim())) {
-            setError(`Sub-question #${j + 1} in main question #${i + 1}: Fill at least one option.`);
-            return;
-          }
-          if (!sq.correctAnswer.trim()) {
-            setError(`Sub-question #${j + 1} in main question #${i + 1}: Add correct answer.`);
-            return;
-          }
+        if (!sq.correctAnswer.trim()) {
+          setError(`Sub-question #${j + 1} in main question #${i + 1}: Add correct answer.`);
+          return;
         }
       }
     }
+  }
 
-    setLoading(true);
-    try {
-    const questionsRef = ref(database, "questions");
+  setLoading(true);
+  try {
+    const questionsRef = ref(database, "multiQuestions");
 
+
+    for (let mainQ of mainQuestions) {
       const newRef = push(questionsRef);
-
       await set(newRef, {
         grade,
         difficultyLevel,
         topic,
         topicList,
-        questions: mainQuestions,
+        mainQuestion: mainQ.mainQuestion,
+        subQuestions: mainQ.subQuestions,
         createdAt: serverTimestamp(),
       });
-
-      toast.success("Questions uploaded successfully!");
-      setMainQuestions([
-        {
-          mainQuestion: "",
-          subQuestions: [
-            { question: "", options: ["", "", "", ""], correctAnswer: "", type: "MCQ" },
-          ],
-        },
-      ]);
-      setGrade("");
-      setDifficultyLevel("");
-      setTopic("");
-      setTopicList("");
-    } catch (err) {
-      setError("Upload failed: " + err.message);
-      toast.error("Upload failed: " + err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    toast.success("Questions uploaded successfully!");
+
+    // Reset form
+    setMainQuestions([
+      {
+        mainQuestion: "",
+        subQuestions: [
+          { question: "", options: ["", "", "", ""], correctAnswer: "", type: "MCQ" },
+        ],
+      },
+    ]);
+    setGrade("");
+    setDifficultyLevel("");
+    setTopic("");
+    setTopicList("");
+  } catch (err) {
+    setError("Upload failed: " + err.message);
+    toast.error("Upload failed: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <div className="uploadMultiContainer">

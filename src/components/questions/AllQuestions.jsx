@@ -20,27 +20,74 @@ const AllQuestions = () => {
   const [topicList, setTopicList] = useState("all");
   const [difficultyLevel, setDifficultyLevel] = useState("all");
   const [questionType, setQuestionType] = useState("all");
+useEffect(() => {
+  const fetchAllQuestions = async () => {
+    try {
+      const questionsRef = ref(database, "questions");
+      const multiQuestionsRef = ref(database, "multiQuestions");
 
-  useEffect(() => {
-    const fetchAllQuestions = async () => {
-      try {
-        const questionsRef = ref(database, "questions");
-        const snapshot = await get(questionsRef);
-        if (!snapshot.exists()) {
-          setError("No questions found!");
-          return;
-        }
-        const data = snapshot.val();
-        const allFetchedQuestions = Object.entries(data).map(([id, question]) => ({ id, ...question })).reverse();
-        setQuestions(allFetchedQuestions);
-        setFilteredQuestions(allFetchedQuestions);
-      } catch (err) {
-        console.error("Error fetching questions:", err);
-        setError("Failed to fetch questions");
+      const [questionsSnap, multiSnap] = await Promise.all([
+        get(questionsRef),
+        get(multiQuestionsRef),
+      ]);
+
+      let allQuestions = [];
+
+      // 1. Load normal single questions
+      if (questionsSnap.exists()) {
+        const data = questionsSnap.val();
+        const loaded = Object.entries(data).map(([id, q]) => ({
+          id,
+          ...q,
+        }));
+        allQuestions.push(...loaded);
       }
-    };
-    fetchAllQuestions();
-  }, []);
+
+      // 2. Load multi questions with subQuestions
+      if (multiSnap.exists()) {
+        const data = multiSnap.val();
+
+        Object.entries(data).forEach(([multiId, multiItem]) => {
+          const mainQuestion = multiItem.mainQuestion || null;
+          const grade = multiItem.grade || "";
+          const topic = multiItem.topic || "";
+          const topicList = multiItem.topicList || "";
+          const difficultyLevel = multiItem.difficultyLevel || "";
+
+          if (Array.isArray(multiItem.subQuestions)) {
+            multiItem.subQuestions.forEach((subQ, index) => {
+              allQuestions.push({
+                ...subQ,
+                id: `${multiId}_${index}`,
+                fromMulti: true,
+                multiId,
+                mainIndex: 0,
+                subIndex: index,
+                mainQuestion,
+                grade,
+                topic,
+                topicList,
+                difficultyLevel,
+              });
+            });
+          }
+        });
+      }
+   // ✅ ADD THIS LOG HERE
+    console.log("🧪 Combined allQuestions:", allQuestions);
+
+
+      setQuestions(allQuestions);
+      setFilteredQuestions(allQuestions);
+    } catch (err) {
+      console.error("Error loading questions:", err);
+      setError("Failed to load questions");
+    }
+  };
+
+  fetchAllQuestions();
+}, []);
+
 
 useEffect(() => {
   if (!questions || questions.length === 0) {
@@ -48,37 +95,79 @@ useEffect(() => {
     return;
   }
 
-  // Normalize filter values so empty strings or null are treated as "all"
+  // Normalize filter values
   const safeGrade = grade && grade !== "" ? grade : "all";
   const safeTopic = topic && topic !== "" ? topic : "all";
   const safeTopicList = topicList && topicList !== "" ? topicList : "all";
   const safeDifficulty = difficultyLevel && difficultyLevel !== "" ? difficultyLevel : "all";
   const safeQuestionType = questionType && questionType !== "" ? questionType : "all";
 
-  const filtered = questions.filter((q) => {
-    return (
-      (safeGrade === "all" || q.grade === safeGrade) &&
-      (safeTopic === "all" || q.topic === safeTopic) &&
-      (safeTopicList === "all" || q.topicList === safeTopicList) &&
-      (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty) &&
-      (safeQuestionType === "all" || q.type === safeQuestionType)
-    );
-  });
+  // 🧪 Debug filters and data
+  console.log("🧪 Filtering questions...");
+  console.log("Grade filter:", safeGrade);
+  console.log("Topic filter:", safeTopic);
+  console.log("TopicList filter:", safeTopicList);
+  console.log("Difficulty filter:", safeDifficulty);
+  console.log("Question Type filter:", safeQuestionType);
+  console.log("Sample Question[0]:", questions[0]);
+  console.log("Sample fromMulti Question:", questions.find((q) => q.fromMulti));
+const filtered = questions.filter((q) => {
+  return (
+    (safeGrade === "all" || q.grade === safeGrade) &&
+    (safeTopic === "all" || q.topic === safeTopic) &&
+    (safeTopicList === "all" || q.topicList === safeTopicList) &&
+    (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty)
+    // remove type check for now
+    // (safeQuestionType === "all" || q.type === safeQuestionType)
+  );
+});
+
 
   setFilteredQuestions(filtered);
 }, [questions, grade, topic, topicList, difficultyLevel, questionType]);
 
 
-  const handleEdit = (question) => setEditingQuestion(question);
 
-  const handleDelete = async (question) => {
-    const { id, questionImage, options, correctAnswer } = question;
+const handleEdit = (question) => {
+  if (question.fromMulti) {
+    // Parse metadata
+    const { multiId, mainIndex, subIndex } = question;
+    // Pass all info to editor
+    setEditingQuestion(question);
+  } else {
+    setEditingQuestion(question);
+  }
+};
+
+
+
+
+const handleDelete = async (question) => {
+  const { id, questionImage, options, correctAnswer } = question;
+
+  if (question.fromMulti) {
+    const { multiId, mainIndex, subIndex } = question;
+  const multiRef = ref(database, `multiQuestions/${multiId}/subQuestions/${subIndex}`);
+
+    
     await Promise.all([
       deleteImageFromSupabase(questionImage),
       ...(options?.map((opt) => deleteImageFromSupabase(opt.image)) || []),
       deleteImageFromSupabase(correctAnswer?.image),
     ]);
 
+    try {
+      await remove(multiRef);
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+      setFilteredQuestions((prev) => prev.filter((q) => q.id !== id));
+      toast.success("Nested question deleted successfully");
+    } catch (err) {
+      console.error("Error deleting nested question:", err);
+      setError("Failed to delete nested question");
+    }
+
+  } else {
+    // Normal question deletion (already implemented)
     try {
       await remove(ref(database, `questions/${id}`));
       setQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -88,7 +177,9 @@ useEffect(() => {
       console.error("Error deleting question:", err);
       setError("Failed to delete question");
     }
-  };
+  }
+};
+
 
   const deleteImageFromSupabase = async (url) => {
     if (!url) return;
@@ -165,7 +256,14 @@ useEffect(() => {
       }
       setLoading(true);
       try {
-        const questionRef = ref(database, `questions/${questionData.id}`);
+        let questionRef;
+if (questionData.fromMulti) {
+  const { multiId, mainIndex, subIndex } = questionData;
+  questionRef = ref(database, `multiQuestions/${multiId}/questions/${mainIndex}/subQuestions/${subIndex}`);
+} else {
+  questionRef = ref(database, `questions/${questionData.id}`);
+}
+
         const updatedData = {
           ...formData,
           timestamp: serverTimestamp(),
@@ -212,13 +310,6 @@ const assignSetToUser = async (userId, setId) => {
         alert("Failed to assign set.");
     }
 };
-
-
-
-
-
-
-
 
     return (
       <div className="uploadContainer editMode">
@@ -330,26 +421,92 @@ const assignSetToUser = async (userId, setId) => {
 
       <div className="questionList">
         <ol>
-          {filteredQuestions.map((q) => (
-            <li key={q.id} className="questionItem">
-              <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
-              <small> - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}</small>
-              <div>{q.questionImage && (<img src={q.questionImage} alt="Question" style={{ maxWidth: "300px" }} />)}</div>
-              {q.type === "MCQ" && Array.isArray(q.options) && (
-                <ul>
-                  {q.options.map((opt, idx) => (
-                    <li key={idx}>{opt.text} {opt.image && (<img src={opt.image} alt={`Option ${idx + 1}`} style={{ maxWidth: "100px" }} />)}</li>
-                  ))}
-                </ul>
-              )}
-              {q.correctAnswer && (
-                <p><strong>Correct Answer:</strong> {q.correctAnswer.text} {q.correctAnswer.image && (<img src={q.correctAnswer.image} alt="Answer" style={{ maxWidth: "100px" }} />)}</p>
-              )}
-              
-              <button className="editButton" onClick={() => handleEdit(q)}>Edit</button>
-              <button className="deleteButton" onClick={() => handleDelete(q)}>Delete</button>
-            </li>
-          ))}
+        {filteredQuestions.map((q) => (
+
+          
+  <li key={q.id} className="questionItem">
+    {q.mainQuestion && (
+      <p style={{ fontWeight: "bold", color: "purple" }}>Main: {q.mainQuestion}</p>
+    )}
+
+    {q.fromMulti && (
+      <p style={{ fontWeight: "bold", color: "orange" }}>
+        🧩 Sub-question (#{q.subIndex + 1}) from Multi-ID: {q.multiId}
+      </p>
+    )}
+ 
+
+    <strong>
+      {q.question
+        ? isHTML(q.question)
+          ? parse(q.question)
+          : q.question
+        : "❓ No Question Text"}
+    </strong>{" "}
+    ({q.type})
+
+    <small>
+      {" "}-{" "}
+      {q.timestamp
+        ? new Date(q.timestamp).toLocaleString()
+        : "No Time"}
+    </small>
+
+    {q.questionImage && (
+      <div>
+        <img
+          src={q.questionImage}
+          alt="Question"
+          style={{ maxWidth: "300px" }}
+        />
+      </div>
+    )}
+
+    {/* Show MCQ Options if available */}
+    {q.type === "MCQ" && Array.isArray(q.options) && (
+      <ul>
+        {q.options.map((opt, idx) => (
+          <li key={idx}>
+            {typeof opt === "string" ? opt : opt?.text}
+            {opt?.image && (
+              <img
+                src={opt.image}
+                alt={`Option ${idx + 1}`}
+                style={{ maxWidth: "100px", marginLeft: "8px" }}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {q.correctAnswer && (
+      <p>
+        <strong>Correct Answer:</strong>{" "}
+        {typeof q.correctAnswer === "string"
+          ? q.correctAnswer
+          : q.correctAnswer?.text}
+        {q.correctAnswer?.image && (
+          <img
+            src={q.correctAnswer.image}
+            alt="Answer"
+            style={{ maxWidth: "100px", marginLeft: "8px" }}
+          />
+        )}
+      </p>
+    )}
+
+    <button className="editButton" onClick={() => handleEdit(q)}>
+      Edit
+    </button>
+    <button className="deleteButton" onClick={() => handleDelete(q)}>
+      Delete
+    </button>
+  </li>
+))}
+
+
+          
         </ol>
       </div>
     </div>
