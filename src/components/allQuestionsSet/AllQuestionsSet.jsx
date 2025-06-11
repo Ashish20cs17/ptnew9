@@ -11,9 +11,6 @@ import parse from "html-react-parser";
 import practiceTime from "../../assets/practiceTime.jpg";
 import JsBarcode from "jsbarcode";
 import JoditEditor from "jodit-react";
-
-
-
 /**
  * Generates a barcode image (as a data URL) from the given text.
  *
@@ -49,10 +46,6 @@ const [editedQuestionText, setEditedQuestionText] = useState("");
 const editor = useRef(null);
 
 
-const setsRef = ref(database, "attachedQuestionSets");
-
-
-
 const [editingQuestionIndex, setEditingQuestionIndex] = React.useState(null);
 const [editingQuestion, setEditingQuestion] = React.useState(null);
 
@@ -67,6 +60,54 @@ const [editingQuestion, setEditingQuestion] = React.useState(null);
     if (username.includes("@")) return username;
     return `${username}@gmail.com`;
   };
+
+  useEffect(() => {
+    fetchQuestionSets();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredSets(questionSets);
+    } else {
+      const lowercasedTerm = searchTerm.toLowerCase();
+      const filtered = questionSets.filter(([setName]) =>
+        setName.toLowerCase().includes(lowercasedTerm)
+      );
+      setFilteredSets(filtered);
+    }
+  }, [searchTerm, questionSets]);
+
+  const fetchQuestionSets = async () => {
+    try {
+      setLoading(true);
+      const setsRef = ref(database, "attachedQuestionSets");
+      const snapshot = await get(setsRef);
+
+      if (!snapshot.exists()) {
+        setQuestionSets([]);
+        setFilteredSets([]);
+        setError("No question sets found!");
+        return;
+      }
+
+      const sets = Object.entries(snapshot.val());
+      const sortedSets = sets.sort(([setNameA], [setNameB]) =>
+        setNameB.localeCompare(setNameA)
+      );
+      setQuestionSets(sortedSets);
+      setFilteredSets(sortedSets);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Error fetching question sets:", err);
+      setError("Failed to fetch question sets.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isHTML = (str) => {
+    return /<[^>]+>/.test(str);
+  };
 const handleSetClick = async (setName, setQuestionsData) => {
   setSelectedSet(setName);
   setQuestions([]);
@@ -74,52 +115,61 @@ const handleSetClick = async (setName, setQuestionsData) => {
   setError(null);
 
   try {
-    const questionsWithOrder = Object.entries(setQuestionsData).map(
-      ([key, value]) => {
-        if (typeof value === "string") {
-          return { id: value, order: 0 };
-        } else {
-          return {
-            id: value.id || key,
-            order: value.order || 0,
-          };
-        }
-      }
-    );
+    const questionEntries = Object.entries(setQuestionsData);
+    let questionsWithOrder = [];
 
-    questionsWithOrder.sort((a, b) => a.order - b.order);
+    for (const [key, value] of questionEntries) {
+if (value?.children) {
+  const childIds = Array.isArray(value.children)
+    ? value.children
+    : Object.keys(value.children);
 
-    const fetchedQuestions = [];
-    for (const { id, order } of questionsWithOrder) {
-      let questionRef = ref(database, `questions/${id}`);
-      let snapshot = await get(questionRef);
+  childIds.forEach((childId, idx) => {
+    questionsWithOrder.push({
+      id: childId, // ✅ Just use the original ID
+      order: value.order + idx / 10,
+    });
+  });
+}
 
-      if (!snapshot.exists()) {
-        // Try fetching from multiQuestions if not found
-        questionRef = ref(database, `multiQuestions/${id}`);
-        snapshot = await get(questionRef);
-      }
 
-      if (snapshot.exists()) {
-        const questionData = snapshot.val();
 
-        if (Array.isArray(questionData)) {
-          // Multi-type: push each sub-question individually
-          questionData.forEach((q, idx) => {
-            fetchedQuestions.push({
-              id: `${id}_${idx}`,
-              order,
-              ...q,
-            });
-          });
-        } else {
-          // Single-type question
-          fetchedQuestions.push({ id, order, ...questionData });
-        }
+        
+      else {
+        // Single question
+        questionsWithOrder.push({
+          id: value.id || key,
+          order: value.order || 0,
+        });
       }
     }
 
-    setQuestions(fetchedQuestions);
+    // Sort by order
+    questionsWithOrder.sort((a, b) => a.order - b.order);
+
+    // Fetch all question data
+    console.log("👉 IDs to fetch:", questionsWithOrder.map(q => q.id));
+const fetchedQuestions = await Promise.all(
+  questionsWithOrder.map(async ({ id, order }) => {
+    let questionRef = ref(database, `questions/${id}`);
+    let snapshot = await get(questionRef);
+
+    if (!snapshot.exists()) {
+      questionRef = ref(database, `multiQuestions/${id}`);
+      snapshot = await get(questionRef);
+    }
+
+    if (snapshot.exists()) {
+      return { id, order, ...snapshot.val() };
+    } else {
+      console.warn(`❌ Question not found in DB: ${id}`);
+      return null;
+    }
+  })
+);
+
+
+    setQuestions(fetchedQuestions.filter(Boolean));
   } catch (err) {
     console.error("❌ Error fetching questions:", err);
     setError("Failed to load questions.");
@@ -127,6 +177,34 @@ const handleSetClick = async (setName, setQuestionsData) => {
     setLoading(false);
   }
 };
+
+  const deleteQuestionSet = async (setName, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete the set "${setName}"?`)) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      const setRef = ref(database, `attachedQuestionSets/${setName}`);
+      await remove(setRef);
+      toast.success(`✅ Question set "${setName}" successfully deleted`);
+
+      const updatedSets = questionSets.filter(([name]) => name !== setName);
+      setQuestionSets(updatedSets);
+      setFilteredSets(updatedSets);
+
+      if (selectedSet === setName) {
+        setSelectedSet(null);
+        setQuestions([]);
+      }
+    } catch (err) {
+      console.error("❌ Error deleting question set:", err);
+      toast.error("❌ Failed to delete question set");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const deleteQuestionFromSet = async (questionId) => {
     if (
@@ -606,219 +684,287 @@ return (
       </div>
     ) : (
       <div className="selectedSetView">
-        <div className="setHeader">
-          <button onClick={() => setSelectedSet(null)} className="backButton">
-            🔙 Back to Sets
-          </button>
-          <h3>Questions in "{selectedSet}"</h3>
-          <button
-            onClick={exportToPDF}
-            disabled={exportLoading || !questions.length}
-            className="exportButton"
-          >
-            {exportLoading ? "Exporting..." : "📄 Export to PDF"}
-          </button>
-        </div>
+  <div className="setHeader">
+    <button onClick={() => setSelectedSet(null)} className="backButton">
+      🔙 Back to Sets
+    </button>
+    <h3>Questions in "{selectedSet}"</h3>
+    <button
+      onClick={exportToPDF}
+      disabled={exportLoading || !questions.length}
+      className="exportButton"
+    >
+      {exportLoading ? "Exporting..." : "📄 Export to PDF"}
+    </button>
+  </div>
 
-        {loading ? <p>Loading questions...</p> : null}
-<div
-  id="pdf-content"
-  ref={pdfContentRef}
-  className="pdfContent"
-  style={{
-    backgroundColor: 'white',
-    backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
-    backgroundSize: '10px 10px',
-    padding: '30px',
-    fontFamily: "'Geologica', sans-serif",
-    color: '#1a1a1a',
-    lineHeight: 1.4,
-  }}
-  
-   
-  
->
-  {/* Precompute question numbers, skipping trivia */}
-  {(() => {
-    let nonTriviaCount = 0;
-    return (
-      <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
-        {questions.map((q, index) => {
-          if (q.type?.toLowerCase() !== 'trivia') {
-            nonTriviaCount++;
-          }
-          const questionNumber = q.type?.toLowerCase() !== 'trivia' ? nonTriviaCount : null;
-          const isTrivia = q.type?.toLowerCase() === 'trivia';
-
-          return (
-         <div
-  key={q.id || index}
-  className="questionWrapperContainer"
-  style={{ position: 'relative', marginBottom: '20px' }}
->
-  {/* Delete Button - will not appear in PDF */}
-<div className="noPrint" style={{ position: 'absolute', top: '0', right: '0', zIndex: 10, display: 'flex', gap: '8px' }}>
-<button
-  className="edit-button"
-  onClick={() => handleEditQuestion(index)}
-  style={{
-    background: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    padding: '6px 10px',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '12px',
-  }}
->
-  Edit
-</button>
-
-    
-
-  <button
-    className="delete-button"
-    onClick={() => handleDeleteQuestion(index)}
+  {loading ? <p>Loading questions...</p> : null}
+  <div
+    id="pdf-content"
+    ref={pdfContentRef}
+    className="pdfContent"
     style={{
-      background: '#ff5c5c',
-      color: 'white',
-      border: 'none',
-      padding: '6px 10px',
-      borderRadius: '5px',
-      cursor: 'pointer',
-      fontSize: '12px',
+      backgroundColor: 'white',
+      backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px)',
+      backgroundSize: '10px 10px',
+      padding: '30px',
+      fontFamily: "'Geologica', sans-serif",
+      color: '#1a1a1a',
+      lineHeight: 1.4,
     }}
   >
-    Delete
-  </button>
-</div>
+    {/* Precompute question numbers, skipping trivia */}
+    {(() => {
+      let nonTriviaCount = 0;
+      return (
+        <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
+ {questions.map((q, index) => {
+  const isTrivia = q.type?.toLowerCase() === 'trivia';
+  const isMulti = Array.isArray(q.children) && q.children.length > 0;
 
+  if (!isTrivia) nonTriviaCount++;
 
+  const questionNumber = !isTrivia ? nonTriviaCount : null;
 
-              {/* Top-left Badge */}
-              {!isTrivia ? (
+  return (
+    <div
+      key={q.id || index}
+      className="questionWrapperContainer"
+      style={{ position: 'relative', marginBottom: '20px' }}
+    >
+      <div
+        className="noPrint"
+        style={{
+          position: 'absolute',
+          top: '0',
+          right: '0',
+          zIndex: 10,
+          display: 'flex',
+          gap: '8px',
+        }}
+      >
+        <button
+          className="edit-button"
+          onClick={() => handleEditQuestion(index)}
+          style={{
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            padding: '6px 10px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '12px',
+          }}
+        >
+          Edit
+        </button>
+
+        <button
+          className="delete-button"
+          onClick={() => handleDeleteQuestion(index)}
+          style={{
+            background: '#ff5c5c',
+            color: 'white',
+            border: 'none',
+            padding: '6px 10px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '12px',
+          }}
+        >
+          Delete
+        </button>
+      </div>
+
+      {!isTrivia && (
+        <div
+          style={{
+            marginBottom: '6px',
+            display: 'inline-block',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            color: '#191816',
+            border: '2px solid orange',
+            padding: '4px 10px',
+            borderRadius: '25px',
+            backgroundColor: '#fff',
+          }}
+        >
+          QUESTION NO: {questionNumber}
+        </div>
+      )}
+
+      <li
+        className="questionWrapper"
+        style={{
+          borderRadius: '12px',
+          padding: '12px',
+          backgroundColor: '#ffffff',
+          listStyleType: 'none',
+          marginTop: '4px',
+          boxShadow: 'none',
+        }}
+      >
+        <div className="questionContent">
+          <div
+            className="questionText"
+            style={{
+              fontSize: '16px',
+              color: '#1a1a1a',
+              marginBottom: '6px',
+              lineHeight: '1.5',
+              fontFamily: "'Geologica', sans-serif",
+              fontStyle: 'normal',
+              fontWeight: 'normal',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {isHTML(q.question)
+              ? parse(q.question)
+              : q.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
+          </div>
+
+          {q.questionImage && (
+            <div
+              className="questionImage"
+              style={{ marginBottom: '15px' }}
+            >
+              <img
+                src={q.questionImage}
+                alt="Question Attachment"
+                style={{
+                  maxWidth: '100%',
+                  borderRadius: '8px',
+                  border: '1px solid #eee',
+                }}
+              />
+            </div>
+          )}
+
+          {/* 🟡 Sub-question rendering (multi-question support) */}
+          {q.children && Array.isArray(q.children) && (
+            <div className="multiQuestionChildren" style={{ marginTop: '10px' }}>
+              {q.children.map((child, childIndex) => (
                 <div
+                  key={child.id || childIndex}
+                  className="childQuestion"
                   style={{
-                    marginBottom: '6px',
-                    display: 'inline-block',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                    color: '#191816',
-                    border: '2px solid orange',
-                    padding: '4px 10px',
-                    borderRadius: '25px',
-                    backgroundColor: '#fff',
+                    marginLeft: '20px',
+                    background: '#f9f9f9',
+                    padding: '10px',
+                    borderLeft: '3px solid #ccc',
+                    borderRadius: '4px',
+                    marginBottom: '8px',
                   }}
                 >
-                  QUESTION NO: {questionNumber}
-                </div>
-              ) : (
-                <div style={{ marginBottom: '4px', height: '1px' }}></div>
-              )}
+                  <strong>
+                    Sub Q{questionNumber}.{childIndex + 1}
+                  </strong>
 
-              {/* Question Container */}
-              <li
-                className="questionWrapper"
-                style={{
-                  borderRadius: '12px',
-                  padding: '12px',
-                  backgroundColor: '#ffffff',
-                  listStyleType: 'none',
-                  marginTop: '4px',
-                  boxShadow: 'none',
-                }}
-              >
-                <div className="questionContent">
-                  {/* Question text */}
-                  <div
-  className="questionText"
-  style={{
-    fontSize: '16px',
-    color: '#1a1a1a',
-    marginBottom: '6px',
-    lineHeight: '1.5',
-    fontFamily: "'Geologica', sans-serif",
-    fontStyle: 'normal',
-      fontWeight: 'normal', // 
-    letterSpacing: '0.02em',
-  }}
->
-  {isHTML(q.question)
-    ? parse(q.question)  // ✅ This will render bold/italic tags as intended
-    : q.question.replace(/^\s*\d+[\.\)]\s*/, '')}
-</div>
+                  <div style={{ marginTop: '6px' }}>
+                    {isHTML(child.question)
+                      ? parse(child.question)
+                      : child.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
+                  </div>
 
-
-                  {/* Question image */}
-                  {q.questionImage && (
-                    <div className="questionImage" style={{ marginBottom: '15px' }}>
-                      <img
-                        src={q.questionImage}
-                        alt="Question Attachment"
-                        style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #eee' }}
-                      />
-                    </div>
+                  {child.options && Array.isArray(child.options) && (
+                    <ol style={{ marginTop: '6px', paddingLeft: '20px' }}>
+                      {child.options.map((opt, i) => (
+                        <li key={i}>
+                          <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text || opt}
+                        </li>
+                      ))}
+                    </ol>
                   )}
 
- {/* fill in blank remove space for mcq */}
-            {q.type?.toLowerCase() !== 'fill_in_the_blanks' &&
-  q.options?.some(opt => opt.text?.trim() !== '') && (
- <ol
-  className="mcqOptions"
-  style={{ marginLeft: '20px', color: '#555', fontSize: '15px', marginBottom: '8px', listStyleType: 'none' }}
->
-  {q.options.map((option, idx) => {
-    const label = String.fromCharCode(65 + idx); // A=65, B=66, etc.
-    return (
-      <li key={idx} style={{ marginBottom: '4px' }}>
-        <strong>{label}.</strong> {option.text}
-      </li>
-    );
-  })}
-</ol>
-
-  )}
-
-                  {/* Answer */}
-                  {!isTrivia ? (
-                    <div
-                      className="answerText"
-                      style={{
-                        backgroundColor: '#d9eaff',
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        marginTop: '12px',
-                        fontSize: '15px',
-                        color: '#333',
-                        fontWeight: '600',
-                        lineHeight: '1.4',
-                      }}
-                    >
-                      {q.answer || ''}
+                  {child.solution && (
+                    <div className="solutionBlock" style={{ marginTop: '6px', fontStyle: 'italic', color: '#333' }}>
+                      <strong>Solution:</strong> {parse(child.solution)}
                     </div>
-                  ) : (
-                    <div style={{ color: 'gray', fontSize: '13px' }}></div>
                   )}
                 </div>
-
-                {/* Separator line */}
-                {index !== questions.length - 1 && (
-                  <hr
-                    className="questionSeparator"
-                    style={{ border: 'none', borderTop: '1px solid #ccc', margin: '15px 0 0 0' }}
-                  />
-                )}
-              </li>
+              ))}
             </div>
-          );
-        })}
-      </ul>
-    );
-  })()}
+          )}
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    {q.type?.toLowerCase() !== 'fill_in_the_blanks' &&
+                      q.options?.some(opt => opt.text?.trim() !== '') && (
+                        <ol
+                          className="mcqOptions"
+                          style={{ marginLeft: '20px', color: '#555', fontSize: '15px', marginBottom: '8px', listStyleType: 'none' }}
+                        >
+                          {q.options.map((option, idx) => {
+                            const label = String.fromCharCode(65 + idx);
+                            return (
+                              <li key={idx} style={{ marginBottom: '4px' }}>
+                                <strong>{label}.</strong> {option.text}
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      )}
+
+                    {!isTrivia ? (
+                      <div
+                        className="answerText"
+                        style={{
+                          backgroundColor: '#d9eaff',
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          marginTop: '12px',
+                          fontSize: '15px',
+                          color: '#333',
+                          fontWeight: '600',
+                          lineHeight: '1.4',
+                        }}
+                      >
+                        {q.answer || ''}
+                      </div>
+                    ) : (
+                      <div style={{ color: 'gray', fontSize: '13px' }}></div>
+                    )}
+                  </div>
+
+                  {index !== questions.length - 1 && (
+                    <hr
+                      className="questionSeparator"
+                      style={{ border: 'none', borderTop: '1px solid #ccc', margin: '15px 0 0 0' }}
+                    />
+                  )}
+                </li>
+              </div>
+            );
+          })}
+        </ul>
+      );
+    })()}
+  </div>
 </div>
 
-
-      </div>
     )}
   </div>
     </>

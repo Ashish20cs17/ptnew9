@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+ import React, { useEffect, useState, useRef } from "react";
 import { ref, get, remove, update, serverTimestamp, child } from "firebase/database";
 import { database } from "../firebase/FirebaseSetup";
 import supabase from "../supabase/SupabaseConfig";
@@ -10,6 +10,13 @@ import "./AllQuestions.css";
 import "../upload/Upload.css";
 
 
+const stripHTML = (html) => {
+  if (!html) return "";
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || div.innerText || "";
+};
+
 const AllQuestions = () => {
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
@@ -20,8 +27,6 @@ const AllQuestions = () => {
   const [topicList, setTopicList] = useState("all");
   const [difficultyLevel, setDifficultyLevel] = useState("all");
   const [questionType, setQuestionType] = useState("all");
-
-
 
   useEffect(() => {
   const fetchAllQuestions = async () => {
@@ -40,47 +45,47 @@ const AllQuestions = () => {
       });
 
       // ✅ Process Multi Questions (flatten)
-      multiQuestions.forEach((child) => {
-        const multiData = child.val();
-        const multiId = child.key;
+     multiQuestions.forEach((child) => {
+  const multiData = child.val();
+  const multiId = child.key;
 
-        if (Array.isArray(multiData.subQuestions)) {
-          multiData.subQuestions.forEach((subQ, index) => {
-            combined.push({
-              id: `${multiId}-${index}`,
-              multiId,
-              mainQuestion: multiData.mainQuestion || "",
-              fromMulti: true,
-              subIndex: index,
-              question: subQ.question,
-              options: subQ.options,
-              correctAnswer: subQ.correctAnswer,
-              type: subQ.type,
-              grade: multiData.grade,
-              topic: multiData.topic,
-              topicList: multiData.topicList,
-              difficultyLevel: multiData.difficultyLevel,
-              timestamp: multiData.createdAt,
-            });
-          });
-        }
+  if (Array.isArray(multiData.subQuestions)) {
+    multiData.subQuestions.forEach((subQ, index) => {
+      combined.push({
+        id: `${multiId}-${index}`,
+        multiId,
+        mainQuestion: stripHTML(multiData.mainQuestion || ""),
+        fromMulti: true,
+        subIndex: index,
+        question: stripHTML(subQ.question || ""),
+        options: subQ.options,
+        correctAnswer: subQ.correctAnswer,
+        type: subQ.type,
+        grade: multiData.grade,
+        topic: multiData.topic,
+        topicList: multiData.topicList,
+        difficultyLevel: multiData.difficultyLevel,
+        timestamp: multiData.createdAt,
       });
-
-// ✅ Sort by timestamp - newest questions first
-combined.sort((a, b) => b.timestamp - a.timestamp);
-
-// ✅ Update your state
-combined.forEach((q) => {
-  if (!q.timestamp || isNaN(q.timestamp)) {
-    q.timestamp = 0;
+    });
   }
 });
 
+      
+
+  
+  // ✅ Sort by timestamp - newest questions first
+combined.sort((a, b) => b.timestamp - a.timestamp);
+
+// 🔁 Sort by timestamp (latest first)
+combined.forEach((q) => {
+  q.timestamp = Number(q.timestamp) || 0;
+});
 combined.sort((a, b) => b.timestamp - a.timestamp);
 
 setQuestions(combined);
 setFilteredQuestions(combined);
-console.log("🧪 Combined allQuestions (sorted):", combined);
+
 
 
       console.log("🧪 Combined allQuestions:", combined);
@@ -125,7 +130,6 @@ useEffect(() => {
     (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty)
   );
 });
-
 
 
   setFilteredQuestions(filtered);

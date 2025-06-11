@@ -20,34 +20,63 @@ const AttachedQuestion = () => {
   const [difficultyLevel, setDifficultyLevel] = useState("all");
   const [questionType, setQuestionType] = useState("all");
 
-  useEffect(() => {
-    const fetchAllQuestions = async () => {
-      try {
-        const questionsRef = ref(database, "questions");
-        const snapshot = await get(questionsRef);
+ useEffect(() => {
+  const fetchAllQuestions = async () => {
+    try {
+      const dbRef = ref(database);
+      const snapshot = await get(dbRef);
 
-        if (!snapshot.exists()) {
-          setError("No questions found!");
-          return;
+      const singleQuestions = snapshot.child("questions");
+      const multiQuestions = snapshot.child("multiQuestions");
+
+      const combined = [];
+
+      // ✅ Process Single Questions
+      singleQuestions.forEach((child) => {
+        combined.push({ id: child.key, ...child.val() });
+      });
+
+      // ✅ Process Multi Questions (flatten subQuestions)
+      multiQuestions.forEach((child) => {
+        const multiData = child.val();
+        const multiId = child.key;
+
+        if (Array.isArray(multiData.subQuestions)) {
+          multiData.subQuestions.forEach((subQ, index) => {
+            combined.push({
+              id: `${multiId}-${index}`,
+              multiId,
+              mainQuestion: multiData.mainQuestion || "",
+              fromMulti: true,
+              subIndex: index,
+              question: subQ.question,
+              options: subQ.options,
+              correctAnswer: subQ.correctAnswer,
+              type: subQ.type,
+              grade: multiData.grade,
+              topic: multiData.topic,
+              topicList: multiData.topicList,
+              difficultyLevel: multiData.difficultyLevel,
+              timestamp: multiData.createdAt,
+            });
+          });
         }
+      });
 
-        const data = snapshot.val();
-        let allFetchedQuestions = Object.keys(data).map((questionId) => ({
-          id: questionId,
-          ...data[questionId],
-        }));
+      // ✅ Sort by latest
+      combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        allFetchedQuestions.reverse();
-        setQuestions(allFetchedQuestions);
-        setFilteredQuestions(allFetchedQuestions);
-      } catch (err) {
-        console.error("Error fetching questions:", err);
-        setError("Failed to fetch questions");
-      }
-    };
+      setQuestions(combined);
+      setFilteredQuestions(combined);
+    } catch (err) {
+      console.error("Error fetching questions:", err);
+      setError("Failed to fetch questions");
+    }
+  };
 
-    fetchAllQuestions();
-  }, []);
+  fetchAllQuestions();
+}, []);
+
 
   // Apply filters when any filter value changes
   useEffect(() => {
@@ -180,64 +209,67 @@ const AttachedQuestion = () => {
 
       <div className="questionList attachedQuestionList">
         <ol>
-          {filteredQuestions.map((q) => (
-            <li key={q.id} className="questionItem attachedQuestionItem">
-              <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
+  {filteredQuestions.map((q) => (
+  <li key={q.id} className="questionItem attachedQuestionItem">
 
-              <div className="questionMeta">
-                {q.grade && <span className="tag">Grade: {q.grade}</span>}
-                {q.topic && <span className="tag">Topic: {q.topic}</span>}
-                {q.topicList && <span className="tag">Subtopic: {q.topicList}</span>}
-                {q.difficultyLevel && <span className="tag">Difficulty: {q.difficultyLevel}</span>}
-              </div>
+    {/* ✅ Show Main Question (only for multiQuestions) */}
+    {q.mainQuestion && (
+      <div style={{ backgroundColor: "#f2f2f2", padding: "8px", marginBottom: "8px", borderRadius: "4px" }}>
+        <strong>Main Question:</strong><br />
+        {isHTML(q.mainQuestion) ? parse(q.mainQuestion) : q.mainQuestion}
+      </div>
+    )}
 
-              {q.questionImage && (
-                <div>
-                  <img
-                    src={q.questionImage}
-                    alt="Question Attachment"
-                    style={{ maxWidth: "300px", marginTop: "10px" }}
-                  />
-                </div>
-              )}
+    {/* ✅ Always show Sub Question */}
+    <div>
+      <strong>{isHTML(q.question) ? parse(q.question) : q.question}</strong> ({q.type})
+    </div>
 
-              {q.type === "MCQ" && Array.isArray(q.options) && (
-                <ul>
-                  {q.options.map((option, index) => (
-                    <li key={index}>
-                      {option.text}
-                      {option.image && (
-                        <img
-                          src={option.image}
-                          alt={`Option ${index + 1}`}
-                          style={{ maxWidth: "100px", marginLeft: "10px" }}
-                        />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+    {/* ✅ Meta tags */}
+    <div className="questionMeta">
+      {q.grade && <span className="tag">Grade: {q.grade}</span>}
+      {q.topic && <span className="tag">Topic: {q.topic}</span>}
+      {q.topicList && <span className="tag">Subtopic: {q.topicList}</span>}
+      {q.difficultyLevel && <span className="tag">Difficulty: {q.difficultyLevel}</span>}
+    </div>
 
-              {q.correctAnswer && (
-                <p>
-                  <strong>Correct Answer:</strong> {q.correctAnswer.text}
-                  {q.correctAnswer.image && (
-                    <img
-                      src={q.correctAnswer.image}
-                      alt="Correct Answer"
-                      style={{ maxWidth: "100px", marginLeft: "10px" }}
-                    />
-                  )}
-                </p>
-              )}
+    {/* ✅ Optional image */}
+    {q.questionImage && (
+      <div>
+        <img
+          src={q.questionImage}
+          alt="Question Attachment"
+          style={{ maxWidth: "300px", marginTop: "10px" }}
+        />
+      </div>
+    )}
 
-              <div>
-                <button className="addQuestionButton" onClick={() => handleAddToSet(q.id)}>
-                  {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
-                </button>
-              </div>
-            </li>
-          ))}
+    {/* ✅ Correct Answer */}
+    {q.correctAnswer && (
+      <p>
+        <strong>Correct Answer:</strong>{" "}
+        {typeof q.correctAnswer === "string"
+          ? q.correctAnswer
+          : q.correctAnswer.text}
+        {q.correctAnswer.image && (
+          <img
+            src={q.correctAnswer.image}
+            alt="Correct Answer"
+            style={{ maxWidth: "100px", marginLeft: "10px" }}
+          />
+        )}
+      </p>
+    )}
+
+    {/* ✅ Add to set button */}
+    <div>
+      <button className="addQuestionButton" onClick={() => handleAddToSet(q.id)}>
+        {selectedSetName ? `Add question to ${selectedSetName}` : "Add to Set"}
+      </button>
+    </div>
+  </li>
+))}
+
         </ol>
       </div>
       <ToastContainer />
