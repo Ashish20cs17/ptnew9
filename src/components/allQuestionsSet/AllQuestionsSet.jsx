@@ -49,6 +49,10 @@ const [editedQuestionText, setEditedQuestionText] = useState("");
 const editor = useRef(null);
 
 
+const setsRef = ref(database, "attachedQuestionSets");
+
+
+
 const [editingQuestionIndex, setEditingQuestionIndex] = React.useState(null);
 const [editingQuestion, setEditingQuestion] = React.useState(null);
 
@@ -63,123 +67,66 @@ const [editingQuestion, setEditingQuestion] = React.useState(null);
     if (username.includes("@")) return username;
     return `${username}@gmail.com`;
   };
+const handleSetClick = async (setName, setQuestionsData) => {
+  setSelectedSet(setName);
+  setQuestions([]);
+  setLoading(true);
+  setError(null);
 
-  useEffect(() => {
-    fetchQuestionSets();
-  }, []);
+  try {
+    const questionsWithOrder = Object.entries(setQuestionsData).map(
+      ([key, value]) => {
+        if (typeof value === "string") {
+          return { id: value, order: 0 };
+        } else {
+          return {
+            id: value.id || key,
+            order: value.order || 0,
+          };
+        }
+      }
+    );
 
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredSets(questionSets);
-    } else {
-      const lowercasedTerm = searchTerm.toLowerCase();
-      const filtered = questionSets.filter(([setName]) =>
-        setName.toLowerCase().includes(lowercasedTerm)
-      );
-      setFilteredSets(filtered);
-    }
-  }, [searchTerm, questionSets]);
+    questionsWithOrder.sort((a, b) => a.order - b.order);
 
-  const fetchQuestionSets = async () => {
-    try {
-      setLoading(true);
-      const setsRef = ref(database, "attachedQuestionSets");
-      const snapshot = await get(setsRef);
+    const fetchedQuestions = [];
+    for (const { id, order } of questionsWithOrder) {
+      let questionRef = ref(database, `questions/${id}`);
+      let snapshot = await get(questionRef);
 
       if (!snapshot.exists()) {
-        setQuestionSets([]);
-        setFilteredSets([]);
-        setError("No question sets found!");
-        return;
+        // Try fetching from multiQuestions if not found
+        questionRef = ref(database, `multiQuestions/${id}`);
+        snapshot = await get(questionRef);
       }
 
-      const sets = Object.entries(snapshot.val());
-      const sortedSets = sets.sort(([setNameA], [setNameB]) =>
-        setNameB.localeCompare(setNameA)
-      );
-      setQuestionSets(sortedSets);
-      setFilteredSets(sortedSets);
-      setError(null);
-    } catch (err) {
-      console.error("❌ Error fetching question sets:", err);
-      setError("Failed to fetch question sets.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (snapshot.exists()) {
+        const questionData = snapshot.val();
 
-  const isHTML = (str) => {
-    return /<[^>]+>/.test(str);
-  };
-
-  const handleSetClick = async (setName, setQuestionsData) => {
-    setSelectedSet(setName);
-    setQuestions([]);
-    setLoading(true);
-    setError(null);
-
-    try {
-      const questionsWithOrder = Object.entries(setQuestionsData).map(
-        ([key, value]) => {
-          if (typeof value === "string") {
-            return { id: value, order: 0 };
-          } else {
-            return {
-              id: value.id || key,
-              order: value.order || 0,
-            };
-          }
+        if (Array.isArray(questionData)) {
+          // Multi-type: push each sub-question individually
+          questionData.forEach((q, idx) => {
+            fetchedQuestions.push({
+              id: `${id}_${idx}`,
+              order,
+              ...q,
+            });
+          });
+        } else {
+          // Single-type question
+          fetchedQuestions.push({ id, order, ...questionData });
         }
-      );
-
-      questionsWithOrder.sort((a, b) => a.order - b.order);
-
-      const fetchedQuestions = [];
-      const questionPromises = questionsWithOrder.map(async ({ id, order }) => {
-        const questionRef = ref(database, `questions/${id}`);
-        const questionSnapshot = await get(questionRef);
-        return questionSnapshot.exists()
-          ? { id, order, ...questionSnapshot.val() }
-          : null;
-      });
-
-      const results = await Promise.all(questionPromises);
-      setQuestions(results.filter(Boolean));
-    } catch (err) {
-      console.error("❌ Error fetching questions:", err);
-      setError("Failed to load questions.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteQuestionSet = async (setName, e) => {
-    e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete the set "${setName}"?`)) {
-      return;
-    }
-
-    try {
-      setDeleteLoading(true);
-      const setRef = ref(database, `attachedQuestionSets/${setName}`);
-      await remove(setRef);
-      toast.success(`✅ Question set "${setName}" successfully deleted`);
-
-      const updatedSets = questionSets.filter(([name]) => name !== setName);
-      setQuestionSets(updatedSets);
-      setFilteredSets(updatedSets);
-
-      if (selectedSet === setName) {
-        setSelectedSet(null);
-        setQuestions([]);
       }
-    } catch (err) {
-      console.error("❌ Error deleting question set:", err);
-      toast.error("❌ Failed to delete question set");
-    } finally {
-      setDeleteLoading(false);
     }
-  };
+
+    setQuestions(fetchedQuestions);
+  } catch (err) {
+    console.error("❌ Error fetching questions:", err);
+    setError("Failed to load questions.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const deleteQuestionFromSet = async (questionId) => {
     if (
