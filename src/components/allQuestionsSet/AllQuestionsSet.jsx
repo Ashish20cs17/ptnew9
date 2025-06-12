@@ -118,37 +118,46 @@ const handleSetClick = async (setName, setQuestionsData) => {
     const questionEntries = Object.entries(setQuestionsData);
     let questionsWithOrder = [];
 
-    for (const [key, value] of questionEntries) {
-if (value?.children) {
-  const childIds = Array.isArray(value.children)
-    ? value.children
-    : Object.keys(value.children);
+for (const [key, value] of questionEntries) {
+  if (value?.children) {
+    const childIds = Array.isArray(value.children)
+      ? value.children
+      : Object.keys(value.children);
 
-  childIds.forEach((childId, idx) => {
-    questionsWithOrder.push({
-      id: childId, // ✅ Just use the original ID
-      order: value.order + idx / 10,
-    });
-  });
-}
-
-
-
-        
-      else {
-        // Single question
-        questionsWithOrder.push({
-          id: value.id || key,
-          order: value.order || 0,
-        });
+    for (let idx = 0; idx < childIds.length; idx++) {
+      const childId = childIds[idx];
+      if (!childId || childId.length < 15) {
+        console.warn(`⚠️ Skipping invalid child ID: ${childId}`);
+        continue;
       }
+
+      questionsWithOrder.push({
+        id: childId,
+        order: value.order + idx / 10,
+      });
+    }
+  } else {
+    const questionId = value.id || key;
+
+    if (!questionId || questionId.length < 15) {
+      console.warn(`⚠️ Skipping invalid question ID: ${questionId}`);
+      continue;
+    }
+
+    questionsWithOrder.push({
+      id: questionId,
+      order: value.order || 0,
+    });
+  }
+
+
     }
 
     // Sort by order
     questionsWithOrder.sort((a, b) => a.order - b.order);
 
-    // Fetch all question data
-    console.log("👉 IDs to fetch:", questionsWithOrder.map(q => q.id));
+// Fetch all question data
+console.log("👉 IDs to fetch:", questionsWithOrder.map(q => q.id));
 const fetchedQuestions = await Promise.all(
   questionsWithOrder.map(async ({ id, order }) => {
     let questionRef = ref(database, `questions/${id}`);
@@ -160,7 +169,20 @@ const fetchedQuestions = await Promise.all(
     }
 
     if (snapshot.exists()) {
-      return { id, order, ...snapshot.val() };
+      const data = snapshot.val();
+
+      // ✅ Normalize multi-question format
+      if (data.mainQuestion && data.subQuestions) {
+        return {
+          id,
+          order,
+          question: data.mainQuestion,
+          children: data.subQuestions,
+          type: 'multi',
+        };
+      }
+
+      return { id, order, ...data };
     } else {
       console.warn(`❌ Question not found in DB: ${id}`);
       return null;
@@ -719,6 +741,182 @@ return (
       return (
         <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
  {questions.map((q, index) => {
+
+
+
+
+
+
+
+
+{q.children && Array.isArray(q.children) ? (
+  // 👉 MULTI-TYPE QUESTION RENDERING
+  <li
+    key={q.id || index}
+    className="questionWrapper"
+    style={{
+      borderRadius: '12px',
+      padding: '12px',
+      backgroundColor: '#ffffff',
+      listStyleType: 'none',
+      marginTop: '4px',
+      boxShadow: 'none',
+    }}
+  >
+    <div className="questionContent">
+      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+        📘 Multi-question set
+      </div>
+
+      {q.children.map((child, childIndex) => (
+        <div
+          key={child.id || childIndex}
+          className="childQuestion"
+          style={{
+            marginBottom: '10px',
+            padding: '10px',
+            background: '#f5f5f5',
+            borderLeft: '4px solid #ccc',
+            borderRadius: '5px',
+          }}
+        >
+          <div style={{ fontWeight: 'bold' }}>
+            Sub Q{index + 1}.{childIndex + 1}
+          </div>
+
+          <div style={{ marginTop: '6px' }}>
+            {isHTML(child.question)
+              ? parse(child.question)
+              : child.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
+          </div>
+
+          {child.options && (
+            <ol style={{ marginTop: '5px', paddingLeft: '20px' }}>
+              {child.options.map((opt, i) => (
+                <li key={i}>
+                  <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text || opt}
+                </li>
+              ))}
+            </ol>
+          )}
+
+          {child.solution && (
+            <div style={{ marginTop: '6px', color: 'green' }}>
+              ✅ <strong>Solution:</strong> {parse(child.solution)}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </li>
+) : (
+  // 👉 SINGLE-TYPE QUESTION RENDERING
+  <li
+    key={q.id || index}
+    className="questionWrapper"
+    style={{
+      borderRadius: '12px',
+      padding: '12px',
+      backgroundColor: '#ffffff',
+      listStyleType: 'none',
+      marginTop: '4px',
+      boxShadow: 'none',
+    }}
+  >
+    <div className="questionContent">
+      <div
+        className="questionText"
+        style={{
+          fontSize: '16px',
+          color: '#1a1a1a',
+          marginBottom: '6px',
+        }}
+      >
+        {isHTML(q.question)
+          ? parse(q.question)
+          : q.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
+      </div>
+
+      {q.questionImage && (
+        <div className="questionImage" style={{ marginBottom: '15px' }}>
+          <img
+            src={q.questionImage}
+            alt="Question Attachment"
+            style={{
+              maxWidth: '100%',
+              borderRadius: '8px',
+              border: '1px solid #eee',
+            }}
+          />
+        </div>
+      )}
+
+      {q.options?.some(opt => opt.text?.trim() !== '') && (
+        <ol
+          className="mcqOptions"
+          style={{
+            marginLeft: '20px',
+            color: '#555',
+            fontSize: '15px',
+            marginBottom: '8px',
+            listStyleType: 'none',
+          }}
+        >
+          {q.options.map((option, idx) => (
+            <li key={idx} style={{ marginBottom: '4px' }}>
+              <strong>{String.fromCharCode(65 + idx)}.</strong> {option.text}
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div
+        className="answerText"
+        style={{
+          backgroundColor: '#d9eaff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginTop: '12px',
+          fontSize: '15px',
+          color: '#333',
+          fontWeight: '600',
+        }}
+      >
+        {q.answer || ''}
+      </div>
+    </div>
+  </li>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const isTrivia = q.type?.toLowerCase() === 'trivia';
   const isMulti = Array.isArray(q.children) && q.children.length > 0;
 
@@ -886,30 +1084,7 @@ return (
               ))}
             </div>
           )}
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      
 
                     {q.type?.toLowerCase() !== 'fill_in_the_blanks' &&
                       q.options?.some(opt => opt.text?.trim() !== '') && (

@@ -52,8 +52,9 @@ const AllQuestions = () => {
   if (Array.isArray(multiData.subQuestions)) {
     multiData.subQuestions.forEach((subQ, index) => {
       combined.push({
-        id: `${multiId}-${index}`,
-        multiId,
+      id: `${multiId}-${index}`,
+multiId, // Use this to fetch from DB
+
         mainQuestion: stripHTML(multiData.mainQuestion || ""),
         fromMulti: true,
         subIndex: index,

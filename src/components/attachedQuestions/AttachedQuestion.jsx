@@ -45,7 +45,8 @@ const AttachedQuestion = () => {
           multiData.subQuestions.forEach((subQ, index) => {
             combined.push({
               id: `${multiId}-${index}`,
-              multiId,
+multiId, // Use this to fetch from DB
+
               mainQuestion: multiData.mainQuestion || "",
               fromMulti: true,
               subIndex: index,
@@ -125,12 +126,16 @@ const AttachedQuestion = () => {
         nextOrder = orders.length > 0 ? Math.max(...orders) + 1 : 0;
       }
 
-      const questionRef = ref(database, `attachedQuestionSets/${selectedSetName}/${questionId}`);
-      await set(questionRef, {
-        id: questionId,
-        order: nextOrder,
-        addedAt: Date.now(),
-      });
+     // Remove trailing "-0", "-1" from ID if it's a sub-question
+const cleanQuestionId = questionId.split("-").slice(0, 2).join("-");
+
+const questionRef = ref(database, `attachedQuestionSets/${selectedSetName}/${cleanQuestionId}`);
+await set(questionRef, {
+  id: cleanQuestionId,
+  order: nextOrder,
+  addedAt: Date.now(),
+});
+
 
       toast.success(`✅ Question added to set: ${selectedSetName} at position ${nextOrder}`);
     } catch (err) {
