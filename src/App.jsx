@@ -14,6 +14,8 @@ import Syllabus from './components/syllabus/Syllabus';
 import OfflineUsers from './components/offlineUsers/OfflineUsers';
 import UploadMultiQuestion from './components/multiQ/UploadMultiQuestion'; // ✅ Use correct relative path
 import AdminStats from './components/AdminStats';
+import AllQuestionsLogin from './components/questions/AllQuestionsLogin';
+
 
 const router = createBrowserRouter([
   {
@@ -31,15 +33,21 @@ const router = createBrowserRouter([
       </>
     )
   },
-  {
-    path: "/all-questions",
-    element: (
-      <>
-        <Navbar />
-        <AllQuestions />
-      </>
-    )
-  },
+{
+  path: "/view-login",
+  element: <AllQuestionsLogin />
+},
+{
+  path: "/all-questions",
+  element: (
+    <>
+      <Navbar />
+      <AllQuestions />
+    </>
+  )
+},
+
+
   {
     path: "/attached-questions",
     element: (

@@ -28,6 +28,40 @@ const AllQuestions = () => {
   const [difficultyLevel, setDifficultyLevel] = useState("all");
   const [questionType, setQuestionType] = useState("all");
 
+const [viewer, setViewer] = useState(null);
+
+
+const applyFilters = () => {
+  let filtered = [...questions];
+
+ 
+  if (questionType !== "all") {
+    filtered = filtered.filter((q) => q.type === questionType);
+  }
+
+  if (difficultyLevel !== "all") {
+    filtered = filtered.filter((q) => q.difficultyLevel === difficultyLevel);
+  }
+
+  setFilteredQuestions(filtered);
+};
+
+useEffect(() => {
+  applyFilters();
+}, [questions, grade, topic, questionType, difficultyLevel, viewer]);
+
+useEffect(() => {
+  const storedViewer = JSON.parse(localStorage.getItem('viewer'));
+  if (!storedViewer) {
+    navigate('/view-login');
+  } else {
+    setViewer(storedViewer);
+  }
+}, []);
+
+
+
+
   useEffect(() => {
   const fetchAllQuestions = async () => {
     try {
@@ -73,8 +107,6 @@ multiId, // Use this to fetch from DB
 });
 
       
-
-  
   // ✅ Sort by timestamp - newest questions first
 combined.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -86,8 +118,6 @@ combined.sort((a, b) => b.timestamp - a.timestamp);
 
 setQuestions(combined);
 setFilteredQuestions(combined);
-
-
 
       console.log("🧪 Combined allQuestions:", combined);
     } catch (err) {
@@ -101,42 +131,33 @@ setFilteredQuestions(combined);
 
 
 useEffect(() => {
-  if (!questions || questions.length === 0) {
+  if (!questions || questions.length === 0 || !viewer) {
     setFilteredQuestions([]);
     return;
   }
 
-  // Normalize filter values
   const safeGrade = grade && grade !== "" ? grade : "all";
   const safeTopic = topic && topic !== "" ? topic : "all";
   const safeTopicList = topicList && topicList !== "" ? topicList : "all";
   const safeDifficulty = difficultyLevel && difficultyLevel !== "" ? difficultyLevel : "all";
   const safeQuestionType = questionType && questionType !== "" ? questionType : "all";
 
-  // 🧪 Debug filters and data
-  console.log("🧪 Filtering questions...");
-  console.log("Grade filter:", safeGrade);
-  console.log("Topic filter:", safeTopic);
-  console.log("TopicList filter:", safeTopicList);
-  console.log("Difficulty filter:", safeDifficulty);
-  console.log("Question Type filter:", safeQuestionType);
-  console.log("Sample Question[0]:", questions[0]);
-  console.log("Sample fromMulti Question:", questions.find((q) => q.fromMulti));
-
   const filtered = questions.filter((q) => {
-  return (
-    (safeGrade === "all" || q.grade === safeGrade) &&
-    (safeTopic === "all" || q.topic === safeTopic) &&
-    (safeTopicList === "all" || q.topicList === safeTopicList) &&
-    (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty)
-  );
-});
+    const matchesViewerGrade =
+      viewer?.grade === "admin" ? true : q.grade === viewer?.grade;
 
+    return (
+      matchesViewerGrade &&
+      (safeGrade === "all" || q.grade === safeGrade) &&
+      (safeTopic === "all" || q.topic === safeTopic) &&
+      (safeTopicList === "all" || q.topicList === safeTopicList) &&
+      (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty) &&
+      (safeQuestionType === "all" || q.type === safeQuestionType)
+    );
+  });
 
   setFilteredQuestions(filtered);
-}, [questions, grade, topic, topicList, difficultyLevel, questionType]);
-
-
+}, [questions, grade, topic, topicList, difficultyLevel, questionType, viewer]);
 
 const handleEdit = (question) => {
   if (question.fromMulti) {
@@ -148,9 +169,6 @@ const handleEdit = (question) => {
     setEditingQuestion(question);
   }
 };
-
-
-
 
 const handleDelete = async (question) => {
   const { id, questionImage, options, correctAnswer } = question;
@@ -445,98 +463,110 @@ const assignSetToUser = async (userId, setId) => {
     {filteredQuestions.length === 0 && !error && <p>No questions found!</p>}
     <p>Showing {filteredQuestions.length} of {questions.length} questions</p>
 
-    <div className="questionList">
-      <ol>
-        {filteredQuestions.map((q) => (
-          <li key={q.id} className="questionItem">
+ <div className="questionList">
+  <ol>
+    {filteredQuestions.map((q) => (
+      <li key={q.id} className="questionItem">
 
-            {/* Multi Info if present */}
-            {q.fromMulti && (
-              <p style={{ color: "orange", fontWeight: "bold" }}>
-                🧩 Multi-question (Sub #{q.subIndex + 1}) — Multi ID: <strong>{q.multiId}</strong>
-              </p>
-            )}
+        {/* Multi Info if present */}
+        {q.fromMulti && (
+          <p style={{ color: "orange", fontWeight: "bold" }}>
+            🧩 Multi-question (Sub #{q.subIndex + 1}) — Multi ID: <strong>{q.multiId}</strong>
+          </p>
+        )}
 
-            {/* Main question if available */}
-            {q.mainQuestion && (
-              <p style={{ fontWeight: "bold", color: "purple" }}>
-                Main: {q.mainQuestion}
-              </p>
-            )}
+        {/* Main question if available */}
+        {q.mainQuestion && (
+          <p style={{ fontWeight: "bold", color: "purple" }}>
+            Main: {q.mainQuestion}
+          </p>
+        )}
 
-            {/* Render question text or fallback */}
-            <p style={{ marginBottom: "6px" }}>
-              <strong>
-                {(() => {
-                  if (q.question && isHTML(q.question)) return parse(q.question);
-                  if (q.question) return q.question;
-                  if (q.mainQuestion) return `Main: ${q.mainQuestion}`;
-                  return "❓ No Question Text";
-                })()}
-              </strong> ({q.type})
-            </p>
+        {/* Render question text or fallback */}
+        <p style={{ marginBottom: "6px" }}>
+          <strong>
 
-            {/* Timestamp */}
-            <small>
-              - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}
-            </small>
 
-            {/* Image if available */}
-            {q.questionImage && (
-              <div>
-                <img
-                  src={q.questionImage}
-                  alt="Question"
-                  style={{ maxWidth: "300px" }}
-                />
-              </div>
-            )}
 
-            {/* Options for MCQ */}
-            {q.type === "MCQ" && Array.isArray(q.options) && (
-              <ul>
-                {q.options.map((opt, idx) => (
-                  <li key={idx}>
-                    {typeof opt === "string" ? opt : opt?.text}
-                    {opt?.image && (
-                      <img
-                        src={opt.image}
-                        alt={`Option ${idx + 1}`}
-                        style={{ maxWidth: "100px", marginLeft: "8px" }}
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+          {q.uploader && (
+  <p style={{ fontStyle: "italic", color: "#007bff", textAlign: "right" }}>
+    Uploaded by: <strong>{q.uploader}</strong>
+  </p>
+)}
 
-            {/* Correct Answer */}
-            {q.correctAnswer && (
-              <p>
-                <strong>Correct Answer:</strong>{" "}
-                {typeof q.correctAnswer === "string"
-                  ? q.correctAnswer
-                  : q.correctAnswer?.text}
-                {q.correctAnswer?.image && (
+            {(() => {
+              if (q.question && isHTML(q.question)) return parse(q.question);
+              if (q.question) return q.question;
+              if (q.mainQuestion) return `Main: ${q.mainQuestion}`;
+              return "❓ No Question Text";
+            })()}
+          </strong> ({q.type})
+        </p>
+
+        {/* Timestamp */}
+        <small>
+          - {q.timestamp ? new Date(q.timestamp).toLocaleString() : "No Time"}
+        </small>
+
+        {/* Image if available */}
+        {q.questionImage && (
+          <div>
+            <img
+              src={q.questionImage}
+              alt="Question"
+              style={{ maxWidth: "300px" }}
+            />
+          </div>
+        )}
+
+        {/* Options for MCQ */}
+        {q.type === "MCQ" && Array.isArray(q.options) && (
+          <ul>
+            {q.options.map((opt, idx) => (
+              <li key={idx}>
+                {typeof opt === "string" ? opt : opt?.text}
+                {opt?.image && (
                   <img
-                    src={q.correctAnswer.image}
-                    alt="Answer"
+                    src={opt.image}
+                    alt={`Option ${idx + 1}`}
                     style={{ maxWidth: "100px", marginLeft: "8px" }}
                   />
                 )}
-              </p>
-            )}
+              </li>
+            ))}
+          </ul>
+        )}
 
-            <button className="editButton" onClick={() => handleEdit(q)}>
-              Edit
-            </button>
-            <button className="deleteButton" onClick={() => handleDelete(q)}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ol>
-    </div>
+        {/* Correct Answer */}
+        {q.correctAnswer && (
+          <p>
+            <strong>Correct Answer:</strong>{" "}
+            {typeof q.correctAnswer === "string"
+              ? q.correctAnswer
+              : q.correctAnswer?.text}
+            {q.correctAnswer?.image && (
+              <img
+                src={q.correctAnswer.image}
+                alt="Answer"
+                style={{ maxWidth: "100px", marginLeft: "8px" }}
+              />
+            )}
+          </p>
+        )}
+
+  
+        {/* Action Buttons */}
+        <button className="editButton" onClick={() => handleEdit(q)}>
+          Edit
+        </button>
+        <button className="deleteButton" onClick={() => handleDelete(q)}>
+          Delete
+        </button>
+      </li>
+    ))}
+  </ol>
+</div>
+
   </div>
 )
 };

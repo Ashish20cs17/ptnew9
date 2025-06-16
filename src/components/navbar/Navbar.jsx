@@ -36,7 +36,8 @@ const Navbar = () => {
       <nav className={showmenu ? "menu-mobile" : "menu-web"}>
         <ul>
           <li onClick={() => handleNavigation("/upload")}>Add Questions</li>
-          <li onClick={() => handleNavigation("/all-questions")}>All Questions</li>
+       <li onClick={() => handleNavigation("/view-login")}>All Questions</li>
+
           <li onClick={() => handleNavigation("/attached-questions")}>Attached Questions</li>
           <li onClick={() => handleNavigation("/upload-multi")}>Add MultiQ</li> {/* ✅ Consistent with others */}
           <li onClick={() => handleNavigation("/all-questions-set")}>All Questions set</li>
