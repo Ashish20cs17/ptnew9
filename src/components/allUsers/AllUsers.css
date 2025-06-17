@@ -12,6 +12,25 @@
   justify-content: flex-start;
 }
 
+.excel-download-btn {
+  background-color: #007bff; /* Blue */
+  color: white;
+  padding: 10px 20px;
+  margin: 15px 0; /* ✅ Adds space above and below */
+  border: none;
+  border-radius: 50px; /* Rounded pill */
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.excel-download-btn:hover {
+  background-color: #28a745; /* Green */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
 /* Highlighted "User Management" title */
 .page-title {
   display: inline-block;
