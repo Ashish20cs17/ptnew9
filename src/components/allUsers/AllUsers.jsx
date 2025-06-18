@@ -7,8 +7,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 
-
-
 const AllUsers = () => {
 const [users, setUsers] = useState([]);
 const [filteredUsers, setFilteredUsers] = useState([]);
@@ -20,7 +18,12 @@ const [questionDetails, setQuestionDetails] = useState({}); // Store fetched que
 const [selectedQuestionId, setSelectedQuestionId] = useState(null); // Track which question's details to show
 
 
-
+// ✅ Strip HTML tags from string
+const stripHTML = (html) => {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || div.innerText || "";
+};
 
 
 
@@ -45,21 +48,20 @@ const exportAllResponsesForUser = async () => {
           questionData = {};
         }
       }
-
-      allRows.push({
-        "Quiz ID": quizId,
-        "Question": questionData.question || "N/A",
-        "Your Answer": response.userAnswer,
-        "Correct Answer": response.correctAnswer?.text || "N/A",
-        "Result": response.isCorrect ? "Correct" : "Incorrect",
-        "Difficulty": questionData.difficultyLevel || "N/A",
-        "Grade": questionData.grade || "N/A",
-        "Topic": questionData.topic || "N/A",
-        "Date Added": questionData.date
-          ? formatDate(questionData.date)
-          : "N/A",
-        "Topic List": questionData.topicList || "N/A",
-      });
+allRows.push({
+  "Quiz ID": quizId,
+  "Question": stripHTML(questionData.question || "N/A"),
+  "Your Answer": response.userAnswer,
+  "Correct Answer": response.correctAnswer?.text || "N/A",
+  "Result": response.isCorrect ? "Correct" : "Incorrect",
+  "Difficulty": questionData.difficultyLevel || "N/A",
+  "Grade": questionData.grade || "N/A",
+  "Topic": questionData.topic || "N/A",
+  "Date Added": questionData.date
+    ? formatDate(questionData.date)
+    : "N/A",
+  "Topic List": questionData.topicList || "N/A",
+});
     }
   }
 
@@ -69,10 +71,6 @@ const exportAllResponsesForUser = async () => {
 
   XLSX.writeFile(workbook, `All_Responses_${selectedUser.email || "user"}.xlsx`);
 };
-
-
-
-
 
 
   const exportToExcel = () => {
@@ -107,9 +105,6 @@ const exportAllResponsesForUser = async () => {
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(blob, `Quiz_${selectedQuiz || "unknown"}_Responses.xlsx`);
   };
-
-
-
 
 
 useEffect(() => {
