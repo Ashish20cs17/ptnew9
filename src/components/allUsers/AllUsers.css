@@ -12,6 +12,23 @@
   justify-content: flex-start;
 }
 
+
+.excel-download-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin: 20px 0;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.excel-download-btn:hover {
+  background-color: #28a745;
+}
+
 .excel-download-btn {
   background-color: #007bff; /* Blue */
   color: white;

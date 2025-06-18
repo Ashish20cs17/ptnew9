@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ref, onValue, get, remove } from 'firebase/database';
+import { ref, onValue, get, remove, child } from 'firebase/database';
+
 import { database } from '../firebase/FirebaseSetup';
 import './AllUsers.css';
 import * as XLSX from "xlsx";
@@ -23,8 +24,51 @@ const [selectedQuestionId, setSelectedQuestionId] = useState(null); // Track whi
 
 
 
+const exportAllResponsesForUser = async () => {
+  if (!selectedUser || !selectedUser.quizResults) return;
 
+  const allRows = [];
 
+  for (const [quizId, quizData] of Object.entries(selectedUser.quizResults)) {
+    for (const response of quizData.responses) {
+      const questionId = response.questionId;
+
+      let questionData = questionDetails[questionId];
+
+      // ❗If not already loaded, fetch from Firebase
+      if (!questionData) {
+   const snapshot = await get(child(ref(database), `questions/${questionId}`));
+
+        if (snapshot.exists()) {
+          questionData = snapshot.val();
+        } else {
+          questionData = {};
+        }
+      }
+
+      allRows.push({
+        "Quiz ID": quizId,
+        "Question": questionData.question || "N/A",
+        "Your Answer": response.userAnswer,
+        "Correct Answer": response.correctAnswer?.text || "N/A",
+        "Result": response.isCorrect ? "Correct" : "Incorrect",
+        "Difficulty": questionData.difficultyLevel || "N/A",
+        "Grade": questionData.grade || "N/A",
+        "Topic": questionData.topic || "N/A",
+        "Date Added": questionData.date
+          ? formatDate(questionData.date)
+          : "N/A",
+        "Topic List": questionData.topicList || "N/A",
+      });
+    }
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(allRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "All Responses");
+
+  XLSX.writeFile(workbook, `All_Responses_${selectedUser.email || "user"}.xlsx`);
+};
 
 
 
@@ -291,6 +335,22 @@ style={{ '--index': index }}
 <h2 className="panel-title">
 {selectedQuiz ? `Quiz Results: ${selectedQuiz}` : 'User Details'}
 </h2>
+
+
+{selectedUser && selectedUser.quizResults && (
+  <button
+    className="excel-download-btn"
+    onClick={exportAllResponsesForUser}
+  >
+    📥 Download All Responses for {selectedUser.email}
+  </button>
+)}
+
+
+
+
+
+
 {selectedQuiz && (
 <button
 className="back-button"
