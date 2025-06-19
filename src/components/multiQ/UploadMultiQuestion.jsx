@@ -146,113 +146,127 @@ const UploadMultiQuestion = () => {
     setLoading(false);
   }
 };
+return (
+  <div className="uploadMultiContainer">
+    <h2>Upload Multiple Questions</h2>
 
+    <DynamicMathSelector
+      grade={grade}
+      setGrade={setGrade}
+      topic={topic}
+      setTopic={setTopic}
+      topicList={topicList}
+      setTopicList={setTopicList}
+    />
 
-
-  return (
-    <div className="uploadMultiContainer">
-      <h2>Upload Multiple Questions</h2>
-      <DynamicMathSelector
-        grade={grade}
-        setGrade={setGrade}
-        topic={topic}
-        setTopic={setTopic}
-        topicList={topicList}
-        setTopicList={setTopicList}
-      />
-
-      <div className="formGroup">
-        <label>Difficulty Level:</label>
-        <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
-          <option value="">Select Difficulty</option>
-          <option value="L1">L1</option>
-          <option value="L2">L2</option>
-          <option value="L3">L3</option>
-          <option value="Br">Br</option>
-        </select>
-      </div>
-
-      {mainQuestions.map((mainQ, mainIndex) => (
-        <div key={mainIndex} className="subQuestionBlock">
-          <label>Main Question #{mainIndex + 1}:</label>
-          <JoditEditor
-            ref={(el) => (editorRefs.current[mainIndex] = el)}
-            value={mainQ.mainQuestion}
-            onBlur={(content) => updateMainQuestion(mainIndex, content)}
-            onChange={() => {}}
-          />
-
-          <h4 style={{ marginTop: 20 }}>Sub Questions</h4>
-          {mainQ.subQuestions.map((sq, subIndex) => (
-            <div key={subIndex} className="subQuestionBlock">
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <label>Question #{subIndex + 1}</label>
-                <button
-                  type="button"
-                  onClick={() => removeSubQuestion(mainIndex, subIndex)}
-                  disabled={mainQ.subQuestions.length === 1}
-                >Remove</button>
-              </div>
-              <JoditEditor
-                ref={(el) => {
-                  if (!editorRefs.current[mainIndex]) editorRefs.current[mainIndex] = [];
-                  editorRefs.current[mainIndex][subIndex] = el;
-                }}
-                value={sq.question}
-                onBlur={(content) => updateSubQuestion(mainIndex, subIndex, "question", content)}
-                onChange={() => {}}
-              />
-
-              <label>Question Type:</label>
-              <select
-                value={sq.type}
-                onChange={(e) => updateSubQuestion(mainIndex, subIndex, "type", e.target.value)}
-              >
-                <option value="MCQ">MCQ</option>
-                <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
-                <option value="TRIVIA">Trivia</option>
-              </select>
-
-              {sq.type === "MCQ" && (
-                <>
-                  <label>Options:</label>
-                  {sq.options.map((opt, optIndex) => (
-                    <input
-                      key={optIndex}
-                      type="text"
-                      placeholder={`Option ${optIndex + 1}`}
-                      value={opt}
-                      onChange={(e) => updateOption(mainIndex, subIndex, optIndex, e.target.value)}
-                    />
-                  ))}
-
-                  <label>Correct Answer:</label>
-                  <input
-                    type="text"
-                    placeholder="Correct Answer"
-                    value={sq.correctAnswer}
-                    onChange={(e) => updateSubQuestion(mainIndex, subIndex, "correctAnswer", e.target.value)}
-                  />
-                </>
-              )}
-            </div>
-          ))}
-
-          <button type="button" onClick={() => addSubQuestion(mainIndex)}>+ Add Sub Question</button>
-        </div>
-      ))}
-
-      <button type="button" onClick={addMainQuestion}>+ Add Main Question</button>
-
-      {error && <div className="errorMsg">{error}</div>}
-
-      <button type="button" className="uploadBtn" onClick={uploadMultiQuestions} disabled={loading}>
-        {loading ? "Uploading..." : "Upload All Questions"}
-      </button>
-
-      <ToastContainer position="top-center" />
+    <div className="formGroup">
+      <label>Difficulty Level:</label>
+      <select value={difficultyLevel} onChange={(e) => setDifficultyLevel(e.target.value)}>
+        <option value="">Select Difficulty</option>
+        <option value="L1">L1</option>
+        <option value="L2">L2</option>
+        <option value="L3">L3</option>
+        <option value="Br">Br</option>
+      </select>
     </div>
-  );
+
+    {mainQuestions.map((mainQ, mainIndex) => (
+      <div key={mainIndex} className="subQuestionBlock">
+        <label>Main Question #{mainIndex + 1}:</label>
+        <JoditEditor
+          ref={(el) => (editorRefs.current[mainIndex] = el)}
+          value={mainQ.mainQuestion}
+          onBlur={(content) => updateMainQuestion(mainIndex, content)}
+          onChange={() => {}}
+        />
+
+        <h4 style={{ marginTop: 20 }}>Sub Questions</h4>
+        {mainQ.subQuestions.map((sq, subIndex) => (
+          <div key={subIndex} className="subQuestionBlock">
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <label>Question #{subIndex + 1}</label>
+              <button
+                type="button"
+                onClick={() => removeSubQuestion(mainIndex, subIndex)}
+                disabled={mainQ.subQuestions.length === 1}
+              >
+                Remove
+              </button>
+            </div>
+
+            <JoditEditor
+              ref={(el) => {
+                if (!editorRefs.current[mainIndex]) editorRefs.current[mainIndex] = [];
+                editorRefs.current[mainIndex][subIndex] = el;
+              }}
+              value={sq.question}
+              onBlur={(content) => updateSubQuestion(mainIndex, subIndex, "question", content)}
+              onChange={() => {}}
+            />
+
+            <label>Question Type:</label>
+            <select
+              value={sq.type}
+              onChange={(e) => updateSubQuestion(mainIndex, subIndex, "type", e.target.value)}
+            >
+              <option value="MCQ">MCQ</option>
+              <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+              <option value="TRIVIA">Trivia</option>
+            </select>
+
+            {sq.type === "MCQ" && (
+              <>
+                <label>Options:</label>
+                {sq.options.map((opt, optIndex) => (
+                  <input
+                    key={optIndex}
+                    type="text"
+                    placeholder={`Option ${optIndex + 1}`}
+                    value={opt}
+                    onChange={(e) => updateOption(mainIndex, subIndex, optIndex, e.target.value)}
+                  />
+                ))}
+              </>
+            )}
+
+            {/* ✅ Always show Correct Answer input for all types */}
+            <label>Correct Answer:</label>
+            <input
+              type="text"
+              placeholder="Correct Answer"
+              value={sq.correctAnswer}
+              onChange={(e) =>
+                updateSubQuestion(mainIndex, subIndex, "correctAnswer", e.target.value)
+              }
+            />
+          </div>
+        ))}
+
+        <button type="button" onClick={() => addSubQuestion(mainIndex)}>
+          + Add Sub Question
+        </button>
+      </div>
+    ))}
+
+    <button type="button" onClick={addMainQuestion}>
+      + Add Main Question
+    </button>
+
+    {error && <div className="errorMsg">{error}</div>}
+
+    <button
+      type="button"
+      className="uploadBtn"
+      onClick={uploadMultiQuestions}
+      disabled={loading}
+    >
+      {loading ? "Uploading..." : "Upload All Questions"}
+    </button>
+
+    <ToastContainer position="top-center" />
+  </div>
+);
+
 };
 
 export default UploadMultiQuestion;
