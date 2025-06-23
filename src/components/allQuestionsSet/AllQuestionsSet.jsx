@@ -890,33 +890,6 @@ return (
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const isTrivia = q.type?.toLowerCase() === 'trivia';
   const isMulti = Array.isArray(q.children) && q.children.length > 0;
 
@@ -1042,46 +1015,70 @@ return (
           {/* 🟡 Sub-question rendering (multi-question support) */}
           {q.children && Array.isArray(q.children) && (
             <div className="multiQuestionChildren" style={{ marginTop: '10px' }}>
-              {q.children.map((child, childIndex) => (
-                <div
-                  key={child.id || childIndex}
-                  className="childQuestion"
-                  style={{
-                    marginLeft: '20px',
-                    background: '#f9f9f9',
-                    padding: '10px',
-                    borderLeft: '3px solid #ccc',
-                    borderRadius: '4px',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <strong>
-                    Sub Q{questionNumber}.{childIndex + 1}
-                  </strong>
+             {q.children.map((child, childIndex) => (
+  <div
+    key={child.id || childIndex}
+    className="childQuestion"
+    style={{
+      marginLeft: '20px',
+      background: '#f9f9f9',
+      padding: '10px',
+      borderLeft: '3px solid #ccc',
+      borderRadius: '4px',
+      marginBottom: '10px',
+    }}
+  >
+    {/* Sub-question content */}
+    <div style={{ marginTop: '6px', color: 'green', fontWeight: 'bold' }}>
+      {isHTML(child.question)
+        ? parse(child.question)
+        : child.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
+    </div>
 
-                  <div style={{ marginTop: '6px' }}>
-                    {isHTML(child.question)
-                      ? parse(child.question)
-                      : child.question?.replace(/^\s*\d+[\.\)]\s*/, '')}
-                  </div>
+   {/* 🅰️ Options with NO 1.,2.,3. */}
+{child.options && (
+  <div style={{ marginTop: '6px', color: '#555', fontSize: '15px' }}>
+    {child.type === 'MCQ' ? (
+      <ol style={{ listStyleType: 'none', paddingLeft: 0 }}>
+        {child.options.map((opt, i) => (
+          <li key={i} style={{ marginBottom: '4px' }}>
+            <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text || opt}
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <div>
+        {child.options.map((opt, i) => (
+          <div key={i} style={{ marginBottom: '4px' }}>
+            {opt.text || opt}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
-                  {child.options && Array.isArray(child.options) && (
-                    <ol style={{ marginTop: '6px', paddingLeft: '20px' }}>
-                      {child.options.map((opt, i) => (
-                        <li key={i}>
-                          <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text || opt}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
+ 
+    {/* ✅ Blue Answer Space after EACH sub-question */}
+ <div
+  style={{
+    backgroundColor: '#d9eaff',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    marginTop: '10px',
+    fontSize: '15px',
+    color: '#333',
+    fontWeight: '600',
+    lineHeight: '1.4', // ✅ Add this for full consistency
+  }}
+>
+  {child.solution || ''}
+</div>
 
-                  {child.solution && (
-                    <div className="solutionBlock" style={{ marginTop: '6px', fontStyle: 'italic', color: '#333' }}>
-                      <strong>Solution:</strong> {parse(child.solution)}
-                    </div>
-                  )}
-                </div>
-              ))}
+  </div>
+))}
+
+              
             </div>
           )}
       
@@ -1103,25 +1100,25 @@ return (
                         </ol>
                       )}
 
-                    {!isTrivia ? (
-                      <div
-                        className="answerText"
-                        style={{
-                          backgroundColor: '#d9eaff',
-                          padding: '12px 16px',
-                          borderRadius: '8px',
-                          marginTop: '12px',
-                          fontSize: '15px',
-                          color: '#333',
-                          fontWeight: '600',
-                          lineHeight: '1.4',
-                        }}
-                      >
-                        {q.answer || ''}
-                      </div>
-                    ) : (
-                      <div style={{ color: 'gray', fontSize: '13px' }}></div>
-                    )}
+    {!isTrivia && !isMulti && (
+  <div
+    className="answerText"
+    style={{
+      backgroundColor: '#d9eaff',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      marginTop: '12px',
+      fontSize: '15px',
+      color: '#333',
+      fontWeight: '600',
+      lineHeight: '1.4',
+    }}
+  >
+    {q.answer || ''}
+  </div>
+)}
+
+                 
                   </div>
 
                   {index !== questions.length - 1 && (

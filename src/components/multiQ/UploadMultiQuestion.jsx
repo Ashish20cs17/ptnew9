@@ -204,41 +204,48 @@ return (
               onChange={() => {}}
             />
 
-            <label>Question Type:</label>
-            <select
-              value={sq.type}
-              onChange={(e) => updateSubQuestion(mainIndex, subIndex, "type", e.target.value)}
-            >
-              <option value="MCQ">MCQ</option>
-              <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
-              <option value="TRIVIA">Trivia</option>
-            </select>
+           <label>Question Type:</label>
+<select
+  value={sq.type}
+  onChange={(e) => updateSubQuestion(mainIndex, subIndex, "type", e.target.value)}
+>
+  <option value="MCQ">MCQ</option>
+  <option value="FILL_IN_THE_BLANKS">Fill in the Blanks</option>
+  <option value="TRIVIA">Trivia</option>
+</select>
 
-            {sq.type === "MCQ" && (
-              <>
-                <label>Options:</label>
-                {sq.options.map((opt, optIndex) => (
-                  <input
-                    key={optIndex}
-                    type="text"
-                    placeholder={`Option ${optIndex + 1}`}
-                    value={opt}
-                    onChange={(e) => updateOption(mainIndex, subIndex, optIndex, e.target.value)}
-                  />
-                ))}
-              </>
-            )}
+{sq.type === "MCQ" && (
+  <>
+    <label>Options:</label>
+    {sq.options.map((opt, optIndex) => (
+      <input
+        key={optIndex}
+        type="text"
+        placeholder={`Option ${optIndex + 1}`}
+        value={opt}
+        onChange={(e) =>
+          updateOption(mainIndex, subIndex, optIndex, e.target.value)
+        }
+      />
+    ))}
+  </>
+)}
 
-            {/* ✅ Always show Correct Answer input for all types */}
-            <label>Correct Answer:</label>
-            <input
-              type="text"
-              placeholder="Correct Answer"
-              value={sq.correctAnswer}
-              onChange={(e) =>
-                updateSubQuestion(mainIndex, subIndex, "correctAnswer", e.target.value)
-              }
-            />
+{sq.type !== "TRIVIA" && (
+  <>
+    <label>Correct Answer:</label>
+    <input
+      type="text"
+      placeholder="Correct Answer"
+      value={sq.correctAnswer}
+      onChange={(e) =>
+        updateSubQuestion(mainIndex, subIndex, "correctAnswer", e.target.value)
+           }
+    />
+  </>
+)}
+
+            
           </div>
         ))}
 

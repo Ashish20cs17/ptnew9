@@ -23,6 +23,16 @@
 .edit-button:hover {
   background-color: #bd59db;
 }
+.answerText {
+  background-color: #d9eaff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
 .delete-button {
   position: absolute;
