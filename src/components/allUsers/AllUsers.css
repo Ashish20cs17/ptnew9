@@ -12,6 +12,34 @@
   justify-content: flex-start;
 }
 
+.user-email-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-email-text {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* Existing Report Button Styling */
+.report-button {
+  background-color: #007bff; /* Blue */
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.report-button:hover {
+  background-color: #28a745; /* Green */
+}
+
 
 .excel-download-btn {
   background-color: #007bff;

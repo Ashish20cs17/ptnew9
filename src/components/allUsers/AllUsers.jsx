@@ -305,23 +305,39 @@ onChange={(e) => setSearchQuery(e.target.value)}
 <div className="empty-message">No users found</div>
 ) : (
 <ul className="users-list">
-{filteredUsers.map((user, index) => (
-<li
-key={user.id}
-className={`user-item ${
-selectedUser && selectedUser.id === user.id ? 'selected' : ''
-}`}
-onClick={() => handleUserClick(user)}
-style={{ '--index': index }}
->
-<div className="user-email">{user.email || 'No email'}</div>
-<div className="user-meta">
-<span>ID: {user.id.substring(0, 10)}...</span>
-<span>Role: {user.role || 'N/A'}</span>
+  {filteredUsers.map((user, index) => (
+    <li
+      key={user.id}
+      className={`user-item ${
+        selectedUser && selectedUser.id === user.id ? 'selected' : ''
+      }`}
+      style={{ '--index': index }}
+    >
+<div className="user-email-row">
+  <span className="user-email-text">{user.email || 'No email'}</span>
+  <button
+    className="report-button"
+    onClick={(e) => {
+      e.stopPropagation();
+      window.open("https://application3-5s7m.onrender.com/", "_blank");
+    }}
+  >
+    Report📄
+  </button>
 </div>
-</li>
-))}
+
+
+      <div
+        className="user-meta"
+        onClick={() => handleUserClick(user)}
+      >
+        <span>ID: {user.id.substring(0, 10)}...</span>
+        <span>Role: {user.role || 'N/A'}</span>
+      </div>
+    </li>
+  ))}
 </ul>
+
 )}
 </div>
 
