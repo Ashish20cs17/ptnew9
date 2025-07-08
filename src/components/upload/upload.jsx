@@ -133,26 +133,26 @@ const handleExcelUpload = async (e) => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
 for (const row of jsonData) {
-  const newQuestion = {
-    question: row.Question || "",
-    options: row.Options ? JSON.parse(row.Options) : [],
-    correctAnswer: {
-      text: row.CorrectAnswer || ""
-    },
-    grade: row.Grade || "",
-    topic: row.Topic || "",
-    topicList: [],  // Update if needed
-    difficultyLevel: row.Difficulty || "",
-    type: row.Type || "MCQ",  // ✅ Use 'type', not 'questionType'
-    timestamp: serverTimestamp(),
-    date: new Date().toISOString().split("T")[0],
-  };
+const newQuestion = {
+  question: row.Question || "",
+  options: row.Options ? JSON.parse(row.Options) : [],
+  correctAnswer: { text: row.CorrectAnswer || "" },
+  grade: String(row.Grade || ""),
+  topic: row.Topic || "",
+  topicList: [],
+  difficultyLevel: row.Difficulty || "",
+  questionType: row.Type || "MCQ", // for frontend edit
+  type: row.Type || "MCQ",         // for backend/filtering
+  timestamp: Date.now(),
+  date: new Date().toISOString().split("T")[0],
+};
+
 
   const newRef = push(ref(database, "questions"));
   await set(newRef, newQuestion);
 }
+
 
 
       toast.success("Questions uploaded from Excel successfully");

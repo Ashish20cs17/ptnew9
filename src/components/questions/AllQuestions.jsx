@@ -31,6 +31,16 @@ const AllQuestions = () => {
 const [viewer, setViewer] = useState(null);
 
 
+
+
+
+
+
+
+
+
+
+
 const applyFilters = () => {
   let filtered = [...questions];
 
@@ -131,6 +141,10 @@ setFilteredQuestions(combined);
 
 
 useEffect(() => {
+
+
+
+
   if (!questions || questions.length === 0 || !viewer) {
     setFilteredQuestions([]);
     return;
@@ -223,17 +237,24 @@ const handleDelete = async (question) => {
   const isHTML = (str) => /<[^>]+>/.test(str);
 
   const UploadComponent = ({ questionData, onSave, onCancel }) => {
-    const [formData, setFormData] = useState({
-      questionType: questionData?.type || "MCQ",
-      question: questionData?.question || "",
-      questionImageUrl: questionData?.questionImage || null,
-      options: questionData?.options?.map((opt) => ({ text: opt.text || "", image: opt.image || null })) || Array(4).fill({ text: "", image: null }),
-      correctAnswer: questionData?.correctAnswer || { text: "", image: null },
-      grade: questionData?.grade || "",
-      topic: questionData?.topic || "",
-      topicList: questionData?.topicList || "",
-      difficultyLevel: questionData?.difficultyLevel || "",
-    });
+const [formData, setFormData] = useState({
+  questionType: questionData?.questionType || questionData?.type || "MCQ",
+  question: questionData?.question || "",
+  questionImageUrl: questionData?.questionImage || null,
+  options: questionData?.options?.map((opt) => ({
+    text: opt.text || "",
+    image: opt.image || null,
+  })) || Array(4).fill({ text: "", image: null }),
+  correctAnswer: questionData?.correctAnswer || { text: "", image: null },
+  grade: questionData?.grade ? `G${questionData.grade}`.toUpperCase() : "",
+
+topic: questionData?.topic ? String(questionData.topic).split(".")[0] : "",
+
+  topicList: questionData?.topicList || "",
+  difficultyLevel: questionData?.difficultyLevel ? String(questionData.difficultyLevel) : "",  // ✅ fix here
+});
+
+
     const [loading, setLoading] = useState(false);
     const editor = useRef(null);
 

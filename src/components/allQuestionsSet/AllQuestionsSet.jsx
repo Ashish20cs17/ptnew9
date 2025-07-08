@@ -46,6 +46,22 @@ const [editedQuestionText, setEditedQuestionText] = useState("");
 const editor = useRef(null);
 
 
+ // ✅ ADD THIS HERE
+  useEffect(() => {
+    console.log("🧪 Edit formData values:", formData);
+  }, [formData]);
+
+
+
+
+
+
+
+
+
+
+
+
 const [editingQuestionIndex, setEditingQuestionIndex] = React.useState(null);
 const [editingQuestion, setEditingQuestion] = React.useState(null);
 
