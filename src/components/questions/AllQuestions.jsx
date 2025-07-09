@@ -28,17 +28,7 @@ const AllQuestions = () => {
   const [difficultyLevel, setDifficultyLevel] = useState("all");
   const [questionType, setQuestionType] = useState("all");
 
-const [viewer, setViewer] = useState(null);
-
-
-
-
-
-
-
-
-
-
+const [viewer, setViewer] = useState({ grade: "admin" });
 
 
 const applyFilters = () => {
@@ -61,12 +51,7 @@ useEffect(() => {
 }, [questions, grade, topic, questionType, difficultyLevel, viewer]);
 
 useEffect(() => {
-  const storedViewer = JSON.parse(localStorage.getItem('viewer'));
-  if (!storedViewer) {
-    navigate('/view-login');
-  } else {
-    setViewer(storedViewer);
-  }
+  setViewer({ grade: "admin" }); // Assume full access by default
 }, []);
 
 
@@ -237,7 +222,12 @@ const handleDelete = async (question) => {
   const isHTML = (str) => /<[^>]+>/.test(str);
 
   const UploadComponent = ({ questionData, onSave, onCancel }) => {
-const [formData, setFormData] = useState({
+
+
+
+
+
+ const [formData, setFormData] = useState({
   questionType: questionData?.questionType || questionData?.type || "MCQ",
   question: questionData?.question || "",
   questionImageUrl: questionData?.questionImage || null,
@@ -246,12 +236,17 @@ const [formData, setFormData] = useState({
     image: opt.image || null,
   })) || Array(4).fill({ text: "", image: null }),
   correctAnswer: questionData?.correctAnswer || { text: "", image: null },
-  grade: questionData?.grade ? `G${questionData.grade}`.toUpperCase() : "",
 
-topic: questionData?.topic ? String(questionData.topic).split(".")[0] : "",
+  // ✅ Ensure grade format is correct (e.g., "G3")
+  grade: questionData?.grade?.startsWith("G") ? questionData?.grade : `G${questionData?.grade}`,
 
+  // ✅ Topic should stay as "G3G" or similar
+  topic: questionData?.topic || "",
+
+  // ✅ topicList (subtopic) must be set directly — don’t leave it blank!
   topicList: questionData?.topicList || "",
-  difficultyLevel: questionData?.difficultyLevel ? String(questionData.difficultyLevel) : "",  // ✅ fix here
+
+  difficultyLevel: questionData?.difficultyLevel ? String(questionData.difficultyLevel) : "",
 });
 
 

@@ -23,16 +23,17 @@
 .edit-button:hover {
   background-color: #bd59db;
 }
-.answerText {
+.answerBox {
   background-color: #d9eaff;
   padding: 12px 16px;
   border-radius: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 15px;
   color: #333;
   font-weight: 600;
   line-height: 1.4;
 }
+
 
 .delete-button {
   position: absolute;
@@ -306,18 +307,19 @@ body, .pdfExportMode {
   margin-bottom: 10px;
 }
 
-.answerText {
-  background-color: #edf3f9;
-  padding: 1rem; /* Responsive padding */
-  border-left: 5px solid #7c8cb8;
-  font-size: 1rem; /* Responsive text size */
-  border-radius: 2px;
-  margin-top: 10px;
-  color: #444;
-  min-height: 60px; /* Ensures some height even for short content */
-  line-height: 1.5;
+.answerBox {
+  background-color: #1955a0;
+  padding: 12px 16px;
+  border-radius: 12px; /* ✅ Match export styling */
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  min-height: 60px; /* ✅ Force consistent height like PDF */
   word-wrap: break-word;
 }
+
 
 /* Optional: Adjust for small mobile screens */
 @media (max-width: 480px) {
@@ -603,12 +605,19 @@ body, .pdfExportMode {
   border: 1px solid #eee;
 }
 
-.answerText {
-  background-color: #edf3f9;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-top: 10px;
+.answerBox {
+  background-color: #d9eaff;
+  padding: 12px 16px;
+  border-radius: 12px; /* ✅ Match export styling */
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  min-height: 60px; /* ✅ Force consistent height like PDF */
+  word-wrap: break-word;
 }
+
 
 .deleteQuestionButton {
   background-color: #ff5722;

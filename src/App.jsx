@@ -12,10 +12,9 @@ import Upload from './components/upload/upload';
 import AllUsers from './components/allUsers/AllUsers';
 import Syllabus from './components/syllabus/Syllabus';
 import OfflineUsers from './components/offlineUsers/OfflineUsers';
-import UploadMultiQuestion from './components/multiQ/UploadMultiQuestion'; // ✅ Use correct relative path
+import UploadMultiQuestion from './components/multiQ/UploadMultiQuestion';
 import AdminStats from './components/AdminStats';
-import AllQuestionsLogin from './components/questions/AllQuestionsLogin';
-
+// ✅ Removed: import AllQuestionsLogin from './components/questions/AllQuestionsLogin';
 
 const router = createBrowserRouter([
   {
@@ -33,20 +32,17 @@ const router = createBrowserRouter([
       </>
     )
   },
-{
-  path: "/view-login",
-  element: <AllQuestionsLogin />
-},
-{
-  path: "/all-questions",
-  element: (
-    <>
-      <Navbar />
-      <AllQuestions />
-    </>
-  )
-},
 
+  // ✅ This is the updated /all-questions route (login removed)
+  {
+    path: "/all-questions",
+    element: (
+      <>
+        <Navbar />
+        <AllQuestions />
+      </>
+    )
+  },
 
   {
     path: "/attached-questions",

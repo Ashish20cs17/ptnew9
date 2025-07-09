@@ -33,19 +33,19 @@ const Navbar = () => {
     <div className="wrapper">
       <h2 onClick={() => handleNavigation("/")}>PracticeTime.ai</h2>
 
-      <nav className={showmenu ? "menu-mobile" : "menu-web"}>
-        <ul>
-          <li onClick={() => handleNavigation("/upload")}>Add Questions</li>
-       <li onClick={() => handleNavigation("/view-login")}>All Questions</li>
+ <nav className={showmenu ? "menu-mobile" : "menu-web"}>
+  <ul>
+    <li onClick={() => handleNavigation("/upload")}>Add Questions</li>
+    <li onClick={() => handleNavigation("/all-questions")}>All Questions</li> {/* ✅ Fixed path */}
+    <li onClick={() => handleNavigation("/attached-questions")}>Attached Questions</li>
+    <li onClick={() => handleNavigation("/upload-multi")}>Add MultiQ</li>
+    <li onClick={() => handleNavigation("/all-questions-set")}>All Questions set</li>
+    <li onClick={() => handleNavigation("/allUsers")}>All Users</li>
+    <li onClick={() => handleNavigation("/admin-stats")}>Admin Stats</li>
+    <li onClick={handleLogout}>Log out</li>
+  </ul>
+</nav>
 
-          <li onClick={() => handleNavigation("/attached-questions")}>Attached Questions</li>
-          <li onClick={() => handleNavigation("/upload-multi")}>Add MultiQ</li> {/* ✅ Consistent with others */}
-          <li onClick={() => handleNavigation("/all-questions-set")}>All Questions set</li>
-          <li onClick={() => handleNavigation("/allUsers")}>All Users</li>
-          <li onClick={() => handleNavigation("/admin-stats")}>Admin Stats</li>
-          <li onClick={handleLogout}>Log out</li>
-        </ul>
-      </nav>
 
       <div className="hamburger">
         <button onClick={handleHamburger}><RxHamburgerMenu /></button>

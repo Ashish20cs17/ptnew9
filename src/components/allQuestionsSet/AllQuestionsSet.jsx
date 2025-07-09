@@ -46,20 +46,6 @@ const [editedQuestionText, setEditedQuestionText] = useState("");
 const editor = useRef(null);
 
 
- // ✅ ADD THIS HERE
-  useEffect(() => {
-    console.log("🧪 Edit formData values:", formData);
-  }, [formData]);
-
-
-
-
-
-
-
-
-
-
 
 
 const [editingQuestionIndex, setEditingQuestionIndex] = React.useState(null);
@@ -758,19 +744,12 @@ return (
         <ul className="questionsList pdfExportMode" style={{ padding: 0 }}>
  {questions.map((q, index) => {
 
-
-
-
-
-
-
-
 {q.children && Array.isArray(q.children) ? (
   // 👉 MULTI-TYPE QUESTION RENDERING
   <li
     key={q.id || index}
     className="questionWrapper"
-    style={{
+   style={{
       borderRadius: '12px',
       padding: '12px',
       backgroundColor: '#ffffff',
@@ -788,13 +767,14 @@ return (
         <div
           key={child.id || childIndex}
           className="childQuestion"
-          style={{
-            marginBottom: '10px',
-            padding: '10px',
-            background: '#f5f5f5',
-            borderLeft: '4px solid #ccc',
-            borderRadius: '5px',
-          }}
+           style={{
+      borderRadius: '12px',
+      padding: '12px',
+      backgroundColor: '#ffffff',
+      listStyleType: 'none',
+      marginTop: '4px',
+      boxShadow: 'none',
+    }}
         >
           <div style={{ fontWeight: 'bold' }}>
             Sub Q{index + 1}.{childIndex + 1}
@@ -1075,21 +1055,10 @@ return (
 )}
 
  
-    {/* ✅ Blue Answer Space after EACH sub-question */}
- <div
-  style={{
-    backgroundColor: '#d9eaff',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    marginTop: '10px',
-    fontSize: '15px',
-    color: '#333',
-    fontWeight: '600',
-    lineHeight: '1.4', // ✅ Add this for full consistency
-  }}
->
+<div className="answerBox">
   {child.solution || ''}
 </div>
+
 
   </div>
 ))}

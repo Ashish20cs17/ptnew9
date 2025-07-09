@@ -38,7 +38,6 @@ const [bulkError, setBulkError] = useState(null);
 const [uploadProgress, setUploadProgress] = useState(0);
 const [uploaderName, setUploaderName] = useState(localStorage.getItem("username") || "");
 
-
 useEffect(() => {
   if (!localStorage.getItem("username")) {
     const name = prompt("Enter your name:");
@@ -133,21 +132,37 @@ const handleExcelUpload = async (e) => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-for (const row of jsonData) {
-const newQuestion = {
-  question: row.Question || "",
-  options: row.Options ? JSON.parse(row.Options) : [],
-  correctAnswer: { text: row.CorrectAnswer || "" },
-  grade: String(row.Grade || ""),
-  topic: row.Topic || "",
-  topicList: [],
-  difficultyLevel: row.Difficulty || "",
-  questionType: row.Type || "MCQ", // for frontend edit
-  type: row.Type || "MCQ",         // for backend/filtering
-  timestamp: Date.now(),
-  date: new Date().toISOString().split("T")[0],
-};
 
+ for (const row of jsonData) {
+  const topicRaw = row.Topic || "";                         // ✅ Move here
+  const gradeRaw = String(row.Grade || "").toUpperCase();   // ✅ Move here
+
+  const topicCode = topicRaw.includes(".")
+    ? topicRaw.split(".")[0]
+    : "";
+
+  const topicListCode = topicRaw;
+  const difficulty = row.Difficulty
+    ? String(row.Difficulty).toUpperCase()
+    : "";
+
+  const newQuestion = {
+    question: row.Question || "",
+    options: row.Options ? JSON.parse(row.Options) : [],
+    correctAnswer: { text: row.CorrectAnswer || "" },
+
+    grade: gradeRaw.startsWith("G") ? gradeRaw : `G${gradeRaw}`, // ✅ always starts with G
+    topic: topicCode,            // ✅ "G3G"
+    topicList: topicListCode,    // ✅ "G3G.4"
+    difficultyLevel: difficulty, // ✅ "L1", "L2", etc.
+
+    questionType: row.Type || "MCQ",
+    type: row.Type || "MCQ",
+
+    timestamp: Date.now(),
+    date: new Date().toISOString().split("T")[0],
+    uploader: uploaderName || "Unknown", // ✅ optional tracking
+  };
 
   const newRef = push(ref(database, "questions"));
   await set(newRef, newQuestion);
