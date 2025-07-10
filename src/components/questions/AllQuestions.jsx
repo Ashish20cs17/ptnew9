@@ -8,6 +8,20 @@ import JoditEditor from "jodit-react";
 import DynamicMathSelector from "../DynamicMathSelector";
 import "./AllQuestions.css";
 import "../upload/Upload.css";
+import MultiQuestionEditor from "./MultiQuestionEditor";
+
+
+// ✅ ADD THIS HERE
+const normalizeGrade = (grade) => {
+  if (!grade) return "UNKNOWN";
+  const g = grade.toString().trim().toUpperCase();
+  if (g.match(/^G\d+$/)) return g;
+  if (g.match(/^GRADE\s*(\d)$/)) return `G${g.split(" ")[1]}`;
+  if (g.match(/^\d$/)) return `G${g}`;
+  return "UNKNOWN";
+};
+
+
 
 
 const stripHTML = (html) => {
@@ -34,7 +48,18 @@ const [viewer, setViewer] = useState({ grade: "admin" });
 const applyFilters = () => {
   let filtered = [...questions];
 
- 
+  if (grade !== "all") {
+    filtered = filtered.filter((q) => q.grade === grade);
+  }
+
+  if (topic !== "all") {
+    filtered = filtered.filter((q) => q.topic === topic);
+  }
+
+  if (topicList !== "all") {
+    filtered = filtered.filter((q) => q.topicList === topicList);
+  }
+
   if (questionType !== "all") {
     filtered = filtered.filter((q) => q.type === questionType);
   }
@@ -46,9 +71,11 @@ const applyFilters = () => {
   setFilteredQuestions(filtered);
 };
 
+
 useEffect(() => {
   applyFilters();
-}, [questions, grade, topic, questionType, difficultyLevel, viewer]);
+}, [questions, grade, topic, topicList, questionType, difficultyLevel]);
+
 
 useEffect(() => {
   setViewer({ grade: "admin" }); // Assume full access by default
@@ -125,11 +152,10 @@ setFilteredQuestions(combined);
 }, []);
 
 
+
+
+
 useEffect(() => {
-
-
-
-
   if (!questions || questions.length === 0 || !viewer) {
     setFilteredQuestions([]);
     return;
@@ -141,33 +167,39 @@ useEffect(() => {
   const safeDifficulty = difficultyLevel && difficultyLevel !== "" ? difficultyLevel : "all";
   const safeQuestionType = questionType && questionType !== "" ? questionType : "all";
 
-  const filtered = questions.filter((q) => {
-    const matchesViewerGrade =
-      viewer?.grade === "admin" ? true : q.grade === viewer?.grade;
+const filtered = questions.filter((q) => {
+  const matchesViewerGrade =
+    viewer?.grade === "admin" ? true : normalizeGrade(q.grade) === normalizeGrade(viewer?.grade);
 
-    return (
-      matchesViewerGrade &&
-      (safeGrade === "all" || q.grade === safeGrade) &&
-      (safeTopic === "all" || q.topic === safeTopic) &&
-      (safeTopicList === "all" || q.topicList === safeTopicList) &&
-      (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty) &&
-      (safeQuestionType === "all" || q.type === safeQuestionType)
-    );
-  });
+  return (
+    matchesViewerGrade &&
+    (safeGrade === "all" || normalizeGrade(q.grade) === normalizeGrade(safeGrade)) &&
+    (safeTopic === "all" || q.topic === safeTopic) &&
+    (safeTopicList === "all" || q.topicList === safeTopicList) &&
+    (safeDifficulty === "all" || q.difficultyLevel === safeDifficulty) &&
+    (safeQuestionType === "all" || q.type === safeQuestionType)
+  );
+});
+
 
   setFilteredQuestions(filtered);
 }, [questions, grade, topic, topicList, difficultyLevel, questionType, viewer]);
 
+
+const [editingMultiId, setEditingMultiId] = useState(null);
+
+
+
 const handleEdit = (question) => {
   if (question.fromMulti) {
-    // Parse metadata
-    const { multiId, mainIndex, subIndex } = question;
-    // Pass all info to editor
-    setEditingQuestion(question);
+    setEditingMultiId(question.multiId); // NEW: switch to full editor mode
+    setEditingQuestion(null); // close normal editor
   } else {
-    setEditingQuestion(question);
+    setEditingQuestion(question); // normal single question edit
+    setEditingMultiId(null); // close multi editor
   }
 };
+
 
 const handleDelete = async (question) => {
   const { id, questionImage, options, correctAnswer } = question;
@@ -207,7 +239,6 @@ const handleDelete = async (question) => {
   }
 };
 
-
   const deleteImageFromSupabase = async (url) => {
     if (!url) return;
     const filePath = url.split("public/questions/")[1];
@@ -222,10 +253,6 @@ const handleDelete = async (question) => {
   const isHTML = (str) => /<[^>]+>/.test(str);
 
   const UploadComponent = ({ questionData, onSave, onCancel }) => {
-
-
-
-
 
  const [formData, setFormData] = useState({
   questionType: questionData?.questionType || questionData?.type || "MCQ",
@@ -303,7 +330,8 @@ const handleDelete = async (question) => {
         let questionRef;
 if (questionData.fromMulti) {
   const { multiId, mainIndex, subIndex } = questionData;
-  questionRef = ref(database, `multiQuestions/${multiId}/questions/${mainIndex}/subQuestions/${subIndex}`);
+questionRef = ref(database, `multiQuestions/${multiId}/subQuestions/${subIndex}`);
+
 } else {
   questionRef = ref(database, `questions/${questionData.id}`);
 }
@@ -315,8 +343,52 @@ if (questionData.fromMulti) {
           type: formData.questionType,
         };
         await update(questionRef, updatedData);
-        setQuestions((prev) => prev.map((q) => (q.id === questionData.id ? { ...q, ...updatedData } : q)));
-        setFilteredQuestions((prev) => prev.map((q) => (q.id === questionData.id ? { ...q, ...updatedData } : q)));
+       setQuestions((prev) =>
+  prev.map((q) => {
+    if (questionData.fromMulti && q.multiId === questionData.multiId && q.subIndex === questionData.subIndex) {
+      return {
+        ...q,
+        question: formData.question,
+        questionImage: formData.questionImageUrl,
+        options: formData.options,
+        correctAnswer: formData.correctAnswer,
+        difficultyLevel: formData.difficultyLevel,
+        topic: formData.topic,
+        topicList: formData.topicList,
+        grade: formData.grade,
+        type: formData.questionType,
+        timestamp: Date.now(),
+      };
+    } else if (!questionData.fromMulti && q.id === questionData.id) {
+      return { ...q, ...updatedData };
+    }
+    return q;
+  })
+);
+
+setFilteredQuestions((prev) =>
+  prev.map((q) => {
+    if (questionData.fromMulti && q.multiId === questionData.multiId && q.subIndex === questionData.subIndex) {
+      return {
+        ...q,
+        question: formData.question,
+        questionImage: formData.questionImageUrl,
+        options: formData.options,
+        correctAnswer: formData.correctAnswer,
+        difficultyLevel: formData.difficultyLevel,
+        topic: formData.topic,
+        topicList: formData.topicList,
+        grade: formData.grade,
+        type: formData.questionType,
+        timestamp: Date.now(),
+      };
+    } else if (!questionData.fromMulti && q.id === questionData.id) {
+      return { ...q, ...updatedData };
+    }
+    return q;
+  })
+);
+
         toast.success("Question updated successfully");
         onSave();
       } catch (err) {
@@ -468,12 +540,29 @@ const assignSetToUser = async (userId, setId) => {
       </div>
     </div>
 
+{editingMultiId && (
+<MultiQuestionEditor
+  multiId={editingMultiId}
+  onCancel={() => setEditingMultiId(null)}
+  onSave={() => {
+    setEditingMultiId(null);
+    fetchAllQuestions(); // ✅ ✅
+  }}
+/>
+
+)}
+
+
     {editingQuestion && (
       <UploadComponent
-        questionData={editingQuestion}
-        onSave={() => setEditingQuestion(null)}
-        onCancel={() => setEditingQuestion(null)}
-      />
+  questionData={editingQuestion}
+  onSave={() => {
+    setEditingQuestion(null);
+    fetchAllQuestions(); // ✅ Fetch fresh data
+  }}
+  onCancel={() => setEditingQuestion(null)}
+/>
+
     )}
     {error && <p style={{ color: "red" }}>{error}</p>}
     {filteredQuestions.length === 0 && !error && <p>No questions found!</p>}

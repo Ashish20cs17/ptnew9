@@ -11,11 +11,48 @@
   color: #333;
 }
 
+.uploadMultiContainer, .uploadContainer {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+  margin: 20px auto;
+  overflow: visible;
+}
+
+.subQuestionBlock {
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.jodit-container {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  min-height: 200px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+
 .uploadMultiContainer h2 {
   font-size: 2rem;
   text-align: center;
   margin-bottom: 2rem;
   font-weight: 700;
+}
+/* Add this to Upload.css or another relevant file */
+.jodit-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 8px;
+  min-height: 150px;
+  background-color: #fff;
+  padding: 6px;
 }
 
 .uploadMultiContainer label {

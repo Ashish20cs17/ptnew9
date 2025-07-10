@@ -20,6 +20,7 @@
     "html-react-parser": "^5.2.2",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
+    "jodit": "^4.6.2",
     "jodit-react": "^5.2.19",
     "jsbarcode": "^3.11.6",
     "jspdf": "^3.0.1",
