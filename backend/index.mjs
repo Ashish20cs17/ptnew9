@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import geminiRoutes from "./api/gemini.mjs";
+import geminiRoutes from "./gemini.mjs";
 
 const app = express();
 app.use(cors());
