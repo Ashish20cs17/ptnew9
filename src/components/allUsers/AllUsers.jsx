@@ -16,6 +16,8 @@ const [selectedQuiz, setSelectedQuiz] = useState(null);
 const [quizDetails, setQuizDetails] = useState(null);
 const [questionDetails, setQuestionDetails] = useState({}); // Store fetched question details
 const [selectedQuestionId, setSelectedQuestionId] = useState(null); // Track which question's details to show
+const [studentReport, setStudentReport] = useState('');
+const [loadingReport, setLoadingReport] = useState(false);
 
 
 // ✅ Strip HTML tags from string
@@ -24,8 +26,6 @@ const stripHTML = (html) => {
   div.innerHTML = html;
   return div.textContent || div.innerText || "";
 };
-
-
 
 const exportAllResponsesForUser = async () => {
   if (!selectedUser || !selectedUser.quizResults) return;
@@ -237,6 +237,92 @@ if (!dateString) return 'N/A';
 return new Date(dateString).toLocaleString();
 };
 
+
+
+
+
+
+
+const handleGenerateReport = async (user) => {
+  setLoadingReport(true);
+  try {
+    const userRef = ref(database, `users/${user.id}/quizResults`);
+    const snapshot = await get(userRef);
+
+    if (!snapshot.exists()) {
+      alert("No quiz results found.");
+      return;
+    }
+
+    const quizResults = snapshot.val();
+    const allResponses = [];
+
+    let totalQuestions = 0, correct = 0;
+
+    for (const [quizId, data] of Object.entries(quizResults)) {
+      const responses = Object.values(data.responses || {});
+      totalQuestions += responses.length;
+      correct += responses.filter((r) => r.isCorrect).length;
+
+      responses.forEach((res) => {
+        allResponses.push({
+          topic: res.topic || 'Unknown',
+          isCorrect: res.isCorrect,
+        });
+      });
+    }
+
+    const wrong = totalQuestions - correct;
+    const accuracy = totalQuestions ? ((correct / totalQuestions) * 100).toFixed(1) : 0;
+
+    const summary = `
+Student Email: ${user.email}
+Total Activities: ${totalQuestions}
+Correct Answers: ${correct}
+Wrong Answers: ${wrong}
+Overall Accuracy: ${accuracy}%
+
+Response Topics: 
+${allResponses.map((r, i) => `${i + 1}. ${r.topic} - ${r.isCorrect ? 'Correct' : 'Wrong'}`).join('\n')}
+`;
+
+    const geminiResponse = await fetch("http://localhost:3001/api/gemini", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: summary }),
+    });
+
+    const { reportText } = await geminiResponse.json();
+    setStudentReport(reportText);
+  } catch (error) {
+    console.error("Error generating report:", error);
+    alert("Failed to generate report.");
+  } finally {
+    setLoadingReport(false);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Sort quiz results by completedAt date (latest first)
 const sortedQuizResults = selectedUser?.quizResults
 ? Object.keys(selectedUser.quizResults).sort((quizIdA, quizIdB) => {
@@ -315,15 +401,57 @@ onChange={(e) => setSearchQuery(e.target.value)}
     >
 <div className="user-email-row">
   <span className="user-email-text">{user.email || 'No email'}</span>
-  <button
-    className="report-button"
-    onClick={(e) => {
-      e.stopPropagation();
-      window.open("https://application3-5s7m.onrender.com/", "_blank");
-    }}
-  >
-    Report📄
-  </button>
+<button
+  className="report-button"
+  onClick={(e) => {
+    e.stopPropagation();
+    handleGenerateReport(user); // 🔥 Trigger report generation
+  }}
+>
+  Report📄
+</button>
+
+
+
+
+
+
+
+
+
+{loadingReport && <p>Loading Report...</p>}
+
+{studentReport && (
+  <div className="report-box">
+    <h2>Student Performance Report</h2>
+    <pre style={{ whiteSpace: 'pre-wrap', padding: "10px", background: "#f9f9f9", borderRadius: "8px" }}>
+      {studentReport}
+    </pre>
+    <button onClick={() => setStudentReport('')}>❌ Close Report</button>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </div>
 
 
@@ -356,10 +484,6 @@ onChange={(e) => setSearchQuery(e.target.value)}
     📥 Download All Responses for {selectedUser.email}
   </button>
 )}
-
-
-
-
 
 
 {selectedQuiz && (
@@ -470,9 +594,6 @@ Delete
 })}
 
 
-
-
-
 </div>
 ) : selectedQuiz && quizDetails ? (
 <div className="quiz-details">
@@ -515,12 +636,6 @@ Delete
     📥 Download Responses as Excel
   </button>
 </div>
-
-
-
-
-
-
 
 
 <table className="responses-table">
