@@ -5,6 +5,7 @@ import { database } from '../firebase/FirebaseSetup';
 import './AllUsers.css';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import html2pdf from "html2pdf.js";
 
 
 const AllUsers = () => {
@@ -20,12 +21,51 @@ const [studentReport, setStudentReport] = useState('');
 const [loadingReport, setLoadingReport] = useState(false);
 
 
+const [accuracy, setAccuracy] = useState(0);
+const [activeReportUserId, setActiveReportUserId] = useState(null);
+const [totalQuestions, setTotalQuestions] = useState(0);
+const [correctAnswers, setCorrectAnswers] = useState(0);
+
+
+const [reportData, setReportData] = useState({});
+
+
+
 // ✅ Strip HTML tags from string
 const stripHTML = (html) => {
   const div = document.createElement("div");
   div.innerHTML = html;
   return div.textContent || div.innerText || "";
 };
+
+
+
+//download pdf
+const downloadReportAsPDF = (userId) => {
+  const reportElement = document.getElementById(`report-${userId}`);
+  if (!reportElement) return;
+
+  const opt = {
+    margin:       0.5,
+    filename:     `Report_${userId}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(reportElement).save();
+};
+
+
+
+
+
+
+
+
+
+
+
 
 const exportAllResponsesForUser = async () => {
   if (!selectedUser || !selectedUser.quizResults) return;
@@ -241,8 +281,6 @@ return new Date(dateString).toLocaleString();
 
 
 
-
-
 const handleGenerateReport = async (user) => {
   setLoadingReport(true);
   try {
@@ -258,6 +296,7 @@ const handleGenerateReport = async (user) => {
     const allResponses = [];
 
     let totalQuestions = 0, correct = 0;
+    let fromDate = null, toDate = null;
 
     for (const [quizId, data] of Object.entries(quizResults)) {
       const responses = Object.values(data.responses || {});
@@ -270,30 +309,59 @@ const handleGenerateReport = async (user) => {
           isCorrect: res.isCorrect,
         });
       });
+
+      const date = new Date(data.completedAt);
+      if (!fromDate || date < fromDate) fromDate = date;
+      if (!toDate || date > toDate) toDate = date;
     }
 
     const wrong = totalQuestions - correct;
-    const accuracy = totalQuestions ? ((correct / totalQuestions) * 100).toFixed(1) : 0;
+ const calculatedAccuracy = totalQuestions ? ((correct / totalQuestions) * 100).toFixed(1) : 0;
+setReportData({
+  totalQuestions,
+  correct,
+  wrong,
+  accuracy: calculatedAccuracy,
+});
 
-    const summary = `
-Student Email: ${user.email}
-Total Activities: ${totalQuestions}
-Correct Answers: ${correct}
-Wrong Answers: ${wrong}
-Overall Accuracy: ${accuracy}%
 
-Response Topics: 
-${allResponses.map((r, i) => `${i + 1}. ${r.topic} - ${r.isCorrect ? 'Correct' : 'Wrong'}`).join('\n')}
+
+    // Collect topics
+    const topics = [...new Set(allResponses.map(r => r.topic))].filter(t => t !== 'Unknown');
+
+   const prompt = `
+Student Performance Report
+Performance Metrics:
+- Total Activities: ${totalQuestions}
+- Overall Accuracy: ${calculatedAccuracy}%
+- Total Questions: ${totalQuestions}
+- Correct Answers: ${correct}
+- Wrong Answers: ${wrong}
+
+Duration: ${fromDate?.toLocaleDateString() || 'N/A'} - ${toDate?.toLocaleDateString() || 'N/A'}
+
+Topics Covered:
+${topics.length ? topics.join(', ') : 'Not available'}
+
+Analyze this data and give:
+- A short summary
+- Strengths (topics where most answers are correct)
+- Weaknesses (topics with frequent mistakes)
+- An improvement plan with action points
+Write in a clean report format with clear headings and spacing. Be helpful and encouraging.
 `;
 
     const geminiResponse = await fetch("http://localhost:3001/api/gemini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: summary }),
+      body: JSON.stringify({ prompt }),
     });
 
     const { reportText } = await geminiResponse.json();
     setStudentReport(reportText);
+setActiveReportUserId(user.id); // 👈 Set the current user's ID for whom report is active
+
+
   } catch (error) {
     console.error("Error generating report:", error);
     alert("Failed to generate report.");
@@ -301,6 +369,7 @@ ${allResponses.map((r, i) => `${i + 1}. ${r.topic} - ${r.isCorrect ? 'Correct' :
     setLoadingReport(false);
   }
 };
+
 
 
 
@@ -413,24 +482,79 @@ onChange={(e) => setSearchQuery(e.target.value)}
 
 
 
+{activeReportUserId === user.id && studentReport && (
+  <div
+    className="student-report-container"
+    id={`report-${user.id}`} // ✅ Important for PDF/download
+    style={{
+      background: '#fff',
+      padding: '30px',
+      marginTop: '20px',
+      borderRadius: '10px',
+      border: '1px solid #ccc',
+      fontFamily: 'Arial, sans-serif',
+      lineHeight: 1.6,
+      color: '#333',
+      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+      maxWidth: '800px'
+    }}
+  >
+    <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>📄 Student Performance Report</h2>
 
+    <section style={{ marginBottom: '20px' }}>
+      <h3>👤 Student Info</h3>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>User ID:</strong> {user.id}</p>
+    </section>
 
+    <section style={{ marginBottom: '20px' }}>
+      <h3>📊 Performance Metrics</h3>
+      <ul>
+       <li><strong>Total Questions:</strong> {reportData.totalQuestions}</li>
+<li><strong>Correct Answers:</strong> {reportData.correct}</li>
+<li><strong>Wrong Answers:</strong> {reportData.wrong}</li>
+<li><strong>Overall Accuracy:</strong> {reportData.accuracy}%</li>
 
+      </ul>
 
+      {/* Visualization */}
+      <div style={{ marginTop: '10px' }}>
+        <div style={{
+          width: '100%',
+          height: '20px',
+          backgroundColor: '#eee',
+          borderRadius: '10px',
+          overflow: 'hidden',
+          marginBottom: '5px'
+        }}>
+          <div style={{
+            width: `${accuracy}%`,
+            height: '100%',
+            backgroundColor: 'green',
+            float: 'left'
+          }}></div>
+          <div style={{
+            width: `${100 - accuracy}%`,
+            height: '100%',
+            backgroundColor: 'red',
+            float: 'left'
+          }}></div>
+        </div>
+        <p>✔️ Correct: {accuracy}% | ❌ Wrong: {100 - accuracy}%</p>
+      </div>
+    </section>
 
+    <section style={{ marginBottom: '20px' }}>
+      <h3>🧠 Performance Analysis</h3>
+      <pre style={{ whiteSpace: 'pre-wrap' }}>{studentReport}</pre>
+    </section>
 
-{loadingReport && <p>Loading Report...</p>}
-
-{studentReport && (
-  <div className="report-box">
-    <h2>Student Performance Report</h2>
-    <pre style={{ whiteSpace: 'pre-wrap', padding: "10px", background: "#f9f9f9", borderRadius: "8px" }}>
-      {studentReport}
-    </pre>
-    <button onClick={() => setStudentReport('')}>❌ Close Report</button>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+      <button onClick={() => setActiveReportUserId(null)}>❌ Close</button>
+      <button onClick={() => downloadReportAsPDF(user.id)}>⬇️ Download PDF</button>
+    </div>
   </div>
 )}
-
 
 
 

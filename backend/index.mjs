@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use("/api/gemini", geminiRoutes); // ✅ Fixed route
+app.use("/api/gemini", geminiRoutes);
 
 app.listen(3001, () => {
   console.log("✅ Gemini API running on http://localhost:3001");

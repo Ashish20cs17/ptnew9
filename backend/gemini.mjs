@@ -1,23 +1,26 @@
-// ✅ Load environment variables from .env file
+// gemini.mjs
+import express from "express";
 import 'dotenv/config';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// ✅ Initialize Gemini with your API key
+const router = express.Router();
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
-async function test() {
+router.post("/", async (req, res) => {
   try {
-    // ✅ Use a valid model name: "gemini-1.5-flash" (lighter & quota-friendly) OR "gemini-1.5-pro"
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const { prompt } = req.body;
 
-    const result = await model.generateContent("Write a simple quiz summary.");
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // lighter & fast
+    const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    const reportText = response.text();
 
-    console.log("✅ Gemini Response:\n", text);
+    return res.status(200).json({ reportText });
   } catch (error) {
     console.error("❌ Gemini API Error:", error);
+    return res.status(500).json({ error: "Failed to generate report" });
   }
-}
+});
 
-test();
+export default router;
