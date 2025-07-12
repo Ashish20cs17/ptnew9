@@ -28,6 +28,9 @@ const [correctAnswers, setCorrectAnswers] = useState(0);
 
 
 const [reportData, setReportData] = useState({});
+const [selectedPhone, setSelectedPhone] = useState('');
+const [startDate, setStartDate] = useState('');
+const [endDate, setEndDate] = useState('');
 
 
 
@@ -278,6 +281,98 @@ return new Date(dateString).toLocaleString();
 };
 
 
+const handleGenerateReportWithDates = async (userId) => {
+  const user = filteredUsers.find(u => u.id === userId);
+  if (!user || !startDate || !endDate) {
+    alert("Please select user and valid date range.");
+    return;
+  }
+
+  setLoadingReport(true);
+
+  try {
+    const userRef = ref(database, `users/${userId}/quizResults`);
+    const snapshot = await get(userRef);
+
+    if (!snapshot.exists()) {
+      alert("No quiz results found.");
+      return;
+    }
+
+    const quizResults = snapshot.val();
+    const allResponses = [];
+
+    let totalQuestions = 0, correct = 0;
+    let fromDate = null, toDate = null;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59); // include full day
+
+    for (const [quizId, data] of Object.entries(quizResults)) {
+      const completedAt = new Date(data.completedAt);
+      if (completedAt < start || completedAt > end) continue;
+
+      const responses = Object.values(data.responses || {});
+      totalQuestions += responses.length;
+      correct += responses.filter((r) => r.isCorrect).length;
+
+      responses.forEach((res) => {
+        allResponses.push({
+          topic: res.topic || 'Unknown',
+          isCorrect: res.isCorrect,
+        });
+      });
+
+      if (!fromDate || completedAt < fromDate) fromDate = completedAt;
+      if (!toDate || completedAt > toDate) toDate = completedAt;
+    }
+
+    const wrong = totalQuestions - correct;
+    const accuracy = totalQuestions ? ((correct / totalQuestions) * 100).toFixed(1) : 0;
+    setAccuracy(accuracy);
+    setReportData({ totalQuestions, correct, wrong, accuracy });
+
+    const topics = [...new Set(allResponses.map(r => r.topic))].filter(t => t !== 'Unknown');
+
+    const prompt = `
+# Student Performance Analysis
+**Duration:** ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}
+
+
+Performance Metrics:
+- Total Questions: ${totalQuestions}
+- Correct Answers: ${correct}
+- Wrong Answers: ${wrong}
+- Accuracy: ${accuracy}%
+
+Topics Covered:
+${topics.length ? topics.join(', ') : 'Not available'}
+
+Analyze this and give:
+- Short summary
+- Strengths
+- Weaknesses
+- Improvement plan
+Write in clear, structured format with headings.
+    `;
+const geminiResponse = await fetch("https://gemini-backend-odux.onrender.com/api/gemini", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+
+    const { reportText } = await geminiResponse.json();
+    setStudentReport(reportText);
+    setActiveReportUserId(userId);
+
+  } catch (error) {
+    console.error("Error generating filtered report:", error);
+    alert("Failed to generate report.");
+  } finally {
+    setLoadingReport(false);
+  }
+};
 
 
 
@@ -351,7 +446,7 @@ Analyze this data and give:
 Write in a clean report format with clear headings and spacing. Be helpful and encouraging.
 `;
 
-    const geminiResponse = await fetch("http://localhost:3001/api/gemini", {
+   const geminiResponse = await fetch("https://gemini-backend-odux.onrender.com/api/gemini",{
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
@@ -449,6 +544,89 @@ value={searchQuery}
 onChange={(e) => setSearchQuery(e.target.value)}
 />
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '20px 0' }}>
+  <select
+    value={selectedPhone}
+    onChange={(e) => setSelectedPhone(e.target.value)}
+    style={{ padding: '6px', minWidth: '200px' }}
+  >
+    <option value="">📱 Select Phone/User</option>
+    {filteredUsers.map((u) => (
+      <option key={u.id} value={u.id}>
+        {u.phone || u.email}
+      </option>
+    ))}
+  </select>
+
+  <input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    style={{ padding: '6px' }}
+  />
+  <input
+    type="date"
+    value={endDate}
+    onChange={(e) => setEndDate(e.target.value)}
+    style={{ padding: '6px' }}
+  />
+
+  <button
+    onClick={() => handleGenerateReportWithDates(selectedPhone)}
+    style={{
+      padding: '6px 12px',
+      backgroundColor: '#007bff',
+      color: '#fff',
+      border: 'none',
+      borderRadius: '5px',
+    }}
+  >
+    📊 Generate Report
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <div className="content-layout">
 <div className="users-list-container">
