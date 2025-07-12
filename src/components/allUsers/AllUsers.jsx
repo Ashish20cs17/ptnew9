@@ -31,7 +31,7 @@ const [reportData, setReportData] = useState({});
 const [selectedPhone, setSelectedPhone] = useState('');
 const [startDate, setStartDate] = useState('');
 const [endDate, setEndDate] = useState('');
-
+  const [hovered, setHovered] = useState(false);
 
 
 // ✅ Strip HTML tags from string
@@ -599,18 +599,22 @@ onChange={(e) => setSearchQuery(e.target.value)}
     style={{ padding: '6px' }}
   />
 
-  <button
-    onClick={() => handleGenerateReportWithDates(selectedPhone)}
-    style={{
-      padding: '6px 12px',
-      backgroundColor: '#007bff',
-      color: '#fff',
-      border: 'none',
-      borderRadius: '5px',
-    }}
-  >
-    📊 Generate Report
-  </button>
+       <button
+        onClick={() => handleGenerateReportWithDates(selectedPhone)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          padding: '6px 12px',
+          backgroundColor: hovered ? '#28a745' : '#007bff', // green on hover, blue default
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          transition: 'background-color 0.3s ease',
+        }}
+      >
+        📊 Generate Report
+      </button>
 </div>
 
 
