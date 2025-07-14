@@ -60,16 +60,6 @@ const downloadReportAsPDF = (userId) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
 const exportAllResponsesForUser = async () => {
   if (!selectedUser || !selectedUser.quizResults) return;
 
@@ -544,32 +534,6 @@ value={searchQuery}
 onChange={(e) => setSearchQuery(e.target.value)}
 />
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '20px 0' }}>

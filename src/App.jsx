@@ -1,10 +1,12 @@
+// src/App.jsx
+
 import React from 'react';
-import Login from './components/login/login';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+import Login from './components/login/login';
 import Home from './components/home/Home';
 import ProtectedRoute from './components/route/ProtectedRoute';
 import Navbar from './components/navbar/Navbar';
-import "./App.css";
 import AllQuestions from './components/questions/AllQuestions';
 import AttachedQuestion from './components/attachedQuestions/AttachedQuestion';
 import AllQuestionsSet from './components/allQuestionsSet/AllQuestionsSet';
@@ -15,12 +17,14 @@ import OfflineUsers from './components/offlineUsers/OfflineUsers';
 import UploadMultiQuestion from './components/multiQ/UploadMultiQuestion';
 import AdminStats from './components/AdminStats';
 
-
+// ✅ New Components
+import WorksheetGenManual from './components/worksheetManual/WorksheetGenManual';
+import WorksheetGenSystem from './components/worksheetSystem/WorksheetGenSystem';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Login />
+    element: <Login />,
   },
   {
     path: "/home",
@@ -31,10 +35,30 @@ const router = createBrowserRouter([
           <Home />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
-
-  // ✅ This is the updated /all-questions route (login removed)
+  {
+    path: "/worksheet-gen-manual",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute>
+          <WorksheetGenManual />
+        </ProtectedRoute>
+      </>
+    ),
+  },
+  {
+    path: "/worksheet-gen-system",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute>
+          <WorksheetGenSystem />
+        </ProtectedRoute>
+      </>
+    ),
+  },
   {
     path: "/all-questions",
     element: (
@@ -42,9 +66,8 @@ const router = createBrowserRouter([
         <Navbar />
         <AllQuestions />
       </>
-    )
+    ),
   },
-
   {
     path: "/attached-questions",
     element: (
@@ -54,7 +77,7 @@ const router = createBrowserRouter([
           <AttachedQuestion />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/all-questions-set",
@@ -65,7 +88,7 @@ const router = createBrowserRouter([
           <AllQuestionsSet />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/upload",
@@ -76,7 +99,7 @@ const router = createBrowserRouter([
           <Upload />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/upload-multi",
@@ -87,7 +110,7 @@ const router = createBrowserRouter([
           <UploadMultiQuestion />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/allUsers",
@@ -98,7 +121,7 @@ const router = createBrowserRouter([
           <AllUsers />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/offlineUsers",
@@ -109,7 +132,7 @@ const router = createBrowserRouter([
           <OfflineUsers />
         </ProtectedRoute>
       </>
-    )
+    ),
   },
   {
     path: "/admin-stats",
@@ -120,8 +143,8 @@ const router = createBrowserRouter([
           <AdminStats />
         </ProtectedRoute>
       </>
-    )
-  }
+    ),
+  },
 ]);
 
 const App = () => {

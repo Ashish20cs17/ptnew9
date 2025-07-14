@@ -21,9 +21,6 @@ const normalizeGrade = (grade) => {
   return "UNKNOWN";
 };
 
-
-
-
 const stripHTML = (html) => {
   if (!html) return "";
   const div = document.createElement("div");
@@ -150,8 +147,6 @@ setFilteredQuestions(combined);
 
   fetchAllQuestions();
 }, []);
-
-
 
 
 
