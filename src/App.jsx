@@ -1,8 +1,12 @@
 // src/App.jsx
-
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
+// ✅ Toastify
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// ✅ Component imports
 import Login from './components/login/login';
 import Home from './components/home/Home';
 import ProtectedRoute from './components/route/ProtectedRoute';
@@ -16,8 +20,6 @@ import Syllabus from './components/syllabus/Syllabus';
 import OfflineUsers from './components/offlineUsers/OfflineUsers';
 import UploadMultiQuestion from './components/multiQ/UploadMultiQuestion';
 import AdminStats from './components/AdminStats';
-
-// ✅ New Components
 import WorksheetGenManual from './components/worksheetManual/WorksheetGenManual';
 import WorksheetGenSystem from './components/worksheetSystem/WorksheetGenSystem';
 
@@ -148,7 +150,12 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer position="top-right" autoClose={2500} pauseOnHover />
+    </>
+  );
 };
 
 export default App;

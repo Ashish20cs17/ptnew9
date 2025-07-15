@@ -1,0 +1,731 @@
+/* PDF Export Container */
+@import url('https://fonts.googleapis.com/css2?family=Geologica:wght@100&display=swap');
+
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+}
+.edit-button {
+  position: absolute;
+  top: 4px;
+  right: 64px; /* 60px away from Delete for spacing */
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 50px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 10;
+}
+.edit-button:hover {
+  background-color: #bd59db;
+}
+.answerBox {
+  background-color: #d9eaff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+
+.delete-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 50px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 10;
+}
+
+.delete-button:hover {
+  background-color: #5abfd1;
+}
+
+.questionText {
+  font-family: 'Geologica', sans-serif;
+  font-size: 16px;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  font-style: normal;
+    font-weight: 700; /* Bold */
+  letter-spacing: 0.02em;
+}
+
+.pdfExportMode {
+  background-color: white !important;
+  background-image: url('./dotted-pattern.jpg') !important;
+  background-repeat: repeat !important;
+  background-size: 10px 10px !important;
+}
+
+
+.optionsContainer {
+  margin-top: 4px;
+  gap: 6px;             /* Tighten option spacing */
+}
+.questionWrapperContainer {
+  margin-bottom: 8px; /* Reduce spacing between questions */
+  padding: 8px 10px;   /* Minimal internal padding */
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* Question number badge outside container */
+.pdfExportMode .questionNumberBadge {
+  display: inline-block;
+  border: 2px solid orange;
+  border-radius: 25px;
+  padding: 6px 14px;
+  font-weight: bold;
+  color: orange;
+  position: relative;
+  left: -30px; /* Moves badge outside container on left */
+  background: #fff;
+  margin-bottom: 10px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+
+/* Main question container with rounded corners */
+.pdfExportMode .questionContainer {
+  border: 1.5px solid #f0f1f1; /* blue border */
+  border-radius: 12px;
+  padding: 15px 20px 10px 20px;
+  background-color: #dee2e6; /* very light blue */
+  margin-left: 20px; /* space to the right of badge */
+  position: relative;
+}
+
+/* Answer container inside question container */
+.pdfExportMode .answerText {
+  background-color:#edf3f9;/* light blue */
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-top: 12px;
+  font-size: 1rem;
+  color: #333;
+  min-height: 60px;
+  line-height: 1;
+  word-wrap: break-word;
+}
+
+/* Horizontal line separator between questions */
+.pdfExportMode hr.questionSeparator {
+  border: none;
+  border-top: 1.5px solid #ccc;
+  margin: 25px 0;
+}
+/* Each question container in PDF */
+.pdfExportContainer .questionsItem {
+  border: 3px solid orange; /* Orange border */
+  border-radius: 15px;      /* Rounded corners */
+  padding: 20px;
+  margin-bottom: 25px;      /* Equal spacing between questions */
+  background-color: #fff8f0; /* Light warm background */
+  box-shadow: 0 4px 8px rgba(255, 165, 0, 0.15); /* subtle shadow */
+  page-break-inside: avoid;  /* Avoid splitting question on page break */
+}
+
+/* Question number style */
+.pdfExportContainer .questionNumber {
+  font-weight: 700;
+  font-size: 20px;
+  color: orange;
+  margin-bottom: 15px;
+  font-family: 'Trebuchet MS', sans-serif;
+  letter-spacing: 1.2px;
+}
+
+/* Question text */
+.pdfExportContainer .questionContent {
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 15px;
+}
+
+/* Answer text */
+.pdfExportContainer .answerText {
+  background-color:#edf3f9; /* softer warm background */
+  border-left: 8px solid orange;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1;
+  word-wrap: break-word;
+}
+
+/* Optional: MCQ options styling */
+.pdfExportContainer .mcqOptions {
+  margin-left: 25px;
+  font-size: 16px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Images inside questions */
+.pdfExportContainer .questionImage img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-top: 15px;
+  border: 3px solid #ffb74d; /* lighter orange border */
+}
+
+/* Responsive PDF export container width */
+@media print, screen and (max-width: 900px) {
+  .pdfExportContainer {
+    max-width: 100%;
+    padding: 15px;
+    font-size: 16px;
+  }
+}
+
+
+
+
+
+.allQuestionsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 20px;
+  max-width: 2500px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 100vh; /* Adjust height to allow scrolling */
+}
+body, .pdfExportMode {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+}
+
+.pdfExportMode .questionNumber  {
+  font-weight: bold;
+  color: #000000; /* Black */
+  font-size: 22px;
+}
+
+
+
+.logoImage {
+  max-width: 200px;
+  height: auto;
+  object-fit: contain;
+}
+
+
+.allQuestionsContainer h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.allQuestionsContainer hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 15px 0;
+  width: 100%;
+}
+
+.pdfExportContainer img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+.questionsItem {
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #eeeded;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.pdfExportMode .questionContent {
+  font-size: 18px !important;
+  line-height: 1.6;
+}
+
+.pdfExportMode .answerText {
+  font-size: 17px !important;
+}
+/* Style for PDF export mode */
+
+
+.pdfExportMode .questionContent {
+  font-size: 18px !important;
+}
+
+/* Add this to your CSS */
+.pdfExportMode {
+  width: 800px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.pdfExportMode .questionsItem {
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+
+.questionContent p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.answerBox {
+  background-color: #1955a0;
+  padding: 12px 16px;
+  border-radius: 12px; /* ✅ Match export styling */
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  min-height: 60px; /* ✅ Force consistent height like PDF */
+  word-wrap: break-word;
+}
+
+
+/* Optional: Adjust for small mobile screens */
+@media (max-width: 480px) {
+  .answerText {
+    font-size: 0.95rem;
+    padding: 0.8rem;
+    min-height: 40px;
+  }
+}
+
+
+.mcqOptions {
+  margin-left: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.questionImage img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Attach to User Section */
+.attachToUserSection {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.attachForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.attachForm input {
+  flex: 1;
+  min-width: 250px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.attachButton {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.attachButton:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+.hintText {
+  width: 100%;
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.noteText {
+  width: 100%;
+  font-size: 13px;
+  color: #757575;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Question Sets List (Grid Layout) */
+.questionSetsList {
+  width: 100%;
+  padding: 0;
+}
+
+.setsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  padding: 0;
+  list-style-type: none;
+  margin: 0;
+}
+
+.setItem {
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-family: 'Arial', sans-serif;
+    color: #000;
+    background: #fff;
+  }
+
+  .allQuestionsContainer {
+    padding: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .questionsItem {
+    page-break-inside: avoid;
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fdfdfd !important;
+  }
+
+  .questionHeader,
+  .questionText,
+  .answerText,
+  .mcqOptions {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .questionImage img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .questionNumber {
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  .answerText h5 {
+    margin: 0;
+    color: #2e7d32;
+  }
+
+  .pdfContent {
+    margin-top: 20px;
+  }
+
+  .exportButton,
+  .backButton,
+  .searchContainer,
+  .attachToUserSection,
+  .setHeader,
+  .setsList,
+  .setsItem,
+  .Toastify__toast-container {
+    display: none !important;
+  }
+}
+
+.setItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+.logoImage {
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+}
+
+.setName {
+  cursor: pointer;
+  flex-grow: 1;
+  margin-right: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #2196f3;
+}
+
+.setName:hover {
+  text-decoration: underline;
+}
+@media print {
+  .logoImage {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+}
+
+.deleteButton {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background-color: #ff6b6b;
+}
+
+.deleteButton:disabled {
+  background-color: #ffcdd2;
+  cursor: not-allowed;
+}
+
+/* Selected Set View */
+.selectedSetView {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.setHeader {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.backButton {
+  background-image: linear-gradient(to right, #a3d559, #03331c);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Questions List */
+.questionsList {
+  list-style-type: none;
+  padding: 0;
+  width: 100%;
+}
+
+.questionsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.questionContent {
+  flex: 1;
+  
+}
+
+.questionType {
+  font-size: 13px;
+  color: #666;
+  margin-left: 8px;
+}
+
+.questionImage {
+  margin: 10px 0;
+}
+
+.questionImage img {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.answerBox {
+  background-color: #d9eaff;
+  padding: 12px 16px;
+  border-radius: 12px; /* ✅ Match export styling */
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  min-height: 60px; /* ✅ Force consistent height like PDF */
+  word-wrap: break-word;
+}
+
+
+.deleteQuestionButton {
+  background-color: #ff5722;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.deleteQuestionButton:disabled {
+  background-color: #ffccbc;
+  cursor: not-allowed;
+}
+
+/* Search Container */
+.searchContainer {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Export Button */
+.exportButton {
+  background-image: linear-gradient(to right, #32a9dc, #0c1d9e);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+  .allQuestionsContainer {
+    padding: 15px;
+  }
+
+  .attachForm input {
+    min-width: 200px;
+  }
+
+  .setsList {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .setItem {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .setName {
+    margin-bottom: 10px;
+    white-space: normal;
+  }
+
+  .deleteButton {
+    align-self: stretch;
+  }
+
+  .searchInput {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .setsList {
+    grid-template-columns: 1fr;
+  }
+
+  .attachForm {
+    flex-direction: column;
+  }
+
+  .attachForm input {
+    min-width: 95%;
+  }
+
+  .attachButton {
+    width: 100%;
+  }
+}
+.mcqOptions{
+  margin-left: 15px;
+  
+}
+@media print {
+  .deleteQuestionButton {
+    display: none !important;
+  }
+}

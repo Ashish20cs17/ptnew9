@@ -1,56 +1,157 @@
-import React, { useEffect, useState } from 'react';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import React, { useEffect, useState, useRef } from "react";
+import { getDatabase, ref, get, remove } from "firebase/database";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const WorksheetGenManual = () => {
-  const [worksheets, setWorksheets] = useState([]);
+  const [sets, setSets] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSet, setSelectedSet] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const pdfContentRef = useRef(null);
 
+  // ✅ Fetch sets from worksheetQuestionSets
   useEffect(() => {
     const db = getDatabase();
-    const wsRef = ref(db, 'manualWorksheets');
+    const worksheetRef = ref(db, "worksheetQuestionSets");
 
-    const unsubscribe = onValue(wsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.entries(data).map(([id, ws]) => ({
-          ...ws,
-          id,
-          createdAt: new Date(ws.createdAt || Date.now()),
-        }));
-        setWorksheets(list.reverse());
-      } else {
-        setWorksheets([]);
-      }
-    });
-
-    return () => unsubscribe();
+    setLoading(true);
+    get(worksheetRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const entries = Object.entries(data); // [ [id, data], ... ]
+          setSets(entries);
+        } else {
+          setSets([]);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("❌ Failed to load worksheet sets");
+        setLoading(false);
+      });
   }, []);
 
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+
+  const filteredSets = sets.filter(([, data]) =>
+    (data.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSetClick = (setId, setData) => {
+    setSelectedSet(setId);
+    setQuestions(setData.questions || []);
+  };
+
+  const handleBackToSets = () => {
+    setSelectedSet(null);
+    setQuestions([]);
+  };
+
+  const deleteQuestionSet = async (setId) => {
+    if (!window.confirm(`Are you sure you want to delete the set "${setId}"?`)) return;
+
+    setDeleteLoading(true);
+    const db = getDatabase();
+    const setRef = ref(db, `worksheetQuestionSets/${setId}`);
+    try {
+      await remove(setRef);
+      setSets((prev) => prev.filter(([id]) => id !== setId));
+      if (selectedSet === setId) {
+        setSelectedSet(null);
+        setQuestions([]);
+      }
+      toast.success("✅ Set deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      setError("❌ Failed to delete set");
+    }
+    setDeleteLoading(false);
+  };
+
   return (
-    <div className="space-y-4 p-6">
-      <h2 className="text-2xl font-bold text-slate-800 mb-4">All Question Sets</h2>
-      {worksheets.length === 0 ? (
-        <div className="text-center text-slate-500">No worksheets found.</div>
-      ) : (
-        worksheets.map(ws => (
-          <details key={ws.id} className="bg-white rounded-lg shadow-md border border-slate-200">
-            <summary className="p-4 cursor-pointer font-semibold text-slate-800">
-              {ws.name} <span className="text-sm text-slate-500 ml-2">({ws.createdAt.toLocaleDateString()})</span>
-            </summary>
-            <div className="p-4 bg-slate-50 space-y-2">
-              {ws.questions && ws.questions.map((q, i) => (
-                <div key={i} className="border p-3 rounded bg-white">
-                  <p><strong>{i + 1}. </strong>{q.questionText}</p>
-                  <ul className="list-disc list-inside text-sm text-slate-600">
-                    {q.options && q.options.map((opt, idx) => (
-                      <li key={idx}>{opt}</li>
-                    ))}
-                  </ul>
-                  <p className="text-green-600 text-sm mt-1">Answer: {q.correctAnswer}</p>
-                </div>
+    <div className="worksheet-wrapper">
+      <h2 className="title">📘 Gemini-Generated Worksheet Sets</h2>
+
+      {error && <p className="errorMessage">{error}</p>}
+
+      {!selectedSet ? (
+        <div className="questionSetsList">
+          <h3>📚 Available Worksheet Sets</h3>
+          <input
+            type="text"
+            placeholder="Search worksheet sets..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="searchInput"
+          />
+
+          {loading ? (
+            <p>Loading sets...</p>
+          ) : filteredSets.length > 0 ? (
+            <ul className="setsList">
+              {filteredSets.map(([setId, setData]) => (
+                <li key={setId} className="setItem">
+                  <div
+                    className="setName"
+                    onClick={() => handleSetClick(setId, setData)}
+                    style={{ cursor: "pointer", fontWeight: "bold" }}
+                  >
+                    {setData.name || setId} ({setData?.questions?.length || 0} questions)
+                  </div>
+                  <button
+                    className="deleteButton"
+                    onClick={() => deleteQuestionSet(setId)}
+                    disabled={deleteLoading}
+                  >
+                    Delete
+                  </button>
+                </li>
               ))}
-            </div>
-          </details>
-        ))
+            </ul>
+          ) : (
+            <p>No sets found.</p>
+          )}
+        </div>
+      ) : (
+        <div className="selectedSetView">
+          <div className="setHeader">
+            <button onClick={handleBackToSets} className="backButton">
+              🔙 Back
+            </button>
+            <h3>Questions in "{selectedSet}"</h3>
+          </div>
+
+          {questions.length > 0 ? (
+            <ol className="questionsList" ref={pdfContentRef}>
+              {questions.map((q, idx) => (
+                <li key={idx} className="question-card">
+                  <p>
+                    <strong>Q:</strong> {q.question || q.question_text || "No text"}
+                  </p>
+                  {q.options && (
+                    <ul>
+                      {q.options.map((opt, i) => (
+                        <li key={i}>{typeof opt === "string" ? opt : opt.text}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p>
+                    <strong>Answer:</strong> {q.answer}
+                  </p>
+                  <p className="difficulty">{q.difficulty?.toUpperCase()}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p>No questions in this set.</p>
+          )}
+        </div>
       )}
     </div>
   );
