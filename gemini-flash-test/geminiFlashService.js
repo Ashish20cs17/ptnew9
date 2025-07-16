@@ -1,4 +1,6 @@
 // geminiFlashService.js ✅ CommonJS version
+
+
 const axios = require("axios");
 require("dotenv").config();
 
@@ -35,4 +37,4 @@ async function generateWithFlash(promptText) {
     return "Error generating content.";
   }
 }
-module.exports = { generateWithFlash }; // ✅
+module.exports = { generateWithFlash }; 
