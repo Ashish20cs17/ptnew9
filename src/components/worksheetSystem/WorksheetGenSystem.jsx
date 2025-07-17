@@ -91,7 +91,8 @@ ${fallbackExamples}
 
   // ✅ Gemini API fetch
   const generateWorksheetFromGemini = async (prompt) => {
-    const res = await fetch("http://localhost:5000/generate-worksheet", {
+ const res = await fetch("/api/generate-worksheet", {
+
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
